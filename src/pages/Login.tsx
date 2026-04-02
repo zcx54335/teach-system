@@ -53,13 +53,20 @@ const Login: React.FC = () => {
     setError(null);
 
     try {
+      // 强制格式化为 +86
+      const formattedPhone = identifier.startsWith('+86') ? identifier : '+86' + identifier;
+
       const { data, error } = await supabase.auth.signInWithPassword({
-        phone: identifier,
+        phone: formattedPhone,
         password,
       });
 
       if (error) {
-        setError('账号或密码错误，请重试');
+        if (error.message.includes('invalid') || error.status === 422) {
+          setError('手机号格式不正确或密码不符合规范');
+        } else {
+          setError('账号或密码错误，请重试');
+        }
       } else if (data.session) {
         // 处理记住账号
         if (rememberMe) {

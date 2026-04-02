@@ -147,7 +147,8 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
         } 
       });
 
-      const phone = newStudent.phone;
+      // 强制格式化为 +86
+      const phone = newStudent.phone.startsWith('+86') ? newStudent.phone : '+86' + newStudent.phone;
       const password = newStudent.phone.slice(-6);
 
       const { data: authData, error: authError } = await supabaseSecondary.auth.signUp({
