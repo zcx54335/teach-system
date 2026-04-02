@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Phone, GripVertical, ChevronDown } from "lucide-react";
+import { GripVertical, ChevronDown } from "lucide-react";
 import { motion, useMotionValue, useTransform } from "framer-motion";
 import { PageProps } from "../components/Layout/RollerNavigation";
 
@@ -91,8 +91,6 @@ const ImageSlider: React.FC = () => {
 };
 
 const Home: React.FC<PageProps> = ({ localProgress }) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  
   // Provide a fallback progress value if not wrapped in RollerNavigation
   const defaultProgress = useMotionValue(0);
   const progress = localProgress || defaultProgress;
@@ -124,17 +122,17 @@ const Home: React.FC<PageProps> = ({ localProgress }) => {
         >
           <div className="space-y-2">
             <h1 className="text-5xl font-black tracking-tight text-white leading-none">
-              杨老师
+              杨老师 · 控制台
             </h1>
             <h2 className="text-3xl font-bold tracking-tight text-white/90">
-              理科逻辑 · STEM 实践
+              数据中心 · 课时管理
             </h2>
           </div>
 
           <div className="w-12 h-0.5 bg-white/30"></div>
 
           <p className="text-xs font-light text-gray-400 tracking-[0.2em] leading-relaxed">
-            面向小学全学段的深度思维重塑
+            欢迎回来，滑动以管理您的所有学员数据
           </p>
           
           {/* 极简向下引导 */}
@@ -144,8 +142,8 @@ const Home: React.FC<PageProps> = ({ localProgress }) => {
         </motion.div>
       </section>
 
-      {/* 沉浸式项目列表区 */}
-      <section className="relative z-20 px-6 space-y-24 bg-black pt-12">
+      {/* 沉浸式项目列表区 - 控制台概览 */}
+      <section className="relative z-20 px-6 space-y-24 bg-black pt-12 pb-32">
         
         {/* 案例 1：工程制图到实物建模 (带滑动对比图) */}
         <div className="space-y-8">
@@ -171,8 +169,12 @@ const Home: React.FC<PageProps> = ({ localProgress }) => {
             </div>
           </div>
           
-          <div className="w-full relative shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-            <ImageSlider />
+          <div className="w-full relative shadow-[0_0_50px_rgba(34,211,238,0.15)] rounded-xl overflow-hidden group">
+            {/* 微光边缘 */}
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl opacity-0 group-hover:opacity-30 blur transition-opacity duration-500"></div>
+            <div className="relative">
+              <ImageSlider />
+            </div>
           </div>
         </div>
 
@@ -200,94 +202,22 @@ const Home: React.FC<PageProps> = ({ localProgress }) => {
             </div>
           </div>
           
-          <div className="w-full aspect-video overflow-hidden rounded-xl bg-gray-900">
-            <img 
-              src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80" 
-              alt="高承重筷子桥" 
-              className="w-full h-full object-cover filter grayscale contrast-125 hover:grayscale-0 transition-all duration-700"
-            />
+          <div className="w-full relative shadow-[0_0_50px_rgba(34,211,238,0.15)] rounded-xl overflow-hidden group">
+            {/* 微光边缘 */}
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl opacity-0 group-hover:opacity-30 blur transition-opacity duration-500"></div>
+            <div className="relative aspect-video rounded-xl bg-gray-900 overflow-hidden">
+              <img 
+                src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80" 
+                alt="高承重桁架桥梁" 
+                className="w-full h-full object-cover filter grayscale contrast-125 hover:grayscale-0 transition-all duration-700"
+              />
+            </div>
           </div>
         </div>
 
       </section>
 
-      {/* 悬浮吸底按钮 */}
-      <div 
-        className="fixed left-6 right-6 z-40 flex justify-center pointer-events-none"
-        style={{ bottom: 'calc(3.5rem + env(safe-area-inset-bottom) + 1.5rem)' }}
-      >
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="w-full max-w-sm bg-white/5 backdrop-blur-xl border border-white/10 text-white font-medium text-sm tracking-widest py-4 rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.5)] hover:bg-white/10 active:scale-95 transition-all duration-300 pointer-events-auto flex items-center justify-center space-x-3"
-        >
-          <MessageCircle className="w-5 h-5" />
-          <span className="tracking-widest">预约咨询</span>
-        </button>
-      </div>
 
-      {/* 预约咨询弹窗 (Modal) */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
-          {/* 深色半透明遮罩 */}
-          <div 
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
-            onClick={() => setIsModalOpen(false)}
-          ></div>
-          
-          {/* 高级毛玻璃弹窗主体 */}
-          <div className="relative bg-white/10 backdrop-blur-2xl border border-white/20 w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden z-10 animate-in fade-in zoom-in duration-300">
-            {/* 精致的关闭按钮 */}
-            <button 
-              onClick={() => setIsModalOpen(false)}
-              className="absolute top-4 right-4 p-2 bg-black/20 text-white/70 hover:text-white hover:bg-black/40 rounded-full transition-all duration-300"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            
-            <div className="p-8 flex flex-col items-center">
-              {/* 优雅的标题 */}
-              <h3 className="text-xl font-medium text-white tracking-widest mb-8">
-                联系杨老师
-              </h3>
-              
-              {/* 美化后的实体名片风二维码区域 */}
-              <div className="bg-white p-4 rounded-2xl mb-6 shadow-[0_10px_30px_rgba(0,0,0,0.5)] flex flex-col items-center">
-                <div className="w-40 h-40 bg-gray-50 rounded-xl overflow-hidden mb-3">
-                  <img 
-                    src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=PlaceholderQR" 
-                    alt="微信群二维码" 
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-                <p className="text-gray-500 text-xs font-medium tracking-wider">
-                  扫码添加微信咨询
-                </p>
-              </div>
-              
-              {/* 视觉分割线 */}
-              <div className="w-full flex items-center justify-center space-x-4 mb-6 opacity-50">
-                <div className="h-px bg-white flex-1"></div>
-                <span className="text-xs text-white tracking-widest">或</span>
-                <div className="h-px bg-white flex-1"></div>
-              </div>
-              
-              {/* 横向排版的一键拨打按钮 */}
-              <a 
-                href="tel:13281250502" 
-                className="w-full group relative overflow-hidden flex items-center justify-center space-x-3 bg-primary text-white py-4 px-6 rounded-2xl hover:bg-blue-800 active:scale-95 transition-all duration-300 shadow-lg shadow-primary/30"
-              >
-                {/* 按钮内部的发光效果 */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
-                
-                <Phone className="w-5 h-5 relative z-10" />
-                <span className="font-semibold text-lg tracking-wider relative z-10">
-                  132 8125 0502
-                </span>
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -247,7 +247,7 @@ const RollerNavigation: React.FC = () => {
     >
       {/* 侧边导航指示器 */}
       <div className="absolute right-4 top-1/2 -translate-y-1/2 z-50 flex flex-col space-y-3 pointer-events-none">
-        {[0, 1, 2].map(i => (
+        {Array.from({ length: totalCards }).map((_, i) => (
           <div 
             key={i} 
             className={`w-1.5 rounded-full transition-all duration-500 ${

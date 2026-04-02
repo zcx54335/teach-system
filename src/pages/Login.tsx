@@ -70,12 +70,14 @@ const Login: React.FC = () => {
 
       <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-3xl flex items-center justify-center mx-auto shadow-[0_0_40px_rgba(34,211,238,0.5)] mb-6 transition-transform hover:scale-105 duration-300">
-            {loginType === 'admin' ? <Lock className="w-10 h-10 text-white" /> : <Users className="w-10 h-10 text-white" />}
+          <div className="w-20 h-20 bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(255,255,255,0.05)] mb-6 transition-transform hover:scale-105 duration-300">
+            {loginType === 'admin' ? <Lock className="w-10 h-10 text-white/80" /> : <Users className="w-10 h-10 text-white/80" />}
           </div>
-          <h1 className="text-4xl font-black tracking-widest mb-2 drop-shadow-md">杨老师</h1>
-          <p className="text-xs font-mono tracking-[0.3em] text-cyan-400 uppercase">
-            {loginType === 'admin' ? 'Exclusive System Access' : 'Parent Portal'}
+          <h1 className="text-4xl font-light tracking-[0.3em] mb-2 drop-shadow-md">
+            {loginType === 'admin' ? 'XY' : 'XY'}
+          </h1>
+          <p className="text-[10px] font-mono tracking-[0.4em] text-gray-500 uppercase">
+            {loginType === 'admin' ? 'System Access' : 'Parent Portal'}
           </p>
         </div>
 
@@ -95,9 +97,9 @@ const Login: React.FC = () => {
           </button>
         </div>
 
-        <form onSubmit={handleLogin} className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-8 shadow-2xl relative overflow-hidden">
+        <form onSubmit={handleLogin} className="bg-white/[0.02] backdrop-blur-3xl border border-white/10 rounded-[2rem] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative overflow-hidden">
           {/* 装饰光效 */}
-          <div className="absolute -top-10 -right-10 w-32 h-32 bg-cyan-500/10 rounded-full blur-[40px]"></div>
+          <div className="absolute -top-20 -right-20 w-40 h-40 bg-white/5 rounded-full blur-[50px] pointer-events-none"></div>
 
           {error && (
             <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-start space-x-3">
@@ -115,7 +117,7 @@ const Login: React.FC = () => {
                 type={loginType === 'admin' ? 'email' : 'tel'}
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all font-mono"
+                className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-white/30 focus:bg-black/80 transition-all font-mono"
                 placeholder={loginType === 'admin' ? 'yang@example.com' : '13800138000'}
                 required
               />
@@ -129,7 +131,7 @@ const Login: React.FC = () => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all font-mono"
+                className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-white/30 focus:bg-black/80 transition-all font-mono"
                 placeholder="••••••••"
                 required
               />
@@ -138,10 +140,10 @@ const Login: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className={`w-full text-white font-bold py-4 rounded-xl tracking-widest transition-all active:scale-95 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed mt-6 relative overflow-hidden group ${
+              className={`w-full text-white font-medium py-4 rounded-xl tracking-[0.2em] transition-all active:scale-95 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed mt-6 relative overflow-hidden group ${
                 loginType === 'admin' 
-                  ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 shadow-[0_0_30px_rgba(34,211,238,0.4)] hover:shadow-[0_0_50px_rgba(34,211,238,0.6)] animate-pulse-glow'
-                  : 'bg-gradient-to-r from-stem-orange to-red-500 hover:from-orange-500 hover:to-red-400 shadow-[0_0_20px_rgba(255,107,0,0.3)] hover:shadow-[0_0_30px_rgba(255,107,0,0.5)]'
+                  ? 'bg-white/10 hover:bg-white/20 border border-white/20 shadow-[0_0_20px_rgba(255,255,255,0.05)] hover:shadow-[0_0_30px_rgba(255,255,255,0.1)]'
+                  : 'bg-stem-orange/20 hover:bg-stem-orange/30 border border-stem-orange/30 shadow-[0_0_20px_rgba(255,107,0,0.1)] hover:shadow-[0_0_30px_rgba(255,107,0,0.2)] text-stem-orange hover:text-white'
               }`}
             >
               {/* 光效扫过动画 */}
@@ -164,9 +166,9 @@ const Login: React.FC = () => {
         <div className="text-center mt-8">
           <button 
             onClick={() => navigate('/')}
-            className="text-xs font-mono text-gray-500 hover:text-cyan-400 transition-colors tracking-widest"
+            className="text-[10px] font-mono text-gray-500 hover:text-white transition-colors tracking-[0.3em] uppercase"
           >
-            ← RETURN TO BRAND PAGE
+            ← RETURN
           </button>
         </div>
       </div>

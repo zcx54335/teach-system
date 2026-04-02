@@ -1,16 +1,24 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Hexagon, Brain, Zap, Target } from 'lucide-react';
+import { supabase } from '../lib/supabaseClient';
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsLoggedIn(!!session);
+    });
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#020617] text-white font-inter selection:bg-cyan-500/30 overflow-hidden relative flex flex-col">
-      {/* 动态星空深邃背景 */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-blue-900/20 blur-[150px] mix-blend-screen animate-pulse duration-10000"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-cyan-900/10 blur-[120px] mix-blend-screen animate-pulse duration-7000 delay-1000"></div>
+      {/* 动态星空深邃背景 (优化性能) */}
+      <div className="fixed inset-0 z-0 pointer-events-none transform-gpu">
+        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-blue-900/20 blur-[100px] mix-blend-screen animate-blob"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-cyan-900/10 blur-[80px] mix-blend-screen animate-blob" style={{ animationDelay: '2s' }}></div>
       </div>
       <div className="fixed inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPjxyZWN0IHdpZHRoPSI0IiBoZWlnaHQ9IjQiIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSIvPjwvc3ZnPg==')] opacity-20 z-0 pointer-events-none"></div>
 
@@ -20,7 +28,9 @@ const LandingPage: React.FC = () => {
           <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(34,211,238,0.4)]">
             <Hexagon className="w-6 h-6 text-white" />
           </div>
-          <span className="text-xl font-black tracking-widest text-white drop-shadow-md">杨老师</span>
+          <span className="text-xl font-black tracking-widest text-white drop-shadow-md">
+            {isLoggedIn ? '杨老师 · 控制台' : 'XY'}
+          </span>
         </div>
       </header>
 
@@ -49,7 +59,7 @@ const LandingPage: React.FC = () => {
         >
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
           <span className="relative z-10 text-lg font-bold tracking-widest text-white">
-            杨老师 · 管理控制台
+            {isLoggedIn ? '杨老师 · 管理控制台' : 'XY · 导师入口'}
           </span>
         </button>
 
@@ -60,10 +70,16 @@ const LandingPage: React.FC = () => {
             { icon: Target, title: "个性化学情追踪", desc: "多维度雷达图数据分析，精准定位并突破瓶颈。" },
             { icon: Zap, title: "极客化 STEM 实践", desc: "将抽象理论融入硬核实践，激发跨学科应用潜能。" }
           ].map((item, idx) => (
-            <div key={idx} className="bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-3xl hover:bg-white/10 hover:border-cyan-500/30 transition-all duration-500 group text-left">
-              <item.icon className="w-8 h-8 text-cyan-400 mb-6 group-hover:scale-110 transition-transform duration-500" />
-              <h3 className="text-lg font-bold text-white mb-3 tracking-wider">{item.title}</h3>
-              <p className="text-sm text-gray-400 font-light leading-relaxed">{item.desc}</p>
+            <div key={idx} className="relative bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-3xl hover:bg-white/10 hover:border-cyan-500/30 transition-all duration-500 group text-left overflow-hidden">
+              {/* 卡片微光边缘效果 */}
+              <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-transparent to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+              <div className="absolute -inset-px bg-gradient-to-r from-cyan-500 to-blue-500 rounded-3xl opacity-0 group-hover:opacity-20 blur-sm transition-opacity duration-500 pointer-events-none"></div>
+              
+              <div className="relative z-10">
+                <item.icon className="w-8 h-8 text-cyan-400 mb-6 group-hover:scale-110 transition-transform duration-500" />
+                <h3 className="text-lg font-bold text-white mb-3 tracking-wider">{item.title}</h3>
+                <p className="text-sm text-gray-400 font-light leading-relaxed">{item.desc}</p>
+              </div>
             </div>
           ))}
         </div>
