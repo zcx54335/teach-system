@@ -10,9 +10,9 @@ if (!rawSupabaseUrl || !supabaseAnonKey) {
 // 生产环境走 Vercel Rewrite 代理加速，开发环境直连
 const isProd = import.meta.env.PROD;
 
-// 关键点：生产环境路径要加上 /rest/v1
+// 修正：末尾不要带 /rest/v1，因为 Supabase SDK 会自动补上
 const supabaseUrl = isProd 
-  ? `${window.location.origin || 'https://xiongxiong.top'}/supabase-api/rest/v1` 
+  ? `${window.location.origin || 'https://xiongxiong.top'}/supabase-api` 
   : rawSupabaseUrl;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {

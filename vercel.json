@@ -1,8 +1,12 @@
 {
   "rewrites": [
     {
-      "source": "/supabase-api/:path*",
-      "destination": "https://xnvqqddrnaynucvatvoq.supabase.co/:path*"
+      "source": "/supabase-api/rest/v1/:path*",
+      "destination": "https://xnvqqddrnaynucvatvoq.supabase.co/rest/v1/:path*"
+    },
+    {
+      "source": "/supabase-api/storage/v1/:path*",
+      "destination": "https://xnvqqddrnaynucvatvoq.supabase.co/storage/v1/:path*"
     },
     {
       "source": "/(.*)",
