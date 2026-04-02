@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Phone, Quote, CalendarCheck, BookOpen, Camera, CheckCircle2, FileText, Image as ImageIcon, ChevronLeft, ChevronRight, Plus, AlertCircle, XCircle, ArrowDown, Hexagon, Download } from "lucide-react";
+import { Phone, Quote, CalendarCheck, BookOpen, Camera, CheckCircle2, FileText, Image as ImageIcon, ChevronLeft, ChevronRight, Plus, AlertCircle, XCircle, ArrowDown, Hexagon, Download, Settings, User } from "lucide-react";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 import { supabase } from '../lib/supabaseClient';
 import html2canvas from 'html2canvas';
@@ -406,6 +406,51 @@ const ParentDashboard: React.FC = () => {
   // 新增：数字跳动动画状态
   const [radarScores, setRadarScores] = useState([0, 0, 0, 0, 0]);
 
+  // 新增：认证状态与设置弹窗
+  const [session, setSession] = useState<any>(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword.length < 6) {
+      showToast("密码长度至少为 6 位");
+      return;
+    }
+    
+    setIsUpdatingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      showToast("密码修改成功！");
+      setIsSettingsOpen(false);
+      setNewPassword('');
+    } catch (error: any) {
+      showToast(error.message || "修改失败，请重试");
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setIsSettingsOpen(false);
+    showToast("已安全退出登录");
+  };
+
   useEffect(() => {
     if (!student) return;
     const targets = [
@@ -495,6 +540,81 @@ const ParentDashboard: React.FC = () => {
         <div className="absolute top-[40%] right-[-10%] w-[60%] h-[60%] rounded-full bg-cyan-900/10 blur-[120px] mix-blend-screen animate-blob" style={{ animationDelay: '2s' }}></div>
         <div className="absolute bottom-[-20%] left-[20%] w-[70%] h-[70%] rounded-full bg-indigo-900/20 blur-[120px] mix-blend-screen animate-blob" style={{ animationDelay: '4s' }}></div>
       </div>
+
+      {/* 顶栏设置入口 */}
+      <div className="fixed top-6 right-6 z-[60]">
+        <button
+          onClick={() => {
+            if (session) {
+              setIsSettingsOpen(true);
+            } else {
+              navigate(`/login?type=parent&redirect=${encodeURIComponent(location.hash.replace('#', ''))}`);
+            }
+          }}
+          className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:bg-white/20 transition-all active:scale-95"
+        >
+          {session ? <Settings className="w-5 h-5 text-white" /> : <User className="w-5 h-5 text-white" />}
+        </button>
+      </div>
+
+      {/* 家长设置/修改密码弹窗 */}
+      {isSettingsOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/90 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="relative bg-slate-900 border border-white/10 w-full max-w-sm rounded-3xl p-6 shadow-2xl">
+            <button 
+              onClick={() => setIsSettingsOpen(false)}
+              className="absolute top-4 right-4 p-2 bg-white/5 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-colors"
+            >
+              <XCircle className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center space-x-3 mb-6 border-b border-white/10 pb-4">
+              <div className="w-10 h-10 rounded-full bg-stem-orange/20 border border-stem-orange/50 flex items-center justify-center">
+                <Settings className="w-5 h-5 text-stem-orange" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white tracking-widest">账号设置</h3>
+                <p className="text-[10px] font-mono text-gray-400">Account Security</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleUpdatePassword} className="space-y-4">
+              <div>
+                <label className="block text-xs font-mono text-gray-400 tracking-widest mb-2 uppercase">
+                  新密码 (至少6位)
+                </label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all font-mono"
+                  placeholder="••••••••"
+                  required
+                  minLength={6}
+                />
+              </div>
+
+              <div className="pt-2 flex flex-col space-y-3">
+                <button
+                  type="submit"
+                  disabled={isUpdatingPassword}
+                  className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 rounded-xl tracking-widest shadow-[0_0_15px_rgba(34,211,238,0.2)] transition-all active:scale-95 disabled:opacity-50"
+                >
+                  {isUpdatingPassword ? '更新中...' : '确认修改密码'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="w-full bg-white/5 border border-white/10 hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/30 text-gray-400 font-bold py-3 rounded-xl tracking-widest transition-all active:scale-95"
+                >
+                  退出登录
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       {/* 侧边小圆点导航 */}
       <div className="fixed right-4 top-1/2 -translate-y-1/2 z-50 flex flex-col space-y-4">
         {[

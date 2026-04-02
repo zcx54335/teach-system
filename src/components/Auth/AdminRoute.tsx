@@ -9,14 +9,32 @@ const AdminRoute: React.FC = () => {
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      setIsAuthenticated(!!session);
+      
+      if (session) {
+        // 如果邮箱包含 @student.aalon.com，说明是家长账号，禁止访问后台
+        if (session.user.email?.endsWith('@student.aalon.com')) {
+          setIsAuthenticated(false);
+        } else {
+          setIsAuthenticated(true);
+        }
+      } else {
+        setIsAuthenticated(false);
+      }
     };
     checkAuth();
 
     // 监听认证状态变化
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        setIsAuthenticated(!!session);
+        if (session) {
+          if (session.user.email?.endsWith('@student.aalon.com')) {
+            setIsAuthenticated(false);
+          } else {
+            setIsAuthenticated(true);
+          }
+        } else {
+          setIsAuthenticated(false);
+        }
       }
     );
 

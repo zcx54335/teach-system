@@ -4,6 +4,8 @@ import { User, Settings, Shield, BookOpen, ChevronRight, Activity, Cpu, DollarSi
 import { PageProps } from "../components/Layout/RollerNavigation";
 import { supabase } from '../lib/supabaseClient';
 
+import { createClient } from '@supabase/supabase-js';
+
 // 扩展类型定义
 interface CRMStudentRecord {
   id: string;
@@ -110,9 +112,65 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  // 新增学员状态
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newStudent, setNewStudent] = useState({ name: '', phone: '', grade: '' });
+  const [isAdding, setIsAdding] = useState(false);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate('/');
+  };
+
+  const handleAddStudent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newStudent.phone.length !== 11) {
+      alert('请输入11位有效手机号');
+      return;
+    }
+    
+    setIsAdding(true);
+    try {
+      // 1. 使用备用客户端创建 Supabase Auth 用户，避免当前管理员被踢出
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+      const supabaseSecondary = createClient(supabaseUrl, supabaseAnonKey, { auth: { persistSession: false } });
+
+      const email = `${newStudent.phone}@student.aalon.com`;
+      const password = newStudent.phone.slice(-6);
+
+      const { data: authData, error: authError } = await supabaseSecondary.auth.signUp({
+        email,
+        password,
+      });
+
+      if (authError) {
+        throw new Error(`Auth Error: ${authError.message}`);
+      }
+
+      // 2. 在 students 表中插入数据并关联 auth_id
+      const { error: dbError } = await supabase.from('students').insert([{
+        name: newStudent.name,
+        phone: newStudent.phone,
+        grade: newStudent.grade,
+        status: 'enrolled',
+        auth_id: authData.user?.id
+      }]);
+
+      if (dbError) {
+        throw new Error(`DB Error: ${dbError.message}`);
+      }
+
+      alert(`学生 ${newStudent.name} 创建成功！\n登录账号: ${newStudent.phone}\n初始密码: ${password}`);
+      setIsAddModalOpen(false);
+      setNewStudent({ name: '', phone: '', grade: '' });
+      if (fetchStudents) fetchStudents();
+
+    } catch (err: any) {
+      alert(`创建学员失败: ${err.message}\n(注: 若提示 Signups not allowed，请在 Supabase Auth 设置中开启 Enable Signups)`);
+    } finally {
+      setIsAdding(false);
+    }
   };
 
   // 调试日志
@@ -168,6 +226,12 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
           </p>
         </div>
         <div className="flex space-x-3">
+          <button 
+            onClick={() => setIsAddModalOpen(true)}
+            className="text-xs font-mono text-white border border-stem-orange/50 px-3 py-1.5 rounded bg-stem-orange hover:bg-stem-orange/80 transition-colors shadow-[0_0_15px_rgba(255,107,0,0.4)]"
+          >
+            + 新增学员
+          </button>
           <button 
             onClick={fetchStudents}
             className="text-xs font-mono text-stem-orange border border-stem-orange/30 px-3 py-1.5 rounded bg-stem-orange/10 hover:bg-stem-orange/20 transition-colors"
@@ -412,6 +476,72 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
               </div>
 
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 新增学员弹窗 */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setIsAddModalOpen(false)}></div>
+          <div className="relative bg-slate-950 border border-white/20 w-full max-w-sm rounded-2xl p-6 shadow-[0_0_50px_rgba(255,107,0,0.2)] animate-in zoom-in duration-300">
+            <button onClick={() => setIsAddModalOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white">
+              <X className="w-5 h-5" />
+            </button>
+            <h2 className="text-xl font-bold text-white mb-6 flex items-center tracking-widest">
+              <User className="w-5 h-5 mr-2 text-stem-orange" />
+              录入新学员
+            </h2>
+            <form onSubmit={handleAddStudent} className="space-y-4">
+              <div>
+                <label className="block text-xs font-mono text-gray-400 mb-1">姓名</label>
+                <input 
+                  type="text" 
+                  required
+                  value={newStudent.name}
+                  onChange={(e) => setNewStudent({...newStudent, name: e.target.value})}
+                  className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-white focus:border-stem-orange focus:outline-none"
+                  placeholder="例如: 张三"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-mono text-gray-400 mb-1">手机号 (登录账号)</label>
+                <input 
+                  type="tel" 
+                  required
+                  maxLength={11}
+                  value={newStudent.phone}
+                  onChange={(e) => setNewStudent({...newStudent, phone: e.target.value})}
+                  className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-white focus:border-stem-orange focus:outline-none"
+                  placeholder="11位手机号"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-mono text-gray-400 mb-1">年级</label>
+                <input 
+                  type="text" 
+                  required
+                  value={newStudent.grade}
+                  onChange={(e) => setNewStudent({...newStudent, grade: e.target.value})}
+                  className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-white focus:border-stem-orange focus:outline-none"
+                  placeholder="例如: 三年级"
+                />
+              </div>
+              <div className="pt-2">
+                <p className="text-[10px] text-gray-500 font-mono mb-4 leading-relaxed bg-white/5 p-2 rounded border border-white/5">
+                  <strong className="text-stem-orange">注意：</strong>
+                  保存后，系统将自动为该家长创建专属账号。<br/>
+                  初始密码为手机号后 6 位：{newStudent.phone.length >= 6 ? newStudent.phone.slice(-6) : '******'}
+                </p>
+                <button 
+                  type="submit" 
+                  disabled={isAdding}
+                  className="w-full bg-stem-orange hover:bg-orange-600 text-white font-bold py-3 rounded-lg tracking-widest disabled:opacity-50 transition-colors"
+                >
+                  {isAdding ? '创建中...' : '一键开户并保存'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
