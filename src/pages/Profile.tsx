@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { User, Settings, Shield, BookOpen, ChevronRight, Activity, Cpu, DollarSign, Users, Clock, X, ChevronLeft, CalendarCheck, FileText, Image as ImageIcon, Quote } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { User, Settings, Shield, BookOpen, ChevronRight, Activity, Cpu, DollarSign, Users, Clock, X, ChevronLeft, CalendarCheck, FileText, Image as ImageIcon, Quote, LogOut } from "lucide-react";
 import { PageProps } from "../components/Layout/RollerNavigation";
 import { supabase } from '../lib/supabaseClient';
 
@@ -107,6 +108,12 @@ const ParticleBackground: React.FC = () => {
 const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStudents, isLoading }) => {
   const [selectedStudent, setSelectedStudent] = useState<CRMStudentRecord | null>(null);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/');
+  };
 
   // 调试日志
   useEffect(() => {
@@ -160,12 +167,21 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
             Aalon CRM System
           </p>
         </div>
-        <button 
-          onClick={fetchStudents}
-          className="text-xs font-mono text-stem-orange border border-stem-orange/30 px-3 py-1.5 rounded bg-stem-orange/10 hover:bg-stem-orange/20 transition-colors"
-        >
-          刷新数据
-        </button>
+        <div className="flex space-x-3">
+          <button 
+            onClick={fetchStudents}
+            className="text-xs font-mono text-stem-orange border border-stem-orange/30 px-3 py-1.5 rounded bg-stem-orange/10 hover:bg-stem-orange/20 transition-colors"
+          >
+            刷新数据
+          </button>
+          <button 
+            onClick={handleLogout}
+            className="text-xs font-mono text-red-400 border border-red-400/30 px-3 py-1.5 rounded bg-red-400/10 hover:bg-red-400/20 transition-colors flex items-center"
+          >
+            <LogOut className="w-3 h-3 mr-1" />
+            登出系统
+          </button>
+        </div>
       </div>
 
       {/* 顶部数据概览 */}
