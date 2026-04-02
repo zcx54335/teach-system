@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
-import { Phone, Quote, CalendarCheck, BookOpen, Camera, CheckCircle2, FileText, Image as ImageIcon, ChevronLeft, ChevronRight, Plus, AlertCircle, XCircle } from "lucide-react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { Phone, Quote, CalendarCheck, BookOpen, Camera, CheckCircle2, FileText, Image as ImageIcon, ChevronLeft, ChevronRight, Plus, AlertCircle, XCircle, ArrowDown } from "lucide-react";
 import { supabase } from '../lib/supabaseClient';
 
 // 定义 ClassRecord 接口
@@ -43,9 +43,13 @@ interface StudentWithRecords extends StudentRecord {
 
 const ParentDashboard: React.FC = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [student, setStudent] = useState<StudentWithRecords | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState<string>('section-hero');
+  const [isJumping, setIsJumping] = useState(false);
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
   // 显示 Toast 的辅助函数
   const showToast = (message: string) => {
@@ -94,6 +98,41 @@ const ParentDashboard: React.FC = () => {
 
     fetchStudentData();
   }, [searchParams]);
+
+  // 监听各个 Section，实现侧边导航高亮与底部自动跳转
+  useEffect(() => {
+    if (!student) return;
+
+    observerRef.current = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          setActiveSection(entry.target.id);
+          
+          // 底部跳转缓冲逻辑
+          if (entry.target.id === 'section-buffer') {
+            setIsJumping(true);
+            setTimeout(() => {
+              // 1秒后跳转到老师端首页 (根据实际业务可调整)
+              navigate('/');
+            }, 1000);
+          } else {
+            setIsJumping(false);
+          }
+        }
+      });
+    }, { threshold: 0.5 }); // 元素有一半进入视野时触发
+
+    // 观察所有的 Section
+    const sectionIds = ['section-hero', 'section-timeline', 'section-contact', 'section-buffer'];
+    sectionIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) observerRef.current?.observe(el);
+    });
+
+    return () => {
+      observerRef.current?.disconnect();
+    };
+  }, [student, navigate]);
 
   // 计算当前月份的日历数据
   const calendarData = useMemo(() => {
@@ -256,9 +295,29 @@ const ParentDashboard: React.FC = () => {
   }
 
   return (
-    // 强制全局极深色背景 (bg-slate-950)，确保对比度和沉浸感
-    <div className="min-h-screen bg-slate-950 font-sans selection:bg-cyan-500/30 text-white overflow-x-hidden pb-12">
+    // 强制全局极深色背景，启用 CSS Scroll Snap 和 overscroll-contain
+    <div className="h-[100dvh] overflow-y-auto snap-y snap-mandatory overscroll-contain bg-slate-950 font-sans selection:bg-cyan-500/30 text-white scroll-smooth relative">
       
+      {/* 侧边小圆点导航 */}
+      <div className="fixed right-4 top-1/2 -translate-y-1/2 z-50 flex flex-col space-y-4">
+        {[
+          { id: 'section-hero', title: '学情总览' },
+          { id: 'section-timeline', title: '成长轨迹' },
+          { id: 'section-contact', title: '专属导师' }
+        ].map((item) => (
+          <button
+            key={item.id}
+            title={item.title}
+            onClick={() => document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth' })}
+            className={`w-2.5 h-2.5 rounded-full transition-all duration-500 ${
+              activeSection === item.id 
+                ? 'bg-cyan-400 scale-150 shadow-[0_0_15px_rgba(34,211,238,0.8)]' 
+                : 'bg-white/20 hover:bg-white/40'
+            }`}
+          />
+        ))}
+      </div>
+
       {/* 极弱的背景纹理，叠加在深色背景上 */}
       <div className="fixed inset-0 bg-blueprint bg-blueprint pointer-events-none opacity-10"></div>
 
@@ -283,7 +342,7 @@ const ParentDashboard: React.FC = () => {
       )}
 
       {/* 顶部学情看板 (Hero Section) */}
-      <header className="relative pt-16 pb-12 px-6 flex flex-col items-center justify-center border-b border-white/5 bg-gradient-to-b from-white/[0.02] to-transparent">
+      <header id="section-hero" className="snap-start min-h-[100dvh] relative pt-16 pb-12 px-6 flex flex-col items-center justify-center border-b border-white/5 bg-gradient-to-b from-white/[0.02] to-transparent will-change-transform">
         {/* 科技感 Cyan 光晕背景 */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-cyan-500/10 rounded-full blur-[80px] pointer-events-none"></div>
         
@@ -383,7 +442,7 @@ const ParentDashboard: React.FC = () => {
       </header>
 
       {/* 中部成长时间轴 (Timeline) */}
-      <section className="relative px-6 py-12 z-10 max-w-lg mx-auto">
+      <section id="section-timeline" className="snap-start min-h-[100dvh] relative px-6 py-12 z-10 max-w-lg mx-auto will-change-transform">
         <div className="mb-10 flex items-center space-x-3">
           <div className="w-8 h-px bg-cyan-500/50"></div>
           <h2 className="text-sm font-medium tracking-[0.2em] text-gray-300 uppercase">
@@ -396,7 +455,7 @@ const ParentDashboard: React.FC = () => {
           <div className="absolute left-0 top-2 bottom-0 w-px bg-gradient-to-b from-cyan-500/50 via-white/10 to-transparent"></div>
 
           {displayRecords.map((record) => (
-            <div key={record.id} id={record.id} className="relative group scroll-mt-24">
+            <div key={record.id} id={record.id} className="snap-center scroll-mt-24 relative group will-change-transform">
               {/* 时间轴节点 (Dot) - 发光效果 */}
               <div className={`absolute -left-[29px] top-1.5 w-3 h-3 rounded-full border-2 border-slate-950 
                 ${record.isLatest ? 'bg-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.8)]' : 'bg-gray-600'}
@@ -527,7 +586,7 @@ const ParentDashboard: React.FC = () => {
       </section>
 
       {/* 底部专属联系卡片 (Contact Card) */}
-      <section className="relative px-6 z-10 mt-8 max-w-lg mx-auto">
+      <section id="section-contact" className="snap-center min-h-[100dvh] relative px-6 z-10 flex flex-col justify-center max-w-lg mx-auto will-change-transform">
         {/* 深色毛玻璃名片容器 */}
         <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
           <div className="mb-6 flex flex-col items-center">
@@ -575,6 +634,14 @@ const ParentDashboard: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* 底部缓冲加载 (Pull to Next) */}
+      <div id="section-buffer" className="snap-end h-40 w-full flex flex-col items-center justify-center bg-gradient-to-t from-black/50 to-transparent">
+        <ArrowDown className={`w-6 h-6 text-gray-500 mb-2 transition-all duration-300 ${isJumping ? 'animate-bounce text-cyan-400' : ''}`} />
+        <span className={`text-xs font-mono tracking-widest transition-colors duration-300 ${isJumping ? 'text-cyan-400' : 'text-gray-500'}`}>
+          {isJumping ? 'JUMPING TO SYSTEM...' : '↓ 继续下拉切换下一页'}
+        </span>
+      </div>
 
     </div>
   );
