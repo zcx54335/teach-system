@@ -176,10 +176,12 @@ const ParentDashboard: React.FC = () => {
     }
   };
 
-  // 取消自动获取数据，改为点击触发
-  // useEffect(() => {
-  //   fetchStudentData();
-  // }, [searchParams]);
+  // 取消自动获取数据，改为自动获取并强制诊断
+  useEffect(() => {
+    // 强制弹窗诊断：确认路由是否进入
+    window.alert('检测到当前完整URL: ' + window.location.href);
+    fetchStudentData();
+  }, [searchParams]);
 
   // 监听各个 Section，实现侧边导航高亮与底部自动跳转
   useEffect(() => {
@@ -351,28 +353,6 @@ const ParentDashboard: React.FC = () => {
       }
     }
   };
-
-  if (!hasStarted) {
-    return (
-      <div className="min-h-[100dvh] bg-slate-950 flex flex-col items-center justify-center p-6 text-center relative">
-        <div className="w-20 h-20 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center mb-8 shadow-[0_0_40px_rgba(34,211,238,0.2)]">
-          <span className="text-cyan-400 font-serif font-bold italic text-2xl">师</span>
-        </div>
-        <h1 className="text-2xl font-black text-white tracking-widest mb-3">
-          专属学情报告
-        </h1>
-        <p className="text-sm text-gray-400 font-light tracking-wider mb-12">
-          Aalon 导师 - 数学逻辑与 STEM 实践
-        </p>
-        <button 
-          onClick={fetchStudentData}
-          className="relative overflow-hidden px-8 py-4 rounded-full font-mono text-sm tracking-widest transition-all duration-300 bg-cyan-500 text-slate-950 font-bold shadow-[0_0_30px_rgba(34,211,238,0.4)] hover:bg-cyan-400 hover:shadow-[0_0_40px_rgba(34,211,238,0.6)] active:scale-95"
-        >
-          点击查看报告
-        </button>
-      </div>
-    );
-  }
 
   // 计算雷达图数据 (给一个默认的空学员数据保底)
   const radarData = useMemo(() => {
