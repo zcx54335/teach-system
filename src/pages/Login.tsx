@@ -99,18 +99,18 @@ const Login: React.FC = () => {
       <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(255,255,255,0.05)] mb-6 transition-transform hover:scale-105 duration-300">
-            {loginType === 'admin' ? <Lock className="w-10 h-10 text-white/80" /> : <Users className="w-10 h-10 text-white/80" />}
+            <Lock className="w-10 h-10 text-white/80" />
           </div>
           <h1 className="text-4xl font-light tracking-[0.3em] mb-2 drop-shadow-md">
             小鱼思维
           </h1>
           <p className="text-[10px] font-mono tracking-[0.4em] text-gray-500 uppercase">
-            {loginType === 'admin' ? '系统入口' : '家长门户'}
+            系统入口
           </p>
         </div>
 
-        {/* 角色切换 */}
-        <div className="flex p-1 bg-white/5 border border-white/10 rounded-xl mb-8 backdrop-blur-md">
+        {/* 角色切换 - 已经全部采用手机号登录，隐藏此部分以统一界面 */}
+        <div className="hidden flex p-1 bg-white/5 border border-white/10 rounded-xl mb-8 backdrop-blur-md">
           <button
             onClick={() => setLoginType('admin')}
             className={`flex-1 py-2.5 text-xs font-mono tracking-widest rounded-lg transition-all duration-300 ${loginType === 'admin' ? 'bg-cyan-500/20 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.2)]' : 'text-gray-500 hover:text-gray-300'}`}
@@ -188,11 +188,7 @@ const Login: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className={`w-full text-white font-medium py-4 rounded-xl tracking-[0.2em] transition-all active:scale-95 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed mt-6 relative overflow-hidden group ${
-                loginType === 'admin' 
-                  ? 'bg-white/10 hover:bg-white/20 border border-white/20 shadow-[0_0_20px_rgba(255,255,255,0.05)] hover:shadow-[0_0_30px_rgba(255,255,255,0.1)]'
-                  : 'bg-stem-orange/20 hover:bg-stem-orange/30 border border-stem-orange/30 shadow-[0_0_20px_rgba(255,107,0,0.1)] hover:shadow-[0_0_30px_rgba(255,107,0,0.2)] text-stem-orange hover:text-white'
-              }`}
+              className={`w-full text-white font-medium py-4 rounded-xl tracking-[0.2em] transition-all active:scale-95 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed mt-6 relative overflow-hidden group bg-white/10 hover:bg-white/20 border border-white/20 shadow-[0_0_20px_rgba(255,255,255,0.05)] hover:shadow-[0_0_30px_rgba(255,255,255,0.1)]`}
             >
               {/* 光效扫过动画 */}
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>

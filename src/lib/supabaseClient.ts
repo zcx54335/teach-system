@@ -9,11 +9,11 @@ if (!rawSupabaseUrl || !supabaseAnonKey) {
 
 // 生产环境走 Vercel Rewrite 代理加速，开发环境直连
 const isProd = import.meta.env.PROD;
+const origin = window.location.origin || 'https://xiongxiong.top';
 
-// 修正：末尾不要带 /rest/v1，因为 Supabase SDK 会自动补上
-const supabaseUrl = isProd 
-  ? `${window.location.origin || 'https://xiongxiong.top'}/supabase-api` 
-  : rawSupabaseUrl;
+// 在使用 Vercel Proxy 时，我们将所有 Supabase 请求交给 /supabase-proxy
+// Vercel 会将 /supabase-proxy 完整转发给原厂域名。
+const supabaseUrl = isProd ? `${origin}/supabase-proxy` : rawSupabaseUrl;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
@@ -26,3 +26,4 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     }
   }
 });
+

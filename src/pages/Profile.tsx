@@ -135,7 +135,17 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
       // 1. 使用备用客户端创建 Supabase Auth 用户，避免当前管理员被踢出
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-      const supabaseSecondary = createClient(supabaseUrl, supabaseAnonKey, { auth: { persistSession: false } });
+      
+      const isProd = import.meta.env.PROD;
+      const origin = window.location.origin || 'https://xiongxiong.top';
+      // 保证使用正确的代理 URL
+      const targetUrl = isProd ? `${origin}/supabase-proxy` : supabaseUrl;
+
+      const supabaseSecondary = createClient(targetUrl, supabaseAnonKey, { 
+        auth: { 
+          persistSession: false
+        } 
+      });
 
       const phone = newStudent.phone;
       const password = newStudent.phone.slice(-6);

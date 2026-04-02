@@ -1,12 +1,16 @@
 {
   "rewrites": [
     {
-      "source": "/supabase-api/rest/v1/:path*",
-      "destination": "https://xnvqqddrnaynucvatvoq.supabase.co/rest/v1/:path*"
+      "source": "/supabase-proxy/:path*",
+      "destination": "https://xnvqqddrnaynucvatvoq.supabase.co/:path*"
     },
     {
-      "source": "/supabase-api/storage/v1/:path*",
-      "destination": "https://xnvqqddrnaynucvatvoq.supabase.co/storage/v1/:path*"
+      "source": "/supabase-auth/:path*",
+      "destination": "https://xnvqqddrnaynucvatvoq.supabase.co/auth/v1/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
