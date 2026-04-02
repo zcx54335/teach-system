@@ -17,7 +17,9 @@ const getProductionUrl = () => {
   return 'https://xiongxiong.top/supabase-api';
 };
 
-const supabaseUrl = isProd ? getProductionUrl() : rawSupabaseUrl;
+// Vercel 代理的地址不能带任何后缀，因为 Vercel 的 rewrite 规则里已经加了 rest/v1
+const cleanRawUrl = rawSupabaseUrl.replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '');
+const supabaseUrl = isProd ? getProductionUrl() : cleanRawUrl;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
