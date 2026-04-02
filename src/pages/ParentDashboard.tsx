@@ -497,11 +497,11 @@ const ParentDashboard: React.FC = () => {
         <div className="relative z-10 flex flex-col items-center">
           {/* 纯白高对比核心标题 */}
           <h1 className="text-4xl font-black tracking-widest text-white mb-3">
-            {student.name}
+            {student?.name || '学员'}
           </h1>
           <div className="px-4 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
             <span className="text-xs font-medium tracking-widest text-gray-300">
-              {student.grade}
+              {student?.grade || '未知年级'}
             </span>
           </div>
 
@@ -511,13 +511,13 @@ const ParentDashboard: React.FC = () => {
             </p>
             {/* 巨大且高亮的剩余课时数字，使用 Cyan 强调色和发光阴影 */}
             <div className="text-8xl font-light tracking-tighter text-cyan-400 drop-shadow-[0_0_20px_rgba(34,211,238,0.4)]">
-              {student.remaining_classes}
+              {student?.remaining_classes ?? 0}
             </div>
           </div>
 
           <div className="flex items-center space-x-2 text-sm text-gray-300 font-light tracking-wider bg-white/5 border border-white/10 px-6 py-2 rounded-2xl backdrop-blur-md shadow-lg mb-8">
             <BookOpen className="w-4 h-4 text-cyan-400" />
-            <span>累计已上：<strong className="text-white font-medium">{student.total_classes - student.remaining_classes}</strong> 课时</span>
+            <span>累计已上：<strong className="text-white font-medium">{(student?.total_classes ?? 0) - (student?.remaining_classes ?? 0)}</strong> 课时</span>
           </div>
 
           {/* 新增：学情日历总览 (Calendar Overview) */}
@@ -604,16 +604,7 @@ const ParentDashboard: React.FC = () => {
           <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-[60px] pointer-events-none"></div>
           
           <div className="h-64 w-full flex flex-col justify-center items-center">
-            {/* 暂时禁用复杂的雷达图组件，改用纯文本列表以排查白屏问题 */}
-            <div className="space-y-3 w-full px-4">
-              {radarData.map((item, idx) => (
-                <div key={idx} className="flex justify-between items-center text-sm font-mono border-b border-white/10 pb-2">
-                  <span className="text-gray-300">{item.subject}</span>
-                  <span className="text-cyan-400 font-bold">{item.A} / {item.fullMark}</span>
-                </div>
-              ))}
-            </div>
-            {/* 
+            {/* 静态无动画雷达图 */}
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
                 <PolarGrid gridType="polygon" stroke="rgba(255,255,255,0.1)" />
@@ -629,12 +620,10 @@ const ParentDashboard: React.FC = () => {
                   strokeWidth={2}
                   fill="#ff6b00"
                   fillOpacity={0.3}
-                  isAnimationActive={true}
-                  animationDuration={1500}
+                  isAnimationActive={false}
                 />
               </RadarChart>
             </ResponsiveContainer>
-            */}
           </div>
 
           <div className="mt-4 flex justify-center space-x-4">
