@@ -164,6 +164,15 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
         throw new Error(`DB Error: ${dbError.message}`);
       }
 
+      // 注意：profiles 表的数据由 auth.users 的 Trigger 自动生成，
+      // 若 Trigger 未能生效或需确保双重保险，可在此处额外进行更新：
+      await supabase.from('profiles').upsert({
+        id: authData.user?.id,
+        role: 'parent',
+        phone: newStudent.phone,
+        email: email
+      });
+
       setCreatedStudent({
         name: newStudent.name,
         phone: newStudent.phone,

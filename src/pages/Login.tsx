@@ -20,7 +20,14 @@ const Login: React.FC = () => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        if (session.user.email?.endsWith('@student.yang.com')) {
+        // 从 profiles 表获取角色
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profile?.role === 'parent') {
           navigate(redirectUrl || '/parent');
         } else {
           navigate('/admin');
@@ -45,9 +52,16 @@ const Login: React.FC = () => {
       });
 
       if (error) {
-        setError(loginType === 'parent' ? '登录失败：手机号或密码错误' : '登录失败：邮箱或密码错误');
+        setError(loginType === 'parent' ? '登录失败：手机号或密码错误' : '登录失败：账号或密码错误');
       } else if (data.session) {
-        if (loginType === 'parent') {
+        // 登录成功后，根据 profiles 表中的角色进行跳转
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', data.session.user.id)
+          .single();
+
+        if (profile?.role === 'parent') {
           navigate(redirectUrl || '/parent');
         } else {
           navigate('/admin');
@@ -74,15 +88,15 @@ const Login: React.FC = () => {
             {loginType === 'admin' ? <Lock className="w-10 h-10 text-white/80" /> : <Users className="w-10 h-10 text-white/80" />}
           </div>
           <h1 className="text-4xl font-light tracking-[0.3em] mb-2 drop-shadow-md">
-            {loginType === 'admin' ? 'XY' : 'XY'}
+            小鱼
           </h1>
           <p className="text-[10px] font-mono tracking-[0.4em] text-gray-500 uppercase">
-            {loginType === 'admin' ? 'System Access' : 'Parent Portal'}
+            {loginType === 'admin' ? '系统入口' : '家长门户'}
           </p>
         </div>
 
-        {/* 角色切换 - 仅作为彩蛋保留，或者直接隐藏家长登录 */}
-        <div className="flex p-1 bg-white/5 border border-white/10 rounded-xl mb-8 backdrop-blur-md hidden">
+        {/* 角色切换 */}
+        <div className="flex p-1 bg-white/5 border border-white/10 rounded-xl mb-8 backdrop-blur-md">
           <button
             onClick={() => setLoginType('admin')}
             className={`flex-1 py-2.5 text-xs font-mono tracking-widest rounded-lg transition-all duration-300 ${loginType === 'admin' ? 'bg-cyan-500/20 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.2)]' : 'text-gray-500 hover:text-gray-300'}`}
@@ -111,21 +125,21 @@ const Login: React.FC = () => {
           <div className="space-y-6 relative z-10">
             <div>
               <label className="block text-xs font-mono text-gray-400 tracking-widest mb-2 uppercase">
-                {loginType === 'admin' ? 'Admin Email' : 'Registered Phone'}
+                账号/手机号
               </label>
               <input
                 type={loginType === 'admin' ? 'email' : 'tel'}
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-white/30 focus:bg-black/80 transition-all font-mono"
-                placeholder={loginType === 'admin' ? 'yang@example.com' : '13800138000'}
+                placeholder={loginType === 'admin' ? '导师邮箱' : '13800138000'}
                 required
               />
             </div>
 
             <div>
               <label className="block text-xs font-mono text-gray-400 tracking-widest mb-2 uppercase">
-                Security Key
+                密码
               </label>
               <input
                 type="password"
@@ -155,7 +169,7 @@ const Login: React.FC = () => {
                 ) : (
                   <>
                     <LogIn className="w-5 h-5 mr-2" />
-                    AUTHENTICATE
+                    登录
                   </>
                 )}
               </div>
@@ -168,7 +182,7 @@ const Login: React.FC = () => {
             onClick={() => navigate('/')}
             className="text-[10px] font-mono text-gray-500 hover:text-white transition-colors tracking-[0.3em] uppercase"
           >
-            ← RETURN
+            ← 返回首页
           </button>
         </div>
       </div>

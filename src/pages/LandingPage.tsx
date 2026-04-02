@@ -59,7 +59,7 @@ const LandingPage: React.FC = () => {
         >
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
           <span className="relative z-10 text-lg font-bold tracking-widest text-white">
-            {isLoggedIn ? '杨老师 · 管理控制台' : 'XY · 导师入口'}
+            {isLoggedIn ? '杨老师 · 管理控制台' : '导师/家长登录'}
           </span>
         </button>
 

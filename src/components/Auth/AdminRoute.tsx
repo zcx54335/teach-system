@@ -11,8 +11,14 @@ const AdminRoute: React.FC = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session) {
-        // 如果邮箱包含 @student.aalon.com，说明是家长账号，禁止访问后台
-        if (session.user.email?.endsWith('@student.aalon.com')) {
+        // 从 profiles 获取真实权限
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profile?.role === 'parent') {
           setIsAuthenticated(false);
         } else {
           setIsAuthenticated(true);
@@ -25,9 +31,15 @@ const AdminRoute: React.FC = () => {
 
     // 监听认证状态变化
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      async (_event, session) => {
         if (session) {
-          if (session.user.email?.endsWith('@student.aalon.com')) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .single();
+
+          if (profile?.role === 'parent') {
             setIsAuthenticated(false);
           } else {
             setIsAuthenticated(true);
