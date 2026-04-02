@@ -23,14 +23,18 @@ const RollerNavigation: React.FC = () => {
 
   const fetchStudents = async () => {
     setIsLoading(true);
+    // 取消所有过滤，强制进行最简单的全量查询，确保不会漏掉任何一条数据
     const { data, error } = await supabase
       .from('students')
-      .select('*, class_records(*)')
+      .select('*')
       .order('created_at', { ascending: false });
       
     if (error) {
       console.error('全局获取学生列表失败:', error);
+      alert('全局数据拉取报错: ' + JSON.stringify(error));
     } else {
+      console.log('原始学生数据:', data);
+      alert('数据库里共有 ' + (data ? data.length : 0) + ' 个学生');
       setStudents(data || []);
     }
     setIsLoading(false);
