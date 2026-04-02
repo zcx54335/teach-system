@@ -137,6 +137,28 @@ const ParentDashboard: React.FC = () => {
           if (data && data.last_deducted_at) {
             setCurrentDate(new Date(data.last_deducted_at));
           }
+          
+          // 强制同步显示，绕过 React 渲染可能带来的延迟
+          setTimeout(() => {
+            const nameEl = document.getElementById('student-name');
+            if (nameEl) nameEl.innerText = data.name || '学员';
+            
+            const gradeEl = document.getElementById('student-grade');
+            if (gradeEl) gradeEl.innerText = data.grade || '未分配年级';
+            
+            const remainingEl = document.getElementById('student-remaining');
+            if (remainingEl) remainingEl.innerText = String(data.remaining_classes ?? 0);
+            
+            const usedEl = document.getElementById('student-used');
+            if (usedEl) usedEl.innerText = String((data.total_classes ?? 0) - (data.remaining_classes ?? 0));
+
+            // 更新雷达图数据 (强制重绘)
+            const radarContainer = document.getElementById('radar-container');
+            if (radarContainer) {
+              radarContainer.style.opacity = '0.99';
+              setTimeout(() => radarContainer.style.opacity = '1', 50);
+            }
+          }, 0);
         } else {
           console.error("获取学生数据失败:", error);
           setFetchError(error ? error.message : "未知错误");
@@ -352,38 +374,8 @@ const ParentDashboard: React.FC = () => {
     );
   }
 
-  if (isLoading) {
-    return (
-      <div className="min-h-[100dvh] bg-slate-950 flex flex-col items-center justify-center space-y-4 relative">
-        <div className="w-12 h-12 border-4 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin"></div>
-        <p className="text-cyan-400 font-mono text-sm tracking-widest animate-pulse">Aalon 导师正在加载报告...</p>
-      </div>
-    );
-  }
-
-  if (!student) {
-    return (
-      <div className="min-h-[100dvh] bg-slate-950 flex flex-col items-center justify-center p-6 text-center relative">
-        <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(239,68,68,0.2)]">
-          <AlertCircle className="w-8 h-8 text-red-500" />
-        </div>
-        <h2 className="text-xl font-bold text-white tracking-widest mb-2">未找到学生信息</h2>
-        <p className="text-sm text-gray-400 font-light tracking-wider mb-6">请扫描正确的专属二维码，或联系 Aalon 老师获取最新链接。</p>
-        
-        {/* 报错详情展示区域 (保留以便后续排查错误，但去掉了顶部的红条) */}
-        {fetchError && (
-          <div className="w-full max-w-sm bg-red-500/5 border border-red-500/20 rounded-xl p-4 text-left">
-            <p className="text-xs font-mono text-red-400/80 mb-1">System Error Log:</p>
-            <p className="text-xs font-mono text-red-400 break-words">{fetchError}</p>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // 计算雷达图数据
+  // 计算雷达图数据 (给一个默认的空学员数据保底)
   const radarData = useMemo(() => {
-    if (!student) return [];
     return [
       { subject: '计算力', A: (student && student.calc_score) ? student.calc_score : 3, fullMark: 5 },
       { subject: '逻辑推理', A: (student && student.logic_score) ? student.logic_score : 3, fullMark: 5 },
@@ -496,12 +488,12 @@ const ParentDashboard: React.FC = () => {
         
         <div className="relative z-10 flex flex-col items-center">
           {/* 纯白高对比核心标题 */}
-          <h1 className="text-4xl font-black tracking-widest text-white mb-3">
+          <h1 id="student-name" className="text-4xl font-black tracking-widest text-white mb-3">
             {student?.name || '学员'}
           </h1>
           <div className="px-4 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
-            <span className="text-xs font-medium tracking-widest text-gray-300">
-              {student?.grade || '未知年级'}
+            <span id="student-grade" className="text-xs font-medium tracking-widest text-gray-300">
+              {student?.grade || '未分配年级'}
             </span>
           </div>
 
@@ -510,14 +502,14 @@ const ParentDashboard: React.FC = () => {
               REMAINING CLASSES
             </p>
             {/* 巨大且高亮的剩余课时数字，使用 Cyan 强调色和发光阴影 */}
-            <div className="text-8xl font-light tracking-tighter text-cyan-400 drop-shadow-[0_0_20px_rgba(34,211,238,0.4)]">
-              {student?.remaining_classes ?? 0}
+            <div id="student-remaining" className="text-8xl font-light tracking-tighter text-cyan-400 drop-shadow-[0_0_20px_rgba(34,211,238,0.4)]">
+              {student?.remaining_classes ?? '--'}
             </div>
           </div>
 
           <div className="flex items-center space-x-2 text-sm text-gray-300 font-light tracking-wider bg-white/5 border border-white/10 px-6 py-2 rounded-2xl backdrop-blur-md shadow-lg mb-8">
             <BookOpen className="w-4 h-4 text-cyan-400" />
-            <span>累计已上：<strong className="text-white font-medium">{(student?.total_classes ?? 0) - (student?.remaining_classes ?? 0)}</strong> 课时</span>
+            <span>累计已上：<strong id="student-used" className="text-white font-medium">{(student?.total_classes ?? 0) - (student?.remaining_classes ?? 0)}</strong> 课时</span>
           </div>
 
           {/* 新增：学情日历总览 (Calendar Overview) */}
@@ -599,11 +591,11 @@ const ParentDashboard: React.FC = () => {
           <div className="w-8 h-px bg-cyan-500/50"></div>
         </div>
 
-        <div className="w-full max-w-sm bg-white/5 backdrop-blur-xl border border-stem-orange/50 rounded-3xl p-6 shadow-[0_0_40px_rgba(255,107,0,0.15)] relative overflow-hidden">
+        <div id="radar-container" className="w-full max-w-sm bg-white/5 backdrop-blur-xl border border-stem-orange/50 rounded-3xl p-6 shadow-[0_0_40px_rgba(255,107,0,0.15)] relative overflow-hidden transition-opacity duration-300">
           <div className="absolute top-0 right-0 w-32 h-32 bg-stem-orange/10 rounded-full blur-[60px] pointer-events-none"></div>
           <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-[60px] pointer-events-none"></div>
           
-          <div className="h-64 w-full flex flex-col justify-center items-center">
+          <div className="h-[300px] min-h-[300px] w-full flex flex-col justify-center items-center">
             {/* 静态无动画雷达图 */}
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
