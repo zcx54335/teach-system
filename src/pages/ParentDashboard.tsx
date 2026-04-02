@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Phone, Quote, CalendarCheck, BookOpen, Camera, CheckCircle2, FileText, Image as ImageIcon, ChevronLeft, ChevronRight, Plus, AlertCircle, XCircle, ArrowDown, Hexagon } from "lucide-react";
+import { Phone, Quote, CalendarCheck, BookOpen, Camera, CheckCircle2, FileText, Image as ImageIcon, ChevronLeft, ChevronRight, Plus, AlertCircle, XCircle, ArrowDown, Hexagon, Download } from "lucide-react";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 import { supabase } from '../lib/supabaseClient';
+import html2canvas from 'html2canvas';
 
 // 定义 ClassRecord 接口
 interface ClassRecord {
@@ -94,15 +95,20 @@ const ParentDashboard: React.FC = () => {
     touchStartY.current = null;
   };
 
-  // 显示 Toast 的辅助函数
-  const showToast = (message: string) => {
-    setToast(message);
-    setTimeout(() => setToast(null), 3000);
+  // 渲染极简 Toast
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2500);
   };
 
   // 日历真实状态管理：默认显示当前月
   const [currentDate, setCurrentDate] = useState(new Date()); 
   const [hasStarted, setHasStarted] = useState(false); // 新增：是否点击了查看报告
+
+  // 海报生成状态
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [posterModal, setPosterModal] = useState<{isOpen: boolean, imageUrl: string | null}>({isOpen: false, imageUrl: null});
+  const posterRef = useRef<HTMLDivElement>(null);
 
   const fetchStudentData = async () => {
     try {
@@ -202,7 +208,7 @@ const ParentDashboard: React.FC = () => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           // 只把 activeSection 设置为这四个实际的卡片
-          if (['section-hero', 'section-radar', 'section-timeline', 'section-contact'].includes(entry.target.id)) {
+          if (['section-hero', 'section-calendar', 'section-timeline', 'section-contact'].includes(entry.target.id)) {
             setActiveSection(entry.target.id);
           }
         }
@@ -210,7 +216,7 @@ const ParentDashboard: React.FC = () => {
     }, { threshold: 0.5 }); // 元素有一半进入视野时触发
 
     // 观察所有的 Section
-    const sectionIds = ['section-hero', 'section-radar', 'section-timeline', 'section-contact'];
+    const sectionIds = ['section-hero', 'section-calendar', 'section-timeline', 'section-contact'];
     sectionIds.forEach(id => {
       const el = document.getElementById(id);
       if (el) observerRef.current?.observe(el);
@@ -340,6 +346,38 @@ const ParentDashboard: React.FC = () => {
     }
   };
 
+  // 海报生成逻辑
+  const generatePoster = async () => {
+    if (!student || !student.id) {
+      showToast("学生信息缺失，无法生成专属海报");
+      return;
+    }
+
+    setPosterModal({ isOpen: true, imageUrl: null });
+    setIsGenerating(true);
+    
+    setTimeout(async () => {
+      if (posterRef.current) {
+        try {
+          const canvas = await html2canvas(posterRef.current, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: '#020617', // 与背景色保持一致
+            logging: false,
+          });
+          const imgUrl = canvas.toDataURL('image/png');
+          setPosterModal(prev => ({ ...prev, imageUrl: imgUrl }));
+        } catch (error) {
+          console.error("生成海报失败:", error);
+          showToast("海报生成失败，请重试");
+          setPosterModal({ isOpen: false, imageUrl: null });
+        } finally {
+          setIsGenerating(false);
+        }
+      }
+    }, 500); // 延迟等待图表渲染
+  };
+
   // 点击日历日期，平滑滚动到对应的时间轴卡片
   const scrollToClass = (year: number, month: number, day: number) => {
     // 构造标准的 YYYY-MM-DD 字符串，用于比对
@@ -414,7 +452,7 @@ const ParentDashboard: React.FC = () => {
   // 自定义雷达图刻度样式，将标签向外推移以防止重叠
   const renderPolarAngleAxis = ({ payload, x, y, cx, cy, ...rest }: any) => {
     // 计算标签的外移偏移量
-    const offset = 20; // 外移像素
+    const offset = 25; // 外移像素 (加大距离，更加舒展)
     // 利用当前点到中心的距离计算出单位向量，然后延长
     const dx = x - cx;
     const dy = y - cy;
@@ -460,9 +498,9 @@ const ParentDashboard: React.FC = () => {
       {/* 侧边小圆点导航 */}
       <div className="fixed right-4 top-1/2 -translate-y-1/2 z-50 flex flex-col space-y-4">
         {[
-          { id: 'section-hero', title: '今日战报' },
-          { id: 'section-radar', title: '能力评估' },
-          { id: 'section-timeline', title: '历史轨迹' },
+          { id: 'section-hero', title: '能力评估' },
+          { id: 'section-calendar', title: '课程概览' },
+          { id: 'section-timeline', title: '成长轨迹' },
           { id: 'section-contact', title: '专属导师' }
         ].map((item) => (
           <button
@@ -524,28 +562,66 @@ const ParentDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* 顶部学情看板 (Hero Section) */}
-      <header id="section-hero" className="snap-start min-h-[100dvh] relative pt-16 pb-12 px-6 flex flex-col items-center justify-center border-b border-white/5 bg-gradient-to-b from-white/[0.02] to-transparent will-change-transform">
-        {/* 科技感 Cyan 光晕背景 */}
+      {/* 首屏：核心雷达图与学员信息 (Hero & Radar) */}
+      <header id="section-hero" className="snap-start min-h-[100dvh] relative pt-12 pb-8 px-6 flex flex-col items-center justify-center border-b border-white/5 bg-gradient-to-b from-white/[0.02] to-transparent will-change-transform">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-cyan-500/10 rounded-full blur-[80px] pointer-events-none"></div>
         
-        <div className="relative z-10 flex flex-col items-center">
-          {/* 纯白高对比核心标题 - 使用更现代的 inter 字体 */}
-          <h1 id="student-name" className="text-4xl font-black tracking-widest text-white mb-3 font-inter text-center">
+        <div className="relative z-10 flex flex-col items-center w-full max-w-sm">
+          <h1 id="student-name" className="text-4xl font-black tracking-widest text-white mb-3 font-inter text-center drop-shadow-md">
             {student?.name || '学员'}
           </h1>
-          <div className="px-4 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md flex items-center justify-center">
-            <span id="student-grade" className="text-xs font-medium tracking-widest text-gray-300 text-center">
+          <div className="px-4 py-1 mb-8 rounded-full bg-white/5 border border-cyan-500/30 backdrop-blur-md flex items-center justify-center shadow-[0_0_15px_rgba(34,211,238,0.2)]">
+            <span id="student-grade" className="text-xs font-medium tracking-widest text-cyan-100 text-center">
               {student?.grade || '未分配年级'}
             </span>
           </div>
 
-          <div className="mt-8 mb-4 text-center">
+          <div id="radar-container" className="w-full bg-white/5 backdrop-blur-xl border border-stem-orange/50 rounded-3xl p-6 shadow-[0_0_40px_rgba(255,107,0,0.15)] relative overflow-hidden transition-opacity duration-300">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-stem-orange/10 rounded-full blur-[60px] pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-[60px] pointer-events-none"></div>
+            
+            <div className="h-[280px] min-h-[280px] w-full flex flex-col justify-center items-center">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart cx="50%" cy="50%" outerRadius="60%" data={radarData}>
+                  <PolarGrid gridType="polygon" stroke="rgba(255,255,255,0.1)" />
+                  <PolarAngleAxis 
+                    dataKey="subject" 
+                    tick={renderPolarAngleAxis} 
+                  />
+                  <PolarRadiusAxis angle={30} domain={[0, 5]} tick={false} axisLine={false} />
+                  <Radar
+                    name="Ability"
+                    dataKey="A"
+                    stroke="#ff6b00"
+                    strokeWidth={2}
+                    fill="#ff6b00"
+                    fillOpacity={0.3}
+                    isAnimationActive={false}
+                    label={{ fill: '#ff6b00', fontSize: 10, fontWeight: 'bold', position: 'top' }}
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* 中段：教学日历 (Calendar) */}
+      <section id="section-calendar" className="snap-start min-h-[100dvh] relative pt-12 pb-8 px-6 flex flex-col items-center justify-center border-b border-white/5 will-change-transform">
+        <div className="relative z-10 flex flex-col items-center w-full max-w-sm">
+          <div className="mb-6 flex items-center space-x-3">
+            <div className="w-8 h-px bg-cyan-500/50"></div>
+            <h2 className="text-sm font-medium tracking-[0.2em] text-gray-300 uppercase font-inter">
+              课程概览
+            </h2>
+            <div className="w-8 h-px bg-cyan-500/50"></div>
+          </div>
+
+          <div className="mb-6 text-center">
             <p className="text-[10px] text-cyan-200/60 font-extralight tracking-[0.5em] uppercase mb-2 font-inter">
               REMAINING CLASSES
             </p>
-            {/* 巨大且高亮的剩余课时数字，使用 Cyan 强调色和发光阴影 */}
-            <div id="student-remaining" className="text-8xl font-light tracking-tighter text-cyan-400 drop-shadow-[0_0_20px_rgba(34,211,238,0.4)]">
+            <div id="student-remaining" className="text-7xl font-light tracking-tighter text-cyan-400 drop-shadow-[0_0_20px_rgba(34,211,238,0.4)]">
               {student?.remaining_classes ?? '--'}
             </div>
           </div>
@@ -555,9 +631,7 @@ const ParentDashboard: React.FC = () => {
             <span>累计已上：<strong id="student-used" className="text-white font-medium">{(student?.total_classes ?? 0) - (student?.remaining_classes ?? 0)}</strong> 课时</span>
           </div>
 
-          {/* 新增：学情日历总览 (Calendar Overview) */}
-          <div className="w-full max-w-sm bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl">
-            {/* 日历头部 */}
+          <div className="w-full bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl">
             <div className="flex items-center justify-between mb-6">
               <button 
                 onClick={handlePrevMonth}
@@ -619,56 +693,6 @@ const ParentDashboard: React.FC = () => {
                   </div>
                 );
               })}
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* 新增：数学能力评估 (Radar Chart) */}
-      <section id="section-radar" className="snap-start min-h-[100dvh] relative px-6 flex flex-col items-center justify-center will-change-transform">
-        <div className="mb-10 flex items-center space-x-3">
-          <div className="w-8 h-px bg-cyan-500/50"></div>
-          <h2 className="text-sm font-medium tracking-[0.2em] text-gray-300 uppercase">
-            综合能力评估
-          </h2>
-          <div className="w-8 h-px bg-cyan-500/50"></div>
-        </div>
-
-        <div id="radar-container" className="w-full max-w-sm bg-white/5 backdrop-blur-xl border border-stem-orange/50 rounded-3xl p-6 shadow-[0_0_40px_rgba(255,107,0,0.15)] relative overflow-hidden transition-opacity duration-300">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-stem-orange/10 rounded-full blur-[60px] pointer-events-none"></div>
-          <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-[60px] pointer-events-none"></div>
-          
-          <div className="h-[320px] min-h-[320px] w-full flex flex-col justify-center items-center">
-            {/* 静态无动画雷达图 */}
-            <ResponsiveContainer width="100%" height="100%">
-              <RadarChart cx="50%" cy="50%" outerRadius="65%" data={radarData}>
-                <PolarGrid gridType="polygon" stroke="rgba(255,255,255,0.1)" />
-                <PolarAngleAxis 
-                  dataKey="subject" 
-                  tick={renderPolarAngleAxis} 
-                />
-                <PolarRadiusAxis angle={30} domain={[0, 5]} tick={false} axisLine={false} />
-                <Radar
-                  name="Ability"
-                  dataKey="A"
-                  stroke="#ff6b00"
-                  strokeWidth={2}
-                  fill="#ff6b00"
-                  fillOpacity={0.3}
-                  isAnimationActive={false}
-                />
-              </RadarChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div className="mt-4 flex justify-center space-x-4">
-            <div className="flex items-center space-x-1.5">
-              <div className="w-2 h-2 rounded-full bg-stem-orange"></div>
-              <span className="text-[10px] font-mono text-gray-400">当前能力值</span>
-            </div>
-            <div className="flex items-center space-x-1.5">
-              <div className="w-2 h-2 rounded-full bg-gray-600 border border-gray-500"></div>
-              <span className="text-[10px] font-mono text-gray-400">满分基准(5)</span>
             </div>
           </div>
         </div>
@@ -836,9 +860,10 @@ const ParentDashboard: React.FC = () => {
             <div className="flex flex-col items-center space-y-2 shrink-0">
               <div className="w-20 h-20 bg-white p-1.5 rounded-xl shadow-inner">
                 <img 
-                  src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=PlaceholderQR" 
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`https://xiongxiong.top/#/parent?id=${student?.id || ''}`)}&format=png`}
                   alt="微信咨询" 
                   className="w-full h-full object-contain"
+                  crossOrigin="anonymous"
                 />
               </div>
               <span className="text-[9px] text-gray-400 tracking-widest">
@@ -865,8 +890,116 @@ const ParentDashboard: React.FC = () => {
               </a>
             </div>
           </div>
+          
+          {/* 生成海报按钮 */}
+          <button
+            onClick={generatePoster}
+            disabled={isGenerating}
+            className="mt-6 w-full relative overflow-hidden px-8 py-4 rounded-2xl font-mono text-sm tracking-widest transition-all duration-300 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold shadow-[0_0_30px_rgba(34,211,238,0.3)] hover:shadow-[0_0_40px_rgba(34,211,238,0.5)] active:scale-95 flex items-center justify-center"
+          >
+            {isGenerating ? (
+              <span className="flex items-center">
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                生成中...
+              </span>
+            ) : (
+              <span className="flex items-center">
+                <Download className="w-4 h-4 mr-2" /> 生成精美学情海报
+              </span>
+            )}
+          </button>
         </div>
       </section>
+
+      {/* 隐藏的海报 DOM (仅用于 html2canvas 渲染) */}
+      <div className="absolute top-0 left-[-9999px]">
+        <div 
+          ref={posterRef}
+          className="w-[375px] h-[667px] flex flex-col relative overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, #0f172a 0%, #020617 100%)',
+            fontFamily: 'Inter, sans-serif'
+          }}
+        >
+          {/* 海报背景纹理 */}
+          <div className="absolute inset-0 bg-blueprint bg-blueprint opacity-20 pointer-events-none"></div>
+          <div className="absolute -top-32 -left-32 w-96 h-96 bg-cyan-500/20 rounded-full blur-[100px]"></div>
+          <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-stem-green/10 rounded-full blur-[100px]"></div>
+          
+          {/* 顶部标题区 */}
+          <div className="relative z-10 pt-12 pb-6 px-8 flex flex-col items-center">
+            <h1 className="text-3xl font-black tracking-widest text-white mb-2 drop-shadow-md">
+              {student?.name || '学员'}
+            </h1>
+            <div className="px-4 py-1 rounded-full bg-white/5 border border-cyan-500/30 backdrop-blur-md">
+              <span className="text-[10px] font-medium tracking-widest text-cyan-100">
+                {student?.grade || '未分配年级'}
+              </span>
+            </div>
+          </div>
+
+          {/* 中部雷达图区 */}
+          <div className="relative z-10 flex-1 w-full flex flex-col items-center justify-center px-4">
+            <div className="w-full h-[280px] bg-white/5 backdrop-blur-md border border-stem-orange/30 rounded-3xl p-4 shadow-[0_0_30px_rgba(255,107,0,0.1)] relative">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-stem-orange/10 rounded-full blur-[40px]"></div>
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart cx="50%" cy="50%" outerRadius="60%" data={radarData}>
+                  <PolarGrid gridType="polygon" stroke="rgba(255,255,255,0.15)" />
+                  <PolarAngleAxis dataKey="subject" tick={renderPolarAngleAxis} />
+                  <PolarRadiusAxis angle={30} domain={[0, 5]} tick={false} axisLine={false} />
+                  <Radar name="Ability" dataKey="A" stroke="#ff6b00" strokeWidth={2} fill="#ff6b00" fillOpacity={0.4} isAnimationActive={false} label={{ fill: '#ff6b00', fontSize: 10, fontWeight: 'bold', position: 'top' }} />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* 底部导师名片区 */}
+          <div className="relative z-10 pb-10 px-8 flex items-center justify-between mt-6">
+            <div className="flex flex-col justify-center">
+              <p className="text-xs font-bold tracking-widest text-cyan-400 mb-1">Aalon 专属导师</p>
+              <p className="text-[10px] font-mono text-gray-400">数学逻辑与 STEM 实践</p>
+              <p className="text-[9px] text-gray-500 mt-2">扫码查看详细学情报告</p>
+            </div>
+            <div className="w-16 h-16 bg-white p-1 rounded-xl shadow-[0_0_20px_rgba(255,255,255,0.1)] shrink-0">
+              <img 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`https://xiongxiong.top/#/parent?id=${student?.id || ''}`)}&format=png`}
+                alt="专属学情二维码" 
+                className="w-full h-full object-contain"
+                crossOrigin="anonymous"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 海报预览弹窗 */}
+      {posterModal.isOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/90 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="relative w-full max-w-[320px] flex flex-col items-center">
+            {/* 关闭按钮 */}
+            <button 
+              onClick={() => setPosterModal({ isOpen: false, imageUrl: null })}
+              className="absolute -top-12 right-0 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
+            >
+              <XCircle className="w-6 h-6" />
+            </button>
+            
+            {/* 海报图片 */}
+            <div className="w-full aspect-[9/16] rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(34,211,238,0.2)] bg-slate-900 border border-white/10">
+              {posterModal.imageUrl ? (
+                <img src={posterModal.imageUrl} alt="专属海报" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center space-y-4">
+                  <div className="w-8 h-8 border-4 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin"></div>
+                  <span className="text-xs font-mono text-cyan-400 tracking-widest animate-pulse">GENERATING...</span>
+                </div>
+              )}
+            </div>
+            
+            <p className="mt-6 text-sm text-gray-400 tracking-widest font-light">长按图片保存，分享朋友圈</p>
+          </div>
+        </div>
+      )}
 
       {/* 底部缓冲加载 (Pull to Next) */}
       <div id="section-buffer" className="snap-end h-40 w-full flex flex-col items-center justify-center bg-gradient-to-t from-black/50 to-transparent">
