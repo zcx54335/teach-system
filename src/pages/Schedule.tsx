@@ -811,7 +811,7 @@ ${tagsStr}
               </div>
               <div className="w-20 h-20 bg-white p-1.5 rounded-xl flex items-center justify-center relative">
                 <img 
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`https://xiongxiong.top/parent?id=${posterModal.student.id}`)}&format=png`}
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`https://xiongxiong.top/#/parent?id=${posterModal.student.id}`)}&format=png`}
                   alt="专属学情看板" 
                   className="w-full h-full object-contain"
                   crossOrigin="anonymous"

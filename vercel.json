@@ -7,10 +7,6 @@
     {
       "source": "/supabase-api/storage/v1/:path*",
       "destination": "https://xnvqqddrnaynucvatvoq.supabase.co/storage/v1/:path*"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
     }
   ]
 }
