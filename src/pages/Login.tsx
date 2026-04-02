@@ -44,7 +44,13 @@ const Login: React.FC = () => {
 
     try {
       // 如果是家长，将手机号伪装成内部邮箱进行验证
-      const email = loginType === 'parent' ? `${identifier}@student.yang.com` : identifier;
+      // 如果是老师（并且输入的是纯数字手机号），我们将它包装为后台设置的管理员专用邮箱
+      let email = identifier;
+      if (loginType === 'parent') {
+        email = `${identifier}@student.yang.com`;
+      } else if (loginType === 'admin' && /^\d{11}$/.test(identifier)) {
+        email = `${identifier}@admin.yang.com`; // SQL 中预设的管理员邮箱
+      }
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -88,7 +94,7 @@ const Login: React.FC = () => {
             {loginType === 'admin' ? <Lock className="w-10 h-10 text-white/80" /> : <Users className="w-10 h-10 text-white/80" />}
           </div>
           <h1 className="text-4xl font-light tracking-[0.3em] mb-2 drop-shadow-md">
-            小鱼
+            小鱼理科逻辑
           </h1>
           <p className="text-[10px] font-mono tracking-[0.4em] text-gray-500 uppercase">
             {loginType === 'admin' ? '系统入口' : '家长门户'}
@@ -132,7 +138,7 @@ const Login: React.FC = () => {
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-white/30 focus:bg-black/80 transition-all font-mono"
-                placeholder={loginType === 'admin' ? '导师邮箱' : '13800138000'}
+                placeholder={loginType === 'admin' ? '导师邮箱或手机号' : '13800138000'}
                 required
               />
             </div>

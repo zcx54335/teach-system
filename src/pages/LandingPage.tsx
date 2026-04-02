@@ -29,7 +29,7 @@ const LandingPage: React.FC = () => {
             <Hexagon className="w-6 h-6 text-white" />
           </div>
           <span className="text-xl font-black tracking-widest text-white drop-shadow-md">
-            {isLoggedIn ? '杨老师 · 控制台' : 'XY'}
+            {isLoggedIn ? '小鱼 · 杨老师控制台' : '小鱼理科逻辑'}
           </span>
         </div>
       </header>
@@ -59,7 +59,7 @@ const LandingPage: React.FC = () => {
         >
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
           <span className="relative z-10 text-lg font-bold tracking-widest text-white">
-            {isLoggedIn ? '杨老师 · 管理控制台' : '导师/家长登录'}
+            {isLoggedIn ? '杨老师 · 管理控制台' : '进入管理系统'}
           </span>
         </button>
 

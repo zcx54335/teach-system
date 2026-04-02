@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { GripVertical, ChevronDown } from "lucide-react";
 import { motion, useMotionValue, useTransform } from "framer-motion";
 import { PageProps } from "../components/Layout/RollerNavigation";
+import { supabase } from '../lib/supabaseClient';
 
 // 滑动对比组件 (ImageSlider)
 const ImageSlider: React.FC = () => {
@@ -91,6 +92,18 @@ const ImageSlider: React.FC = () => {
 };
 
 const Home: React.FC<PageProps> = ({ localProgress }) => {
+  const [studentCount, setStudentCount] = useState(0);
+
+  useEffect(() => {
+    const fetchStudentCount = async () => {
+      const { count } = await supabase
+        .from('students')
+        .select('*', { count: 'exact', head: true });
+      setStudentCount(count || 0);
+    };
+    fetchStudentCount();
+  }, []);
+
   // Provide a fallback progress value if not wrapped in RollerNavigation
   const defaultProgress = useMotionValue(0);
   const progress = localProgress || defaultProgress;
@@ -122,7 +135,7 @@ const Home: React.FC<PageProps> = ({ localProgress }) => {
         >
           <div className="space-y-2">
             <h1 className="text-5xl font-black tracking-tight text-white leading-none">
-              杨老师 · 控制台
+              小鱼 · 杨老师控制台
             </h1>
             <h2 className="text-3xl font-bold tracking-tight text-white/90">
               数据中心 · 课时管理
@@ -131,8 +144,8 @@ const Home: React.FC<PageProps> = ({ localProgress }) => {
 
           <div className="w-12 h-0.5 bg-white/30"></div>
 
-          <p className="text-xs font-light text-gray-400 tracking-[0.2em] leading-relaxed">
-            欢迎回来，滑动以管理您的所有学员数据
+          <p className="text-sm font-medium text-cyan-400 tracking-[0.2em] leading-relaxed">
+            欢迎回来，杨老师。当前共有 <span className="text-white text-lg font-bold mx-1">{studentCount}</span> 名学生。
           </p>
           
           {/* 极简向下引导 */}
