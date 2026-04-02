@@ -106,43 +106,51 @@ const ParentDashboard: React.FC = () => {
   useEffect(() => {
     const fetchStudentData = async () => {
       setIsLoading(true);
-      // 解析 URL 中的 id 参数
-      const studentId = searchParams.get("id");
-      
-      console.log('正在获取学生ID:', studentId);
-      
-      if (studentId) {
-        // 使用 Supabase 获取学生及历史课程记录
-        const { data, error } = await supabase
-          .from('students')
-          .select('*, class_records(*)')
-          .eq('id', studentId)
-          .single();
-          
-        if (data && !error) {
-          // 对关联查询回来的 class_records 做按日期倒序排序
-          if (data.class_records) {
-            data.class_records.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
-            if (data.class_records.length > 0) {
-              data.class_records[0].isLatest = true;
+      try {
+        // 解析 URL 中的 id 参数
+        const studentId = searchParams.get("id");
+        
+        console.log('正在获取学生ID:', studentId);
+        
+        if (studentId) {
+          // 使用 Supabase 获取学生及历史课程记录
+          const { data, error } = await supabase
+            .from('students')
+            .select('*, class_records(*)')
+            .eq('id', studentId)
+            .single();
+            
+          if (data && !error) {
+            // 对关联查询回来的 class_records 做按日期倒序排序
+            if (data.class_records) {
+              data.class_records.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+              if (data.class_records.length > 0) {
+                data.class_records[0].isLatest = true;
+              }
             }
-          }
-          setStudent(data);
-          setFetchError(null);
-          
-          // 如果学生有最后上课时间，将日历定位到那个月
-          if (data.last_deducted_at) {
-            setCurrentDate(new Date(data.last_deducted_at));
+            setStudent(data);
+            setFetchError(null);
+            
+            // 如果学生有最后上课时间，将日历定位到那个月
+            if (data.last_deducted_at) {
+              setCurrentDate(new Date(data.last_deducted_at));
+            }
+          } else {
+            console.error("获取学生数据失败:", error);
+            setFetchError(error.message || "未知错误");
+            alert(JSON.stringify(error));
+            showToast("云端同步失败，请检查网络");
           }
         } else {
-          console.error("获取学生数据失败:", error);
-          setFetchError(error.message || "未知错误");
-          showToast("云端同步失败，请检查网络");
+          setFetchError("URL 中未提供有效的学生 ID");
         }
-      } else {
-        setFetchError("URL 中未提供有效的学生 ID");
+      } catch (err: any) {
+        console.error("捕获到异常:", err);
+        setFetchError(err.message || "未知异常");
+        alert(JSON.stringify(err));
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     fetchStudentData();
@@ -389,6 +397,10 @@ const ParentDashboard: React.FC = () => {
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
+      {/* 顶部强制状态条 */}
+      <div className={`fixed top-0 left-0 right-0 z-[100] text-center text-[10px] font-mono py-1 tracking-widest ${fetchError ? 'bg-red-600 text-white' : 'bg-cyan-500/20 text-cyan-400 backdrop-blur-md border-b border-cyan-500/30'}`}>
+        STATUS: {isLoading ? 'LOADING' : (fetchError ? 'ERROR' : 'SUCCESS')} | ID: {searchParams.get("id") || 'NULL'}
+      </div>
       
       {/* 侧边小圆点导航 */}
       <div className="fixed right-4 top-1/2 -translate-y-1/2 z-50 flex flex-col space-y-4">
