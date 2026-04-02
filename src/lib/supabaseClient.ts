@@ -19,8 +19,11 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
   },
   global: {
+    headers: {
+      apikey: supabaseAnonKey,
+      Authorization: `Bearer ${supabaseAnonKey}`,
+    },
     // 覆盖默认的请求 fetch，以便在请求 Storage 等其他非 /rest 路径时也能正确映射
-    // 注意：这里的简单替换适用于 /rest/v1 的默认请求。如果是 storage，Vercel Rewrite 已配置 /supabase-storage
     fetch: (url, options) => {
       let finalUrl = url.toString();
       if (isProd && typeof window !== 'undefined') {
