@@ -29,7 +29,7 @@ const LandingPage: React.FC = () => {
             <Hexagon className="w-6 h-6 text-white" />
           </div>
           <span className="text-xl font-black tracking-widest text-white drop-shadow-md">
-            {isLoggedIn ? '小鱼 · 杨老师控制台' : '小鱼理科逻辑'}
+            {isLoggedIn ? '小鱼 · 杨老师控制台' : '小鱼思维'}
           </span>
         </div>
       </header>

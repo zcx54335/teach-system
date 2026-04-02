@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
-import { Lock, LogIn, AlertCircle, Users } from 'lucide-react';
+import { Lock, LogIn, AlertCircle, Users, CheckCircle2 } from 'lucide-react';
 
 const Login: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -11,9 +11,19 @@ const Login: React.FC = () => {
   const [loginType, setLoginType] = useState<'admin' | 'parent'>(initialType);
   const [identifier, setIdentifier] = useState(''); // 邮箱 或 手机号
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  // 初始化记住账号
+  useEffect(() => {
+    const savedIdentifier = localStorage.getItem('rememberedIdentifier');
+    if (savedIdentifier) {
+      setIdentifier(savedIdentifier);
+      setRememberMe(true);
+    }
+  }, []);
 
   // 检查是否已经登录
   useEffect(() => {
@@ -58,8 +68,15 @@ const Login: React.FC = () => {
       });
 
       if (error) {
-        setError(loginType === 'parent' ? '登录失败：手机号或密码错误' : '登录失败：账号或密码错误');
+        setError('账号或密码错误，请重试');
       } else if (data.session) {
+        // 处理记住账号
+        if (rememberMe) {
+          localStorage.setItem('rememberedIdentifier', identifier);
+        } else {
+          localStorage.removeItem('rememberedIdentifier');
+        }
+
         // 登录成功后，根据 profiles 表中的角色进行跳转
         const { data: profile } = await supabase
           .from('profiles')
@@ -94,7 +111,7 @@ const Login: React.FC = () => {
             {loginType === 'admin' ? <Lock className="w-10 h-10 text-white/80" /> : <Users className="w-10 h-10 text-white/80" />}
           </div>
           <h1 className="text-4xl font-light tracking-[0.3em] mb-2 drop-shadow-md">
-            小鱼理科逻辑
+            小鱼思维
           </h1>
           <p className="text-[10px] font-mono tracking-[0.4em] text-gray-500 uppercase">
             {loginType === 'admin' ? '系统入口' : '家长门户'}
@@ -134,7 +151,7 @@ const Login: React.FC = () => {
                 账号/手机号
               </label>
               <input
-                type={loginType === 'admin' ? 'email' : 'tel'}
+                type={loginType === 'admin' ? 'text' : 'tel'}
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-white/30 focus:bg-black/80 transition-all font-mono"
@@ -155,6 +172,26 @@ const Login: React.FC = () => {
                 placeholder="••••••••"
                 required
               />
+            </div>
+
+            {/* 记住我 */}
+            <div className="flex items-center justify-between">
+              <label className="flex items-center space-x-2 cursor-pointer group">
+                <div className="relative w-4 h-4">
+                  <input 
+                    type="checkbox" 
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="peer absolute opacity-0 w-0 h-0"
+                  />
+                  <div className="w-4 h-4 border border-white/20 rounded bg-white/5 flex items-center justify-center peer-checked:bg-cyan-500 peer-checked:border-cyan-500 transition-colors group-hover:border-white/40">
+                    {rememberMe && <CheckCircle2 className="w-3 h-3 text-white" />}
+                  </div>
+                </div>
+                <span className="text-[10px] font-mono text-gray-400 group-hover:text-gray-300 transition-colors tracking-widest">
+                  记住账号
+                </span>
+              </label>
             </div>
 
             <button
