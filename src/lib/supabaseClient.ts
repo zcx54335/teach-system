@@ -9,9 +9,15 @@ if (!rawSupabaseUrl || !supabaseAnonKey) {
 
 // 生产环境走 Vercel Rewrite 代理加速，开发环境直连
 const isProd = import.meta.env.PROD;
-const supabaseUrl = isProd && typeof window !== 'undefined' 
-  ? `${window.location.origin}/supabase-api` 
-  : rawSupabaseUrl;
+const getProductionUrl = () => {
+  if (typeof window !== 'undefined' && window.location.origin) {
+    return `${window.location.origin}/supabase-api`;
+  }
+  // 生产环境兜底
+  return 'https://xiongxiong.top/supabase-api';
+};
+
+const supabaseUrl = isProd ? getProductionUrl() : rawSupabaseUrl;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {

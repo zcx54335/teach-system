@@ -104,6 +104,10 @@ const ParentDashboard: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date()); 
 
   useEffect(() => {
+    // 强制弹窗诊断
+    const paramId = new URLSearchParams(window.location.search).get('id');
+    alert('捕获到ID: ' + paramId);
+
     const fetchStudentData = async () => {
       setIsLoading(true);
       try {
@@ -329,7 +333,11 @@ const ParentDashboard: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-[100dvh] bg-slate-950 flex flex-col items-center justify-center space-y-4">
+      <div className="min-h-[100dvh] bg-slate-950 flex flex-col items-center justify-center space-y-4 relative">
+        {/* 顶部强制状态条 (Loading状态) */}
+        <div className="fixed top-0 left-0 right-0 z-[100] text-center text-[10px] font-mono py-1 tracking-widest bg-cyan-500/20 text-cyan-400 backdrop-blur-md border-b border-cyan-500/30">
+          STATUS: LOADING | ID: {searchParams.get("id") || 'NULL'}
+        </div>
         <div className="w-12 h-12 border-4 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin"></div>
         <p className="text-cyan-400 font-mono text-sm tracking-widest animate-pulse">Aalon 导师正在加载报告...</p>
       </div>
@@ -338,7 +346,11 @@ const ParentDashboard: React.FC = () => {
 
   if (!student) {
     return (
-      <div className="min-h-[100dvh] bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-[100dvh] bg-slate-950 flex flex-col items-center justify-center p-6 text-center relative">
+        {/* 顶部强制状态条 (Error状态) */}
+        <div className="fixed top-0 left-0 right-0 z-[100] text-center text-[10px] font-mono py-1 tracking-widest bg-red-600 text-white backdrop-blur-md border-b border-red-500/50">
+          STATUS: ERROR | ID: {searchParams.get("id") || 'NULL'}
+        </div>
         <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(239,68,68,0.2)]">
           <AlertCircle className="w-8 h-8 text-red-500" />
         </div>
@@ -360,11 +372,11 @@ const ParentDashboard: React.FC = () => {
   const radarData = useMemo(() => {
     if (!student) return [];
     return [
-      { subject: '计算力', A: student.calc_score || 3, fullMark: 5 },
-      { subject: '逻辑推理', A: student.logic_score || 3, fullMark: 5 },
-      { subject: '空间想象', A: student.spatial_score || 3, fullMark: 5 },
-      { subject: '应用意识', A: student.app_score || 3, fullMark: 5 },
-      { subject: '数据分析', A: student.data_score || 3, fullMark: 5 },
+      { subject: '计算力', A: student?.calc_score ?? 3, fullMark: 5 },
+      { subject: '逻辑推理', A: student?.logic_score ?? 3, fullMark: 5 },
+      { subject: '空间想象', A: student?.spatial_score ?? 3, fullMark: 5 },
+      { subject: '应用意识', A: student?.app_score ?? 3, fullMark: 5 },
+      { subject: '数据分析', A: student?.data_score ?? 3, fullMark: 5 },
     ];
   }, [student]);
 
@@ -397,9 +409,9 @@ const ParentDashboard: React.FC = () => {
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* 顶部强制状态条 */}
-      <div className={`fixed top-0 left-0 right-0 z-[100] text-center text-[10px] font-mono py-1 tracking-widest ${fetchError ? 'bg-red-600 text-white' : 'bg-cyan-500/20 text-cyan-400 backdrop-blur-md border-b border-cyan-500/30'}`}>
-        STATUS: {isLoading ? 'LOADING' : (fetchError ? 'ERROR' : 'SUCCESS')} | ID: {searchParams.get("id") || 'NULL'}
+      {/* 顶部强制状态条 (Success状态) */}
+      <div className="fixed top-0 left-0 right-0 z-[100] text-center text-[10px] font-mono py-1 tracking-widest bg-cyan-500/20 text-cyan-400 backdrop-blur-md border-b border-cyan-500/30">
+        STATUS: SUCCESS | ID: {searchParams.get("id") || 'NULL'}
       </div>
       
       {/* 侧边小圆点导航 */}
