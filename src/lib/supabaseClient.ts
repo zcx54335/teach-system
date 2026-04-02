@@ -9,17 +9,11 @@ if (!rawSupabaseUrl || !supabaseAnonKey) {
 
 // 生产环境走 Vercel Rewrite 代理加速，开发环境直连
 const isProd = import.meta.env.PROD;
-const getProductionUrl = () => {
-  if (typeof window !== 'undefined' && window.location.origin) {
-    return `${window.location.origin}/supabase-api`;
-  }
-  // 生产环境兜底
-  return 'https://xiongxiong.top/supabase-api';
-};
 
-// Vercel 代理的地址不能带任何后缀，因为 Vercel 的 rewrite 规则里已经加了 rest/v1
-const cleanRawUrl = rawSupabaseUrl.replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '');
-const supabaseUrl = isProd ? getProductionUrl() : cleanRawUrl;
+// 关键点：生产环境路径要加上 /rest/v1
+const supabaseUrl = isProd 
+  ? `${window.location.origin || 'https://xiongxiong.top'}/supabase-api/rest/v1` 
+  : rawSupabaseUrl;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
@@ -28,8 +22,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
   global: {
     headers: {
-      apikey: supabaseAnonKey,
-      Authorization: `Bearer ${supabaseAnonKey}`,
+      'apikey': supabaseAnonKey,
+      'Authorization': `Bearer ${supabaseAnonKey}`
     }
   }
 });
