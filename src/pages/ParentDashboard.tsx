@@ -365,19 +365,30 @@ const ParentDashboard: React.FC = () => {
     ];
   }, [student]);
 
-  // 自定义雷达图刻度样式
+  // 自定义雷达图刻度样式，将标签向外推移以防止重叠
   const renderPolarAngleAxis = ({ payload, x, y, cx, cy, ...rest }: any) => {
+    // 计算标签的外移偏移量
+    const offset = 20; // 外移像素
+    // 利用当前点到中心的距离计算出单位向量，然后延长
+    const dx = x - cx;
+    const dy = y - cy;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    // 如果由于某种原因 distance 为 0，不进行偏移
+    const nx = distance > 0 ? x + (dx / distance) * offset : x;
+    const ny = distance > 0 ? y + (dy / distance) * offset : y;
+
     return (
       <text
         {...rest}
-        x={x}
-        y={y}
+        x={nx}
+        y={ny}
         cx={cx}
         cy={cy}
         fill="#9ca3af" // text-gray-400
-        fontSize="10px"
+        fontSize="12px" // 稍微放大一点字体使其适中
         fontFamily="monospace"
-        textAnchor={x > cx ? 'start' : x < cx ? 'end' : 'middle'}
+        textAnchor={nx > cx ? 'start' : nx < cx ? 'end' : 'middle'}
       >
         {payload.value}
       </text>
@@ -575,10 +586,10 @@ const ParentDashboard: React.FC = () => {
           <div className="absolute top-0 right-0 w-32 h-32 bg-stem-orange/10 rounded-full blur-[60px] pointer-events-none"></div>
           <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-[60px] pointer-events-none"></div>
           
-          <div className="h-[300px] min-h-[300px] w-full flex flex-col justify-center items-center">
+          <div className="h-[320px] min-h-[320px] w-full flex flex-col justify-center items-center">
             {/* 静态无动画雷达图 */}
             <ResponsiveContainer width="100%" height="100%">
-              <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
+              <RadarChart cx="50%" cy="50%" outerRadius="65%" data={radarData}>
                 <PolarGrid gridType="polygon" stroke="rgba(255,255,255,0.1)" />
                 <PolarAngleAxis 
                   dataKey="subject" 
