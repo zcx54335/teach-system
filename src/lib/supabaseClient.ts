@@ -22,17 +22,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     headers: {
       apikey: supabaseAnonKey,
       Authorization: `Bearer ${supabaseAnonKey}`,
-    },
-    // 覆盖默认的请求 fetch，以便在请求 Storage 等其他非 /rest 路径时也能正确映射
-    fetch: (url, options) => {
-      let finalUrl = url.toString();
-      if (isProd && typeof window !== 'undefined') {
-        // 如果是 Storage 请求
-        if (finalUrl.includes('/storage/v1')) {
-          finalUrl = finalUrl.replace(`${rawSupabaseUrl}/storage/v1`, `${window.location.origin}/supabase-storage`);
-        }
-      }
-      return fetch(finalUrl, options);
     }
   }
 });
