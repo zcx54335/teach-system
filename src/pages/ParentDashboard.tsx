@@ -142,7 +142,7 @@ const ParentDashboard: React.FC = () => {
           } else {
             console.error("获取学生数据失败:", error);
             setFetchError(error.message || "未知错误");
-            alert(JSON.stringify(error));
+            alert('数据库报错内容: ' + JSON.stringify(error));
             showToast("云端同步失败，请检查网络");
           }
         } else {
@@ -151,7 +151,7 @@ const ParentDashboard: React.FC = () => {
       } catch (err: any) {
         console.error("捕获到异常:", err);
         setFetchError(err.message || "未知异常");
-        alert(JSON.stringify(err));
+        alert('数据库报错内容: ' + JSON.stringify(err));
       } finally {
         setIsLoading(false);
       }
