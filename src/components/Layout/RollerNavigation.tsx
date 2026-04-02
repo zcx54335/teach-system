@@ -31,10 +31,8 @@ const RollerNavigation: React.FC = () => {
       
     if (error) {
       console.error('全局获取学生列表失败:', error);
-      alert('全局数据拉取报错: ' + JSON.stringify(error));
     } else {
       console.log('原始学生数据:', data);
-      alert('数据库里共有 ' + (data ? data.length : 0) + ' 个学生');
       setStudents(data || []);
     }
     setIsLoading(false);

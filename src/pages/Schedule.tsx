@@ -747,7 +747,10 @@ ${tagsStr}
         <div className="absolute top-0 left-[-9999px]">
           <div 
             ref={posterRef}
-            className="w-[375px] h-[667px] bg-slate-950 flex flex-col relative overflow-hidden"
+            className="w-[375px] h-[667px] flex flex-col relative overflow-hidden"
+            style={{
+              background: 'linear-gradient(135deg, #0f172a 0%, #020617 100%)', // 深蓝色到黑色的优雅渐变
+            }}
           >
             {/* 海报背景纹理 */}
             <div className="absolute inset-0 bg-blueprint bg-blueprint opacity-20 pointer-events-none"></div>

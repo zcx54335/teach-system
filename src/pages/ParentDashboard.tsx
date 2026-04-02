@@ -104,10 +104,6 @@ const ParentDashboard: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date()); 
 
   useEffect(() => {
-    // 强制弹窗诊断
-    const paramId = new URLSearchParams(window.location.search).get('id');
-    alert('捕获到ID: ' + paramId);
-
     const fetchStudentData = async () => {
       setIsLoading(true);
       try {
@@ -142,7 +138,6 @@ const ParentDashboard: React.FC = () => {
           } else {
             console.error("获取学生数据失败:", error);
             setFetchError(error.message || "未知错误");
-            alert('数据库报错内容: ' + JSON.stringify(error));
             showToast("云端同步失败，请检查网络");
           }
         } else {
@@ -151,7 +146,6 @@ const ParentDashboard: React.FC = () => {
       } catch (err: any) {
         console.error("捕获到异常:", err);
         setFetchError(err.message || "未知异常");
-        alert('数据库报错内容: ' + JSON.stringify(err));
       } finally {
         setIsLoading(false);
       }
@@ -334,10 +328,6 @@ const ParentDashboard: React.FC = () => {
   if (isLoading) {
     return (
       <div className="min-h-[100dvh] bg-slate-950 flex flex-col items-center justify-center space-y-4 relative">
-        {/* 顶部强制状态条 (Loading状态) */}
-        <div className="fixed top-0 left-0 right-0 z-[100] text-center text-[10px] font-mono py-1 tracking-widest bg-cyan-500/20 text-cyan-400 backdrop-blur-md border-b border-cyan-500/30">
-          STATUS: LOADING | ID: {searchParams.get("id") || 'NULL'}
-        </div>
         <div className="w-12 h-12 border-4 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin"></div>
         <p className="text-cyan-400 font-mono text-sm tracking-widest animate-pulse">Aalon 导师正在加载报告...</p>
       </div>
@@ -347,17 +337,13 @@ const ParentDashboard: React.FC = () => {
   if (!student) {
     return (
       <div className="min-h-[100dvh] bg-slate-950 flex flex-col items-center justify-center p-6 text-center relative">
-        {/* 顶部强制状态条 (Error状态) */}
-        <div className="fixed top-0 left-0 right-0 z-[100] text-center text-[10px] font-mono py-1 tracking-widest bg-red-600 text-white backdrop-blur-md border-b border-red-500/50">
-          STATUS: ERROR | ID: {searchParams.get("id") || 'NULL'}
-        </div>
         <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(239,68,68,0.2)]">
           <AlertCircle className="w-8 h-8 text-red-500" />
         </div>
         <h2 className="text-xl font-bold text-white tracking-widest mb-2">未找到学生信息</h2>
         <p className="text-sm text-gray-400 font-light tracking-wider mb-6">请扫描正确的专属二维码，或联系 Aalon 老师获取最新链接。</p>
         
-        {/* 报错详情展示区域 */}
+        {/* 报错详情展示区域 (保留以便后续排查错误，但去掉了顶部的红条) */}
         {fetchError && (
           <div className="w-full max-w-sm bg-red-500/5 border border-red-500/20 rounded-xl p-4 text-left">
             <p className="text-xs font-mono text-red-400/80 mb-1">System Error Log:</p>
@@ -409,11 +395,6 @@ const ParentDashboard: React.FC = () => {
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* 顶部强制状态条 (Success状态) */}
-      <div className="fixed top-0 left-0 right-0 z-[100] text-center text-[10px] font-mono py-1 tracking-widest bg-cyan-500/20 text-cyan-400 backdrop-blur-md border-b border-cyan-500/30">
-        STATUS: SUCCESS | ID: {searchParams.get("id") || 'NULL'}
-      </div>
-      
       {/* 侧边小圆点导航 */}
       <div className="fixed right-4 top-1/2 -translate-y-1/2 z-50 flex flex-col space-y-4">
         {[
