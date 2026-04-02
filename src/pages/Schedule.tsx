@@ -809,11 +809,19 @@ ${tagsStr}
                   扫码查看详细成长轨迹与作业
                 </p>
               </div>
-              <div className="w-20 h-20 bg-white p-1.5 rounded-xl">
+              <div className="w-20 h-20 bg-white p-1.5 rounded-xl flex items-center justify-center relative">
                 <img 
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`https://xiongxiong.top/parent?id=${posterModal.student.id}`)}`}
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`https://xiongxiong.top/parent?id=${posterModal.student.id}`)}&format=png`}
                   alt="专属学情看板" 
                   className="w-full h-full object-contain"
+                  crossOrigin="anonymous"
+                  onError={(e) => {
+                    // 如果外部 QR Code 挂了，显示一个后备文字防止白屏或报错
+                    e.currentTarget.style.display = 'none';
+                    if (e.currentTarget.parentElement) {
+                      e.currentTarget.parentElement.innerHTML = '<span class="text-[10px] text-gray-500 font-mono">QR CODE</span>';
+                    }
+                  }}
                 />
               </div>
             </div>

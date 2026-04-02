@@ -51,7 +51,7 @@ const ParentDashboard: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [student, setStudent] = useState<StudentWithRecords | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false); // 初始改为 false，等待手动点击
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<string>('section-hero');
@@ -102,57 +102,60 @@ const ParentDashboard: React.FC = () => {
 
   // 日历真实状态管理：默认显示当前月
   const [currentDate, setCurrentDate] = useState(new Date()); 
+  const [hasStarted, setHasStarted] = useState(false); // 新增：是否点击了查看报告
 
-  useEffect(() => {
-    const fetchStudentData = async () => {
-      setIsLoading(true);
-      try {
-        // 解析 URL 中的 id 参数
-        const studentId = searchParams.get("id");
-        
-        console.log('正在获取学生ID:', studentId);
-        
-        if (studentId) {
-          // 使用 Supabase 获取学生及历史课程记录
-          const { data, error } = await supabase
-            .from('students')
-            .select('*, class_records(*)')
-            .eq('id', studentId)
-            .single();
-            
-          if (data && !error) {
-            // 对关联查询回来的 class_records 做按日期倒序排序
-            if (data.class_records) {
-              data.class_records.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
-              if (data.class_records.length > 0) {
-                data.class_records[0].isLatest = true;
-              }
+  const fetchStudentData = async () => {
+    setIsLoading(true);
+    setHasStarted(true);
+    try {
+      // 解析 URL 中的 id 参数
+      const studentId = searchParams.get("id");
+      
+      console.log('正在获取学生ID:', studentId);
+      
+      if (studentId) {
+        // 使用 Supabase 获取学生及历史课程记录
+        const { data, error } = await supabase
+          .from('students')
+          .select('*, class_records(*)')
+          .eq('id', studentId)
+          .single();
+          
+        if (data && !error) {
+          // 对关联查询回来的 class_records 做按日期倒序排序
+          if (data.class_records) {
+            data.class_records.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            if (data.class_records.length > 0) {
+              data.class_records[0].isLatest = true;
             }
-            setStudent(data);
-            setFetchError(null);
-            
-            // 如果学生有最后上课时间，将日历定位到那个月
-            if (data.last_deducted_at) {
-              setCurrentDate(new Date(data.last_deducted_at));
-            }
-          } else {
-            console.error("获取学生数据失败:", error);
-            setFetchError(error.message || "未知错误");
-            showToast("云端同步失败，请检查网络");
+          }
+          setStudent(data);
+          setFetchError(null);
+          
+          // 如果学生有最后上课时间，将日历定位到那个月
+          if (data.last_deducted_at) {
+            setCurrentDate(new Date(data.last_deducted_at));
           }
         } else {
-          setFetchError("URL 中未提供有效的学生 ID");
+          console.error("获取学生数据失败:", error);
+          setFetchError(error.message || "未知错误");
+          showToast("云端同步失败，请检查网络");
         }
-      } catch (err: any) {
-        console.error("捕获到异常:", err);
-        setFetchError(err.message || "未知异常");
-      } finally {
-        setIsLoading(false);
+      } else {
+        setFetchError("URL 中未提供有效的学生 ID");
       }
-    };
+    } catch (err: any) {
+      console.error("捕获到异常:", err);
+      setFetchError(err.message || "未知异常");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    fetchStudentData();
-  }, [searchParams]);
+  // 取消自动获取数据，改为点击触发
+  // useEffect(() => {
+  //   fetchStudentData();
+  // }, [searchParams]);
 
   // 监听各个 Section，实现侧边导航高亮与底部自动跳转
   useEffect(() => {
@@ -324,6 +327,28 @@ const ParentDashboard: React.FC = () => {
       }
     }
   };
+
+  if (!hasStarted) {
+    return (
+      <div className="min-h-[100dvh] bg-slate-950 flex flex-col items-center justify-center p-6 text-center relative">
+        <div className="w-20 h-20 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center mb-8 shadow-[0_0_40px_rgba(34,211,238,0.2)]">
+          <span className="text-cyan-400 font-serif font-bold italic text-2xl">师</span>
+        </div>
+        <h1 className="text-2xl font-black text-white tracking-widest mb-3">
+          专属学情报告
+        </h1>
+        <p className="text-sm text-gray-400 font-light tracking-wider mb-12">
+          Aalon 导师 - 数学逻辑与 STEM 实践
+        </p>
+        <button 
+          onClick={fetchStudentData}
+          className="relative overflow-hidden px-8 py-4 rounded-full font-mono text-sm tracking-widest transition-all duration-300 bg-cyan-500 text-slate-950 font-bold shadow-[0_0_30px_rgba(34,211,238,0.4)] hover:bg-cyan-400 hover:shadow-[0_0_40px_rgba(34,211,238,0.6)] active:scale-95"
+        >
+          点击查看报告
+        </button>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
