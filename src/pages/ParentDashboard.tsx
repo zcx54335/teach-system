@@ -112,8 +112,6 @@ const ParentDashboard: React.FC = () => {
       // 解析 URL 中的 id 参数
       const studentId = searchParams.get("id");
       
-      console.log('正在获取学生ID:', studentId);
-      
       if (studentId) {
         // 使用 Supabase 获取学生及历史课程记录
         const { data, error } = await supabase
@@ -186,16 +184,13 @@ const ParentDashboard: React.FC = () => {
     } catch (err: any) {
       console.error("捕获到异常:", err);
       setFetchError(err && err.message ? err.message : "未知异常");
-      alert('运行报错：' + (err && err.message ? err.message : JSON.stringify(err)));
     } finally {
       setIsLoading(false);
     }
   };
 
-  // 取消自动获取数据，改为自动获取并强制诊断
+  // 组件加载时自动获取数据
   useEffect(() => {
-    // 强制弹窗诊断：确认路由是否进入
-    window.alert('检测到当前完整URL: ' + window.location.href);
     fetchStudentData();
   }, [searchParams]);
 
@@ -546,7 +541,7 @@ const ParentDashboard: React.FC = () => {
           </div>
 
           <div className="mt-8 mb-4 text-center">
-            <p className="text-[10px] text-gray-400 tracking-[0.4em] uppercase mb-2">
+            <p className="text-[10px] text-cyan-200/60 font-extralight tracking-[0.5em] uppercase mb-2 font-inter">
               REMAINING CLASSES
             </p>
             {/* 巨大且高亮的剩余课时数字，使用 Cyan 强调色和发光阴影 */}
@@ -879,9 +874,6 @@ const ParentDashboard: React.FC = () => {
         <span className={`text-xs font-mono tracking-widest transition-colors duration-300 ${isJumping ? 'text-cyan-400' : 'text-gray-500'}`}>
           {isJumping ? 'JUMPING TO SYSTEM...' : '↓ 继续下拉切换下一页'}
         </span>
-        <div className="mt-8 text-[9px] font-mono text-gray-600/50 tracking-widest">
-          v1.0.5 - Debug Mode
-        </div>
       </div>
 
     </div>
