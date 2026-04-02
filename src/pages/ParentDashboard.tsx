@@ -57,6 +57,42 @@ const ParentDashboard: React.FC = () => {
   const [isJumping, setIsJumping] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
+  // 滑动阻尼与微动效状态
+  const touchStartY = useRef<number | null>(null);
+  const [pullDistance, setPullDistance] = useState(0);
+  const [vibrated, setVibrated] = useState(false);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+    setVibrated(false);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!touchStartY.current) return;
+    const currentY = e.touches[0].clientY;
+    const diff = touchStartY.current - currentY; // 正值表示向上拉（页面向下滚动）
+    
+    const container = e.currentTarget;
+    // 判断是否在最后一页
+    const isAtBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 10;
+    
+    if (diff > 0 && !isAtBottom) {
+      setPullDistance(diff);
+      if (diff > 50 && !vibrated) {
+        setVibrated(true);
+        if (navigator.vibrate) navigator.vibrate(50); // 触发震动反馈
+      }
+    } else {
+      setPullDistance(0);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setPullDistance(0);
+    setVibrated(false);
+    touchStartY.current = null;
+  };
+
   // 显示 Toast 的辅助函数
   const showToast = (message: string) => {
     setToast(message);
@@ -329,6 +365,9 @@ const ParentDashboard: React.FC = () => {
     // 为滑动容器增加平滑滚动
     <div 
       className="h-[100dvh] overflow-y-auto snap-y snap-mandatory overscroll-contain bg-slate-950 font-sans selection:bg-cyan-500/30 text-white scroll-smooth scroll-pt-20 relative transition-all duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       
       {/* 侧边小圆点导航 */}
@@ -343,24 +382,36 @@ const ParentDashboard: React.FC = () => {
             key={item.id}
             title={item.title}
             onClick={() => document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth' })}
-            className={`group relative flex items-center justify-end transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+            className={`group relative flex items-center justify-end transition-all duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
               activeSection === item.id ? 'w-24' : 'w-2.5'
             }`}
           >
             {/* 文字提示 (激活时显示) */}
-            <span className={`absolute right-6 text-[10px] font-mono whitespace-nowrap transition-all duration-500 ${
+            <span className={`absolute right-6 text-[10px] font-mono whitespace-nowrap transition-all duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
               activeSection === item.id ? 'opacity-100 text-cyan-400 translate-x-0' : 'opacity-0 text-gray-500 translate-x-4 pointer-events-none'
             }`}>
               {item.title}
             </span>
             {/* 圆点 / 长条 */}
-            <div className={`h-2.5 rounded-full transition-all duration-500 ${
+            <div className={`h-2.5 rounded-full transition-all duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
               activeSection === item.id 
                 ? 'w-1.5 h-6 bg-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.8)]' 
                 : 'w-2.5 bg-white/20 hover:bg-white/40'
             }`} />
           </button>
         ))}
+      </div>
+
+      {/* 阻尼翻页提示微动效 */}
+      <div 
+        className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] flex items-center justify-center space-x-2 bg-black/80 backdrop-blur-xl border border-cyan-500/30 px-5 py-2.5 rounded-full shadow-[0_10px_30px_rgba(34,211,238,0.2)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          pullDistance > 50 
+            ? 'opacity-100 translate-y-0 scale-100' 
+            : 'opacity-0 translate-y-10 scale-90 pointer-events-none'
+        }`}
+      >
+        <ArrowDown className="w-4 h-4 text-cyan-400 animate-bounce" />
+        <span className="text-xs font-mono font-bold tracking-widest text-cyan-400">松开以跳转下一页</span>
       </div>
 
       {/* 极弱的背景纹理，叠加在深色背景上 */}
@@ -496,7 +547,7 @@ const ParentDashboard: React.FC = () => {
           <div className="w-8 h-px bg-cyan-500/50"></div>
         </div>
 
-        <div className="w-full max-w-sm bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
+        <div className="w-full max-w-sm bg-white/5 backdrop-blur-xl border border-stem-orange/50 rounded-3xl p-6 shadow-[0_0_40px_rgba(255,107,0,0.15)] relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-stem-orange/10 rounded-full blur-[60px] pointer-events-none"></div>
           <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-[60px] pointer-events-none"></div>
           
