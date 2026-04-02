@@ -52,6 +52,7 @@ const ParentDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [student, setStudent] = useState<StudentWithRecords | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<string>('section-hero');
   const [isJumping, setIsJumping] = useState(false);
@@ -108,6 +109,8 @@ const ParentDashboard: React.FC = () => {
       // 解析 URL 中的 id 参数
       const studentId = searchParams.get("id");
       
+      console.log('正在获取学生ID:', studentId);
+      
       if (studentId) {
         // 使用 Supabase 获取学生及历史课程记录
         const { data, error } = await supabase
@@ -125,6 +128,7 @@ const ParentDashboard: React.FC = () => {
             }
           }
           setStudent(data);
+          setFetchError(null);
           
           // 如果学生有最后上课时间，将日历定位到那个月
           if (data.last_deducted_at) {
@@ -132,8 +136,11 @@ const ParentDashboard: React.FC = () => {
           }
         } else {
           console.error("获取学生数据失败:", error);
+          setFetchError(error.message || "未知错误");
           showToast("云端同步失败，请检查网络");
         }
+      } else {
+        setFetchError("URL 中未提供有效的学生 ID");
       }
       setIsLoading(false);
     };
@@ -313,17 +320,30 @@ const ParentDashboard: React.FC = () => {
   };
 
   if (isLoading) {
-    return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-cyan-400 font-mono tracking-widest animate-pulse">LOADING SYSTEM...</div>;
+    return (
+      <div className="min-h-[100dvh] bg-slate-950 flex flex-col items-center justify-center space-y-4">
+        <div className="w-12 h-12 border-4 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin"></div>
+        <p className="text-cyan-400 font-mono text-sm tracking-widest animate-pulse">Aalon 导师正在加载报告...</p>
+      </div>
+    );
   }
 
   if (!student) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-[100dvh] bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
         <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(239,68,68,0.2)]">
           <AlertCircle className="w-8 h-8 text-red-500" />
         </div>
         <h2 className="text-xl font-bold text-white tracking-widest mb-2">未找到学生信息</h2>
-        <p className="text-sm text-gray-400 font-light tracking-wider">请扫描正确的专属二维码，或联系 Aalon 老师获取最新链接。</p>
+        <p className="text-sm text-gray-400 font-light tracking-wider mb-6">请扫描正确的专属二维码，或联系 Aalon 老师获取最新链接。</p>
+        
+        {/* 报错详情展示区域 */}
+        {fetchError && (
+          <div className="w-full max-w-sm bg-red-500/5 border border-red-500/20 rounded-xl p-4 text-left">
+            <p className="text-xs font-mono text-red-400/80 mb-1">System Error Log:</p>
+            <p className="text-xs font-mono text-red-400 break-words">{fetchError}</p>
+          </div>
+        )}
       </div>
     );
   }
