@@ -4,11 +4,13 @@ create extension if not exists "uuid-ossp";
 -- 1. 创建 students 表
 create table public.students (
     id uuid default uuid_generate_v4() primary key,
+    auth_id uuid references auth.users(id), -- 关联 Supabase Auth
     name text not null,
+    phone text, -- 手机号（作为家长账号）
+    password_hash text, -- 虽然用了 Auth，但也可以存一个用于记录初始密码的字段（可选）
     grade text not null,
     total_classes integer not null default 0,
-    remaining_classes integer not null default 0,
-    phone text,
+    remaining_classes integer not null default 0, -- 剩余课时
     time text, -- 模拟的上课时间段
     status text default 'enrolled' check (status in ('enrolled', 'intent', 'completed')), -- 状态: 报名(enrolled)/意向(intent)/结课(completed)
     price_per_lesson numeric(10, 2) default 0, -- 单价

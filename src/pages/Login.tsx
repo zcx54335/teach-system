@@ -79,8 +79,8 @@ const Login: React.FC = () => {
           </p>
         </div>
 
-        {/* 角色切换 */}
-        <div className="flex p-1 bg-white/5 border border-white/10 rounded-xl mb-8 backdrop-blur-md">
+        {/* 角色切换 - 仅作为彩蛋保留，或者直接隐藏家长登录 */}
+        <div className="flex p-1 bg-white/5 border border-white/10 rounded-xl mb-8 backdrop-blur-md hidden">
           <button
             onClick={() => setLoginType('admin')}
             className={`flex-1 py-2.5 text-xs font-mono tracking-widest rounded-lg transition-all duration-300 ${loginType === 'admin' ? 'bg-cyan-500/20 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.2)]' : 'text-gray-500 hover:text-gray-300'}`}
@@ -138,20 +138,25 @@ const Login: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className={`w-full text-white font-bold py-4 rounded-xl tracking-widest transition-all active:scale-95 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed mt-6 ${
+              className={`w-full text-white font-bold py-4 rounded-xl tracking-widest transition-all active:scale-95 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed mt-6 relative overflow-hidden group ${
                 loginType === 'admin' 
-                  ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:shadow-[0_0_30px_rgba(34,211,238,0.5)]'
+                  ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 shadow-[0_0_30px_rgba(34,211,238,0.4)] hover:shadow-[0_0_50px_rgba(34,211,238,0.6)] animate-pulse-glow'
                   : 'bg-gradient-to-r from-stem-orange to-red-500 hover:from-orange-500 hover:to-red-400 shadow-[0_0_20px_rgba(255,107,0,0.3)] hover:shadow-[0_0_30px_rgba(255,107,0,0.5)]'
               }`}
             >
-              {loading ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              ) : (
-                <>
-                  <LogIn className="w-5 h-5 mr-2" />
-                  AUTHENTICATE
-                </>
-              )}
+              {/* 光效扫过动画 */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+              
+              <div className="relative z-10 flex items-center">
+                {loading ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                ) : (
+                  <>
+                    <LogIn className="w-5 h-5 mr-2" />
+                    AUTHENTICATE
+                  </>
+                )}
+              </div>
             </button>
           </div>
         </form>

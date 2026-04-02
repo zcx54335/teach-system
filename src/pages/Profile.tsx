@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Settings, Shield, BookOpen, ChevronRight, Activity, Cpu, DollarSign, Users, Clock, X, ChevronLeft, CalendarCheck, FileText, Image as ImageIcon, Quote, LogOut } from "lucide-react";
+import { User, Settings, Shield, BookOpen, ChevronRight, Activity, Cpu, DollarSign, Users, Clock, X, ChevronLeft, CalendarCheck, FileText, Image as ImageIcon, Quote, LogOut, CheckCircle2 } from "lucide-react";
 import { PageProps } from "../components/Layout/RollerNavigation";
 import { supabase } from '../lib/supabaseClient';
 
@@ -116,6 +116,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newStudent, setNewStudent] = useState({ name: '', phone: '', grade: '' });
   const [isAdding, setIsAdding] = useState(false);
+  const [createdStudent, setCreatedStudent] = useState<{name: string, phone: string, id: string} | null>(null);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -149,20 +150,26 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
       }
 
       // 2. 在 students 表中插入数据并关联 auth_id
-      const { error: dbError } = await supabase.from('students').insert([{
+      const { data: insertData, error: dbError } = await supabase.from('students').insert([{
         name: newStudent.name,
         phone: newStudent.phone,
         grade: newStudent.grade,
         status: 'enrolled',
-        auth_id: authData.user?.id
-      }]);
+        auth_id: authData.user?.id,
+        password_hash: password, // 保存初始密码供参考
+        remaining_classes: 0
+      }]).select().single();
 
       if (dbError) {
         throw new Error(`DB Error: ${dbError.message}`);
       }
 
-      alert(`学生 ${newStudent.name} 创建成功！\n登录账号: ${newStudent.phone}\n初始密码: ${password}`);
-      setIsAddModalOpen(false);
+      setCreatedStudent({
+        name: newStudent.name,
+        phone: newStudent.phone,
+        id: insertData.id
+      });
+      
       setNewStudent({ name: '', phone: '', grade: '' });
       if (fetchStudents) fetchStudents();
 
@@ -171,6 +178,55 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
     } finally {
       setIsAdding(false);
     }
+  };
+
+  const handleCopyLink = (id: string) => {
+    const url = `https://xiongxiong.top/#/parent?id=${id}`;
+    navigator.clipboard.writeText(url).then(() => {
+      alert('家长专属链接已复制到剪贴板！');
+    }).catch(() => {
+      alert('复制失败，请手动选择复制');
+    });
+  };
+
+  // 扣除课时逻辑
+  const handleDeductClass = async (studentId: string, currentRemaining: number, studentName: string) => {
+    if (currentRemaining <= 0) {
+      alert('剩余课时不足，无法消课！');
+      return;
+    }
+    
+    if (!window.confirm(`确认要为学员 ${studentName} 扣除 1 个课时吗？`)) {
+      return;
+    }
+
+    try {
+      const newRemaining = currentRemaining - 1;
+      const { error } = await supabase
+        .from('students')
+        .update({ 
+          remaining_classes: newRemaining,
+          last_deducted_at: new Date().toISOString()
+        })
+        .eq('id', studentId);
+
+      if (error) throw error;
+
+      alert(`已扣除 1 课时，${studentName} 剩余 ${newRemaining} 课时。`);
+      
+      // 预留接口：发送通知
+      sendNotification(studentId, newRemaining);
+
+      if (fetchStudents) fetchStudents();
+    } catch (err: any) {
+      alert('消课失败：' + err.message);
+    }
+  };
+
+  // 预留的通知函数
+  const sendNotification = (studentId: string, remainingClasses: number) => {
+    // TODO: 接入短信或微信通知逻辑
+    console.log(`[通知] 学员 ${studentId} 已消课，剩余课时: ${remainingClasses}`);
   };
 
   // 调试日志
@@ -326,12 +382,20 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button 
-                        onClick={() => setSelectedStudent(student)}
-                        className="text-[10px] font-mono text-gray-300 border border-white/20 px-3 py-1.5 rounded hover:bg-white/10 hover:text-white transition-colors tracking-widest"
-                      >
-                        查看档案
-                      </button>
+                      <div className="flex items-center justify-end space-x-2">
+                        <button 
+                          onClick={() => handleDeductClass(student.id, student.remaining_classes, student.name)}
+                          className="text-[10px] font-mono text-stem-orange border border-stem-orange/30 px-3 py-1.5 rounded hover:bg-stem-orange/20 transition-colors tracking-widest"
+                        >
+                          消课
+                        </button>
+                        <button 
+                          onClick={() => setSelectedStudent(student)}
+                          className="text-[10px] font-mono text-gray-300 border border-white/20 px-3 py-1.5 rounded hover:bg-white/10 hover:text-white transition-colors tracking-widest"
+                        >
+                          档案
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -481,7 +545,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
       )}
 
       {/* 新增学员弹窗 */}
-      {isAddModalOpen && (
+      {isAddModalOpen && !createdStudent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setIsAddModalOpen(false)}></div>
           <div className="relative bg-slate-950 border border-white/20 w-full max-w-sm rounded-2xl p-6 shadow-[0_0_50px_rgba(255,107,0,0.2)] animate-in zoom-in duration-300">
@@ -542,6 +606,60 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* 创建成功后的链接展示弹窗 */}
+      {createdStudent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
+          <div className="relative bg-slate-950 border border-stem-green/30 w-full max-w-sm rounded-2xl p-6 shadow-[0_0_50px_rgba(34,197,94,0.2)] animate-in zoom-in duration-300">
+            <h2 className="text-xl font-bold text-stem-green mb-4 flex items-center tracking-widest">
+              <CheckCircle2 className="w-6 h-6 mr-2" />
+              开户成功
+            </h2>
+            
+            <div className="space-y-4">
+              <div className="bg-white/5 p-4 rounded-xl border border-white/10">
+                <p className="text-xs text-gray-400 font-mono mb-1">学员姓名</p>
+                <p className="text-lg text-white font-bold tracking-widest mb-3">{createdStudent.name}</p>
+                
+                <p className="text-xs text-gray-400 font-mono mb-1">家长登录账号</p>
+                <p className="text-sm text-cyan-400 font-mono mb-3">{createdStudent.phone}</p>
+                
+                <p className="text-xs text-gray-400 font-mono mb-1">初始密码</p>
+                <p className="text-sm text-white font-mono">{createdStudent.phone.slice(-6)}</p>
+              </div>
+
+              <div>
+                <p className="text-[10px] text-gray-500 font-mono mb-2 uppercase tracking-widest">专属免登录链接</p>
+                <div className="flex items-center space-x-2">
+                  <input 
+                    type="text" 
+                    readOnly 
+                    value={`https://xiongxiong.top/#/parent?id=${createdStudent.id}`}
+                    className="flex-1 bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-[10px] text-gray-400 font-mono focus:outline-none"
+                  />
+                  <button 
+                    onClick={() => handleCopyLink(createdStudent.id)}
+                    className="bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-2 rounded-lg text-xs font-mono transition-colors tracking-widest"
+                  >
+                    复制链接
+                  </button>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => {
+                  setCreatedStudent(null);
+                  setIsAddModalOpen(false);
+                }}
+                className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-lg tracking-widest transition-colors mt-2 border border-white/10"
+              >
+                完成并关闭
+              </button>
+            </div>
           </div>
         </div>
       )}
