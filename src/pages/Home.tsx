@@ -124,10 +124,10 @@ const Home: React.FC<PageProps> = ({ localProgress }) => {
         >
           <div className="space-y-2">
             <h1 className="text-5xl font-black tracking-tight text-white leading-none">
-              Aalon 导师
+              杨老师
             </h1>
             <h2 className="text-3xl font-bold tracking-tight text-white/90">
-              数学逻辑 · STEM 实践
+              理科逻辑 · STEM 实践
             </h2>
           </div>
 
@@ -247,7 +247,7 @@ const Home: React.FC<PageProps> = ({ localProgress }) => {
             <div className="p-8 flex flex-col items-center">
               {/* 优雅的标题 */}
               <h3 className="text-xl font-medium text-white tracking-widest mb-8">
-                联系 Aalon 老师
+                联系杨老师
               </h3>
               
               {/* 美化后的实体名片风二维码区域 */}

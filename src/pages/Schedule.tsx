@@ -26,6 +26,8 @@ export interface StudentRecord {
   spatial_score?: number;
   app_score?: number;
   data_score?: number;
+  physics_score?: number;
+  chemistry_score?: number;
   class_records?: any[];
 }
 
@@ -37,7 +39,7 @@ const deductClass = async (
   comment: string = '表现良好，继续保持！',
   homeworkTask: string = '',
   homeworkRefImage: string = '',
-  scores: { calc_score: number, logic_score: number, spatial_score: number, app_score: number, data_score: number }
+  scores: { calc_score: number, logic_score: number, spatial_score: number, app_score: number, data_score: number, physics_score: number, chemistry_score: number }
 ): Promise<{ success: boolean, error: any }> => {
   // 1. 更新剩余课时和雷达图维度分数
   const { error: updateError } = await supabase
@@ -100,6 +102,8 @@ const Schedule: React.FC<PageProps> = ({ localProgress, students = [], setStuden
       spatial_score: number;
       app_score: number;
       data_score: number;
+      physics_score: number;
+      chemistry_score: number;
     };
   } | null>(null);
 
@@ -108,7 +112,9 @@ const Schedule: React.FC<PageProps> = ({ localProgress, students = [], setStuden
     { key: 'logic_score', label: '逻辑推理' },
     { key: 'spatial_score', label: '空间想象' },
     { key: 'app_score', label: '应用意识' },
-    { key: 'data_score', label: '数据分析' }
+    { key: 'data_score', label: '数据分析' },
+    { key: 'physics_score', label: '物理逻辑' },
+    { key: 'chemistry_score', label: '化学逻辑' }
   ] as const;
 
   // AI 生成状态
@@ -176,6 +182,8 @@ const Schedule: React.FC<PageProps> = ({ localProgress, students = [], setStuden
         spatial_score: student.spatial_score || 3,
         app_score: student.app_score || 3,
         data_score: student.data_score || 3,
+        physics_score: student.physics_score || 3,
+        chemistry_score: student.chemistry_score || 3,
       }
     });
     setSelectedTags([]);
@@ -188,14 +196,14 @@ const Schedule: React.FC<PageProps> = ({ localProgress, students = [], setStuden
 
     try {
       const tagsStr = selectedTags.length > 0 ? `该学生在本次课中表现出了以下特点：【${selectedTags.join('、')}】。` : '该学生表现良好。';
-      const prompt = `你是一位专业且温情的 Aalon 老师，专注小学全学段数学与STEM思维提分。今天你给 ${confirmModal.grade} 的 ${confirmModal.studentName} 同学上了一节课。
+      const prompt = `你是一位专业且温情的杨老师，专注理科逻辑与STEM思维提分。今天你给 ${confirmModal.grade} 的 ${confirmModal.studentName} 同学上了一节课。
 ${tagsStr}
 请根据以上信息，生成一段不少于 150 字的课后反馈评语。要求：
-1. 第一句话必须是具体的课题名称，格式为：课题：[你编一个符合${confirmModal.grade}数学或STEM的课题]。
+1. 第一句话必须是具体的课题名称，格式为：课题：[你编一个符合${confirmModal.grade}理科逻辑或STEM的课题]。
 2. 随后另起一段，开始写具体的课后评语。语气要专业、温和、鼓励，指出他的亮点并给出一点下节课的期许。`;
       
-      let generatedTopic = `【STEM进阶】${confirmModal.grade}逻辑思维训练`;
-      let generatedComment = `Aalon老师课后反馈：\n今天${confirmModal.studentName}同学在课堂上表现非常出色。特别是表现出了【${selectedTags.join('、')}】的特点在推导核心逻辑时，展现了极强的空间想象力和问题拆解能力。虽然遇到了一些具有挑战性的复杂结构，但能够保持耐心，独立寻找破局点。建议课后继续保持这种探索精神，我们下节课将进一步深化这个知识点。加油！`;
+      let generatedTopic = `【STEM进阶】${confirmModal.grade}理科逻辑训练`;
+      let generatedComment = `杨老师课后反馈：\n今天${confirmModal.studentName}同学在课堂上表现非常出色。特别是表现出了【${selectedTags.join('、')}】的特点在推导核心逻辑时，展现了极强的空间想象力和问题拆解能力。虽然遇到了一些具有挑战性的复杂结构，但能够保持耐心，独立寻找破局点。建议课后继续保持这种探索精神，我们下节课将进一步深化这个知识点。加油！`;
 
       // 尝试调用真实的 OpenAI API
       if (import.meta.env.VITE_OPENAI_API_KEY) {
@@ -801,7 +809,7 @@ ${tagsStr}
                     <span className="text-cyan-400 font-serif font-bold italic">师</span>
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-white tracking-widest">Aalon 导师</p>
+                    <p className="text-sm font-bold text-white tracking-widest">杨老师</p>
                     <p className="text-[10px] font-mono text-gray-400 tracking-widest mt-1">132 8125 0502</p>
                   </div>
                 </div>

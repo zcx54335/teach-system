@@ -137,7 +137,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
       const supabaseSecondary = createClient(supabaseUrl, supabaseAnonKey, { auth: { persistSession: false } });
 
-      const email = `${newStudent.phone}@student.aalon.com`;
+      const email = `${newStudent.phone}@student.yang.com`;
       const password = newStudent.phone.slice(-6);
 
       const { data: authData, error: authError } = await supabaseSecondary.auth.signUp({
@@ -278,7 +278,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
             <span>学生资产管理</span>
           </h1>
           <p className="text-[10px] text-stem-orange/60 tracking-[0.3em] uppercase mt-2 font-mono">
-            Aalon CRM System
+            Yang CRM System
           </p>
         </div>
         <div className="flex space-x-3">

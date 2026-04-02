@@ -20,7 +20,7 @@ const Login: React.FC = () => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        if (session.user.email?.endsWith('@student.aalon.com')) {
+        if (session.user.email?.endsWith('@student.yang.com')) {
           navigate(redirectUrl || '/parent');
         } else {
           navigate('/admin');
@@ -37,7 +37,7 @@ const Login: React.FC = () => {
 
     try {
       // 如果是家长，将手机号伪装成内部邮箱进行验证
-      const email = loginType === 'parent' ? `${identifier}@student.aalon.com` : identifier;
+      const email = loginType === 'parent' ? `${identifier}@student.yang.com` : identifier;
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -73,7 +73,7 @@ const Login: React.FC = () => {
           <div className="w-20 h-20 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-3xl flex items-center justify-center mx-auto shadow-[0_0_40px_rgba(34,211,238,0.5)] mb-6 transition-transform hover:scale-105 duration-300">
             {loginType === 'admin' ? <Lock className="w-10 h-10 text-white" /> : <Users className="w-10 h-10 text-white" />}
           </div>
-          <h1 className="text-4xl font-black tracking-widest mb-2 drop-shadow-md">AALON</h1>
+          <h1 className="text-4xl font-black tracking-widest mb-2 drop-shadow-md">杨老师</h1>
           <p className="text-xs font-mono tracking-[0.3em] text-cyan-400 uppercase">
             {loginType === 'admin' ? 'Exclusive System Access' : 'Parent Portal'}
           </p>
@@ -116,7 +116,7 @@ const Login: React.FC = () => {
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all font-mono"
-                placeholder={loginType === 'admin' ? 'aalon@example.com' : '13800138000'}
+                placeholder={loginType === 'admin' ? 'yang@example.com' : '13800138000'}
                 required
               />
             </div>

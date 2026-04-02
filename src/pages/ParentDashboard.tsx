@@ -41,6 +41,8 @@ interface StudentRecord {
   spatial_score?: number;
   app_score?: number;
   data_score?: number;
+  physics_score?: number;
+  chemistry_score?: number;
 }
 
 // 扩展 StudentRecord 以包含 class_records
@@ -404,7 +406,7 @@ const ParentDashboard: React.FC = () => {
   };
 
   // 新增：数字跳动动画状态
-  const [radarScores, setRadarScores] = useState([0, 0, 0, 0, 0]);
+  const [radarScores, setRadarScores] = useState([0, 0, 0, 0, 0, 0, 0]);
 
   // 新增：认证状态与设置弹窗
   const [session, setSession] = useState<any>(null);
@@ -458,7 +460,9 @@ const ParentDashboard: React.FC = () => {
       student.logic_score ?? 3,
       student.spatial_score ?? 3,
       student.app_score ?? 3,
-      student.data_score ?? 3
+      student.data_score ?? 3,
+      student.physics_score ?? 3,
+      student.chemistry_score ?? 3
     ];
     
     let startTime: number | null = null;
@@ -491,6 +495,8 @@ const ParentDashboard: React.FC = () => {
       { subject: '空间想象', A: radarScores[2], fullMark: 5 },
       { subject: '应用意识', A: radarScores[3], fullMark: 5 },
       { subject: '数据分析', A: radarScores[4], fullMark: 5 },
+      { subject: '物理逻辑', A: radarScores[5], fullMark: 5 },
+      { subject: '化学逻辑', A: radarScores[6], fullMark: 5 },
     ];
   }, [radarScores]);
 
@@ -579,6 +585,16 @@ const ParentDashboard: React.FC = () => {
             </div>
 
             <form onSubmit={handleUpdatePassword} className="space-y-4">
+              <div>
+                <label className="block text-xs font-mono text-gray-400 tracking-widest mb-2 uppercase">
+                  当前登录账号
+                </label>
+                <div className="w-full bg-black/20 border border-white/5 rounded-xl px-4 py-3 text-gray-400 font-mono mb-4 cursor-not-allowed flex items-center justify-between">
+                  <span>{session?.user?.email?.split('@')[0] || '未获取到手机号'}</span>
+                  <span className="text-[10px] text-green-500/70 border border-green-500/20 bg-green-500/10 px-2 py-0.5 rounded">已验证</span>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-xs font-mono text-gray-400 tracking-widest mb-2 uppercase">
                   新密码 (至少6位)
@@ -688,8 +704,8 @@ const ParentDashboard: React.FC = () => {
         
         <div className="relative z-10 flex flex-col items-center w-full max-w-sm">
           <h1 id="student-name" className="text-4xl font-black tracking-widest text-white mb-3 font-inter text-center drop-shadow-md">
-            {student?.name || '学员'}
-          </h1>
+              {student?.name || '学员'}
+            </h1>
           <div className="px-4 py-1 mb-8 rounded-full bg-white/5 border border-cyan-500/30 backdrop-blur-md flex items-center justify-center shadow-[0_0_15px_rgba(34,211,238,0.2)]">
             <span id="student-grade" className="text-xs font-medium tracking-widest text-cyan-100 text-center">
               {student?.grade || '未分配年级'}
@@ -971,7 +987,7 @@ const ParentDashboard: React.FC = () => {
               EXCLUSIVE MENTOR
             </h3>
             <p className="text-xl font-bold tracking-widest text-white">
-              专属导师：Aalon
+              专属导师：杨老师
             </p>
           </div>
 
@@ -1076,8 +1092,8 @@ const ParentDashboard: React.FC = () => {
           {/* 底部导师名片区 */}
           <div className="relative z-10 pb-10 px-8 flex items-center justify-between mt-6">
             <div className="flex flex-col justify-center">
-              <p className="text-xs font-bold tracking-widest text-cyan-400 mb-1">Aalon 专属导师</p>
-              <p className="text-[10px] font-mono text-gray-400">数学逻辑与 STEM 实践</p>
+              <p className="text-xs font-bold tracking-widest text-cyan-400 mb-1">杨老师专属导师</p>
+              <p className="text-[10px] font-mono text-gray-400">理科逻辑与 STEM 实践</p>
               <p className="text-[9px] text-gray-500 mt-2">扫码查看详细学情报告</p>
             </div>
             <div className="w-16 h-16 bg-white p-1 rounded-xl shadow-[0_0_20px_rgba(255,255,255,0.1)] shrink-0">

@@ -20,33 +20,38 @@ const LandingPage: React.FC = () => {
           <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(34,211,238,0.4)]">
             <Hexagon className="w-6 h-6 text-white" />
           </div>
-          <span className="text-xl font-black tracking-widest text-white drop-shadow-md">Aalon</span>
+          <span className="text-xl font-black tracking-widest text-white drop-shadow-md">杨老师</span>
         </div>
-        <button 
-          onClick={() => navigate('/login')}
-          className="text-xs font-mono tracking-widest text-white/20 hover:text-white/60 transition-colors duration-300"
-        >
-          MENTOR LOGIN
-        </button>
       </header>
 
       {/* 核心展示区 */}
       <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 text-center max-w-4xl mx-auto w-full">
         <div className="inline-block px-4 py-1.5 mb-8 rounded-full bg-white/5 border border-cyan-500/30 backdrop-blur-md">
           <span className="text-xs font-medium tracking-[0.2em] text-cyan-400 uppercase">
-            Exclusive STEM & Math Education
+            Exclusive STEM & Science Education
           </span>
         </div>
         
         <h1 className="text-5xl md:text-7xl font-black tracking-tight text-white mb-6 leading-tight">
-          重塑 <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">数学逻辑</span>
+          重塑 <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">理科逻辑</span>
           <br />
           点燃 STEM 潜能
         </h1>
         
         <p className="text-gray-400 text-lg md:text-xl font-light tracking-wide max-w-2xl mb-12 leading-relaxed">
-          Aalon 导师专属定制化教学体系。拒绝机械刷题，以顶级逻辑框架构建孩子的底层思维能力，为未来精英打造坚实的数理基础。
+          杨老师专属定制化教学体系。拒绝机械刷题，以顶级逻辑框架构建孩子的底层思维能力，贯通数理化全科，为未来精英打造坚实的理科基础。
         </p>
+
+        {/* 巨大的登录按钮 */}
+        <button 
+          onClick={() => navigate('/login')}
+          className="group relative overflow-hidden px-10 py-5 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 shadow-[0_0_40px_rgba(34,211,238,0.4)] hover:shadow-[0_0_60px_rgba(34,211,238,0.6)] hover:scale-105 transition-all duration-300 ease-out active:scale-95 mb-16"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+          <span className="relative z-10 text-lg font-bold tracking-widest text-white">
+            杨老师 · 管理控制台
+          </span>
+        </button>
 
         {/* 理念卡片网格 */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-8">
@@ -67,7 +72,7 @@ const LandingPage: React.FC = () => {
       {/* 页脚 */}
       <footer className="relative z-10 py-8 text-center border-t border-white/5 mt-auto">
         <p className="text-[10px] font-mono text-gray-600 tracking-widest uppercase">
-          &copy; {new Date().getFullYear()} Aalon Education. All rights reserved.
+          &copy; {new Date().getFullYear()} 杨老师 Education. All rights reserved.
         </p>
       </footer>
     </div>
