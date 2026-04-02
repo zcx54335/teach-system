@@ -105,9 +105,10 @@ const ParentDashboard: React.FC = () => {
   const [hasStarted, setHasStarted] = useState(false); // 新增：是否点击了查看报告
 
   const fetchStudentData = async () => {
-    setIsLoading(true);
-    setHasStarted(true);
     try {
+      setIsLoading(true);
+      setHasStarted(true);
+      
       // 解析 URL 中的 id 参数
       const studentId = searchParams.get("id");
       
@@ -123,7 +124,7 @@ const ParentDashboard: React.FC = () => {
           
         if (data && !error) {
           // 对关联查询回来的 class_records 做按日期倒序排序
-          if (data.class_records) {
+          if (data && data.class_records) {
             data.class_records.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
             if (data.class_records.length > 0) {
               data.class_records[0].isLatest = true;
@@ -133,12 +134,12 @@ const ParentDashboard: React.FC = () => {
           setFetchError(null);
           
           // 如果学生有最后上课时间，将日历定位到那个月
-          if (data.last_deducted_at) {
+          if (data && data.last_deducted_at) {
             setCurrentDate(new Date(data.last_deducted_at));
           }
         } else {
           console.error("获取学生数据失败:", error);
-          setFetchError(error.message || "未知错误");
+          setFetchError(error ? error.message : "未知错误");
           showToast("云端同步失败，请检查网络");
         }
       } else {
@@ -146,7 +147,8 @@ const ParentDashboard: React.FC = () => {
       }
     } catch (err: any) {
       console.error("捕获到异常:", err);
-      setFetchError(err.message || "未知异常");
+      setFetchError(err && err.message ? err.message : "未知异常");
+      alert('运行报错：' + (err && err.message ? err.message : JSON.stringify(err)));
     } finally {
       setIsLoading(false);
     }
@@ -383,11 +385,11 @@ const ParentDashboard: React.FC = () => {
   const radarData = useMemo(() => {
     if (!student) return [];
     return [
-      { subject: '计算力', A: student?.calc_score ?? 3, fullMark: 5 },
-      { subject: '逻辑推理', A: student?.logic_score ?? 3, fullMark: 5 },
-      { subject: '空间想象', A: student?.spatial_score ?? 3, fullMark: 5 },
-      { subject: '应用意识', A: student?.app_score ?? 3, fullMark: 5 },
-      { subject: '数据分析', A: student?.data_score ?? 3, fullMark: 5 },
+      { subject: '计算力', A: (student && student.calc_score) ? student.calc_score : 3, fullMark: 5 },
+      { subject: '逻辑推理', A: (student && student.logic_score) ? student.logic_score : 3, fullMark: 5 },
+      { subject: '空间想象', A: (student && student.spatial_score) ? student.spatial_score : 3, fullMark: 5 },
+      { subject: '应用意识', A: (student && student.app_score) ? student.app_score : 3, fullMark: 5 },
+      { subject: '数据分析', A: (student && student.data_score) ? student.data_score : 3, fullMark: 5 },
     ];
   }, [student]);
 
@@ -601,7 +603,17 @@ const ParentDashboard: React.FC = () => {
           <div className="absolute top-0 right-0 w-32 h-32 bg-stem-orange/10 rounded-full blur-[60px] pointer-events-none"></div>
           <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-[60px] pointer-events-none"></div>
           
-          <div className="h-64 w-full">
+          <div className="h-64 w-full flex flex-col justify-center items-center">
+            {/* 暂时禁用复杂的雷达图组件，改用纯文本列表以排查白屏问题 */}
+            <div className="space-y-3 w-full px-4">
+              {radarData.map((item, idx) => (
+                <div key={idx} className="flex justify-between items-center text-sm font-mono border-b border-white/10 pb-2">
+                  <span className="text-gray-300">{item.subject}</span>
+                  <span className="text-cyan-400 font-bold">{item.A} / {item.fullMark}</span>
+                </div>
+              ))}
+            </div>
+            {/* 
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
                 <PolarGrid gridType="polygon" stroke="rgba(255,255,255,0.1)" />
@@ -613,7 +625,7 @@ const ParentDashboard: React.FC = () => {
                 <Radar
                   name="Ability"
                   dataKey="A"
-                  stroke="#ff6b00" /* stem-orange */
+                  stroke="#ff6b00"
                   strokeWidth={2}
                   fill="#ff6b00"
                   fillOpacity={0.3}
@@ -622,6 +634,7 @@ const ParentDashboard: React.FC = () => {
                 />
               </RadarChart>
             </ResponsiveContainer>
+            */}
           </div>
 
           <div className="mt-4 flex justify-center space-x-4">
@@ -782,7 +795,7 @@ const ParentDashboard: React.FC = () => {
       </section>
 
       {/* 底部专属联系卡片 (Contact Card) */}
-      <section id="section-contact" className="snap-center min-h-[100dvh] relative px-6 z-10 flex flex-col justify-center max-w-lg mx-auto will-change-transform">
+      <section id="section-contact" className="snap-start min-h-[100dvh] relative px-6 z-10 flex flex-col justify-center max-w-lg mx-auto will-change-transform">
         {/* 深色毛玻璃名片容器 */}
         <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
           <div className="mb-6 flex flex-col items-center">
@@ -837,6 +850,9 @@ const ParentDashboard: React.FC = () => {
         <span className={`text-xs font-mono tracking-widest transition-colors duration-300 ${isJumping ? 'text-cyan-400' : 'text-gray-500'}`}>
           {isJumping ? 'JUMPING TO SYSTEM...' : '↓ 继续下拉切换下一页'}
         </span>
+        <div className="mt-8 text-[9px] font-mono text-gray-600/50 tracking-widest">
+          v1.0.5 - Debug Mode
+        </div>
       </div>
 
     </div>
