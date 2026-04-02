@@ -146,11 +146,27 @@ const ParentDashboard: React.FC = () => {
             const gradeEl = document.getElementById('student-grade');
             if (gradeEl) gradeEl.innerText = data.grade || '未分配年级';
             
-            const remainingEl = document.getElementById('student-remaining');
-            if (remainingEl) remainingEl.innerText = String(data.remaining_classes ?? 0);
-            
-            const usedEl = document.getElementById('student-used');
-            if (usedEl) usedEl.innerText = String((data.total_classes ?? 0) - (data.remaining_classes ?? 0));
+            // 增加 DOM 元素的数字跳动动画
+            const animateDOMNumber = (id: string, target: number, duration = 1500) => {
+              const el = document.getElementById(id);
+              if (!el) return;
+              let start: number | null = null;
+              const step = (timestamp: number) => {
+                if (!start) start = timestamp;
+                const progress = Math.min((timestamp - start) / duration, 1);
+                const ease = 1 - Math.pow(1 - progress, 4); // easeOutQuart
+                el.innerText = String(Math.floor(ease * target));
+                if (progress < 1) {
+                  requestAnimationFrame(step);
+                } else {
+                  el.innerText = String(target);
+                }
+              };
+              requestAnimationFrame(step);
+            };
+
+            animateDOMNumber('student-remaining', data.remaining_classes ?? 0);
+            animateDOMNumber('student-used', (data.total_classes ?? 0) - (data.remaining_classes ?? 0));
 
             // 更新雷达图数据 (强制重绘)
             const radarContainer = document.getElementById('radar-container');
@@ -354,16 +370,51 @@ const ParentDashboard: React.FC = () => {
     }
   };
 
-  // 计算雷达图数据 (给一个默认的空学员数据保底)
+  // 新增：数字跳动动画状态
+  const [radarScores, setRadarScores] = useState([0, 0, 0, 0, 0]);
+
+  useEffect(() => {
+    if (!student) return;
+    const targets = [
+      student.calc_score ?? 3,
+      student.logic_score ?? 3,
+      student.spatial_score ?? 3,
+      student.app_score ?? 3,
+      student.data_score ?? 3
+    ];
+    
+    let startTime: number | null = null;
+    const duration = 1500; // 1.5 秒的快速跳动动画
+
+    const animate = (currentTime: number) => {
+      if (!startTime) startTime = currentTime;
+      const elapsed = currentTime - startTime;
+      let progress = elapsed / duration;
+      if (progress > 1) progress = 1;
+      
+      // 使用 easeOutQuart 曲线，呈现减速跳动的高级感
+      const ease = 1 - Math.pow(1 - progress, 4);
+      
+      setRadarScores(targets.map(t => Number((t * ease).toFixed(1))));
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+    
+    requestAnimationFrame(animate);
+  }, [student]);
+
+  // 计算雷达图数据 (使用跳动动画数据)
   const radarData = useMemo(() => {
     return [
-      { subject: '计算力', A: (student && student.calc_score) ? student.calc_score : 3, fullMark: 5 },
-      { subject: '逻辑推理', A: (student && student.logic_score) ? student.logic_score : 3, fullMark: 5 },
-      { subject: '空间想象', A: (student && student.spatial_score) ? student.spatial_score : 3, fullMark: 5 },
-      { subject: '应用意识', A: (student && student.app_score) ? student.app_score : 3, fullMark: 5 },
-      { subject: '数据分析', A: (student && student.data_score) ? student.data_score : 3, fullMark: 5 },
+      { subject: '计算力', A: radarScores[0], fullMark: 5 },
+      { subject: '逻辑推理', A: radarScores[1], fullMark: 5 },
+      { subject: '空间想象', A: radarScores[2], fullMark: 5 },
+      { subject: '应用意识', A: radarScores[3], fullMark: 5 },
+      { subject: '数据分析', A: radarScores[4], fullMark: 5 },
     ];
-  }, [student]);
+  }, [radarScores]);
 
   // 自定义雷达图刻度样式，将标签向外推移以防止重叠
   const renderPolarAngleAxis = ({ payload, x, y, cx, cy, ...rest }: any) => {
@@ -400,11 +451,17 @@ const ParentDashboard: React.FC = () => {
     // 增加 scroll-pt-20 (80px) 确保顶部不被遮挡
     // 为滑动容器增加平滑滚动
     <div 
-      className="h-[100dvh] overflow-y-auto snap-y snap-mandatory overscroll-contain bg-slate-950 font-sans selection:bg-cyan-500/30 text-white scroll-smooth scroll-pt-20 relative transition-all duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
+      className="h-[100dvh] overflow-y-auto snap-y snap-mandatory overscroll-contain font-inter selection:bg-cyan-500/30 text-white scroll-smooth scroll-pt-20 relative transition-all duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
+      {/* 动态深邃银河背景 (Dynamic Galaxy Background) */}
+      <div className="fixed inset-0 z-[-1] bg-[#020617] overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-900/20 blur-[120px] mix-blend-screen animate-blob"></div>
+        <div className="absolute top-[40%] right-[-10%] w-[60%] h-[60%] rounded-full bg-cyan-900/10 blur-[120px] mix-blend-screen animate-blob" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute bottom-[-20%] left-[20%] w-[70%] h-[70%] rounded-full bg-indigo-900/20 blur-[120px] mix-blend-screen animate-blob" style={{ animationDelay: '4s' }}></div>
+      </div>
       {/* 侧边小圆点导航 */}
       <div className="fixed right-4 top-1/2 -translate-y-1/2 z-50 flex flex-col space-y-4">
         {[
@@ -478,12 +535,12 @@ const ParentDashboard: React.FC = () => {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-cyan-500/10 rounded-full blur-[80px] pointer-events-none"></div>
         
         <div className="relative z-10 flex flex-col items-center">
-          {/* 纯白高对比核心标题 */}
-          <h1 id="student-name" className="text-4xl font-black tracking-widest text-white mb-3">
+          {/* 纯白高对比核心标题 - 使用更现代的 inter 字体 */}
+          <h1 id="student-name" className="text-4xl font-black tracking-widest text-white mb-3 font-inter text-center">
             {student?.name || '学员'}
           </h1>
-          <div className="px-4 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
-            <span id="student-grade" className="text-xs font-medium tracking-widest text-gray-300">
+          <div className="px-4 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md flex items-center justify-center">
+            <span id="student-grade" className="text-xs font-medium tracking-widest text-gray-300 text-center">
               {student?.grade || '未分配年级'}
             </span>
           </div>

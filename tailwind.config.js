@@ -17,7 +17,8 @@ export default {
         }
       },
       fontFamily: {
-        // 使用更具设计感的无衬线字体组合
+        // 增加 Inter 字体作为主要科技感字体
+        inter: ['Inter', 'sans-serif'],
         sans: [
           'system-ui',
           '-apple-system',
@@ -46,12 +47,19 @@ export default {
         },
         'shimmer': {
           '100%': { transform: 'translateX(100%)' }
+        },
+        'blob': {
+          "0%": { transform: "translate(0px, 0px) scale(1)" },
+          "33%": { transform: "translate(30px, -50px) scale(1.1)" },
+          "66%": { transform: "translate(-20px, 20px) scale(0.9)" },
+          "100%": { transform: "translate(0px, 0px) scale(1)" },
         }
       },
       animation: {
         'float-slow': 'float-slow 6s ease-in-out infinite',
         'pulse-glow': 'pulse-glow 4s ease-in-out infinite',
         'shimmer': 'shimmer 1.5s infinite',
+        'blob': 'blob 15s infinite',
       }
     },
   },
