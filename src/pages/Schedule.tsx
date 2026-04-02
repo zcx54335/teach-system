@@ -21,6 +21,11 @@ export interface StudentRecord {
   last_deducted_at: string | null;
   phone?: string;
   time?: string; // 模拟上课时间，用于展示
+  calc_score?: number;
+  logic_score?: number;
+  spatial_score?: number;
+  app_score?: number;
+  data_score?: number;
   class_records?: any[];
 }
 
@@ -31,14 +36,16 @@ const deductClass = async (
   topic: string = '云端同步默认课题', 
   comment: string = '表现良好，继续保持！',
   homeworkTask: string = '',
-  homeworkRefImage: string = ''
+  homeworkRefImage: string = '',
+  scores: { calc_score: number, logic_score: number, spatial_score: number, app_score: number, data_score: number }
 ): Promise<{ success: boolean, error: any }> => {
-  // 1. 更新剩余课时
+  // 1. 更新剩余课时和雷达图维度分数
   const { error: updateError } = await supabase
     .from('students')
     .update({ 
       remaining_classes: currentRemaining - 1,
-      last_deducted_at: new Date().toISOString()
+      last_deducted_at: new Date().toISOString(),
+      ...scores
     })
     .eq('id', id);
     
@@ -87,7 +94,22 @@ const Schedule: React.FC<PageProps> = ({ localProgress, students = [], setStuden
     comment: string;
     homeworkTask: string;
     homeworkRefImage: string;
+    scores: {
+      calc_score: number;
+      logic_score: number;
+      spatial_score: number;
+      app_score: number;
+      data_score: number;
+    };
   } | null>(null);
+
+  const DIMENSIONS = [
+    { key: 'calc_score', label: '计算力' },
+    { key: 'logic_score', label: '逻辑推理' },
+    { key: 'spatial_score', label: '空间想象' },
+    { key: 'app_score', label: '应用意识' },
+    { key: 'data_score', label: '数据分析' }
+  ] as const;
 
   // AI 生成状态
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
@@ -147,7 +169,14 @@ const Schedule: React.FC<PageProps> = ({ localProgress, students = [], setStuden
       topic: '',
       comment: '',
       homeworkTask: '',
-      homeworkRefImage: ''
+      homeworkRefImage: '',
+      scores: {
+        calc_score: student.calc_score || 3,
+        logic_score: student.logic_score || 3,
+        spatial_score: student.spatial_score || 3,
+        app_score: student.app_score || 3,
+        data_score: student.data_score || 3,
+      }
     });
     setSelectedTags([]);
   };
@@ -208,7 +237,7 @@ ${tagsStr}
   const handleConfirmDeduct = async () => {
     if (!confirmModal) return;
     
-    const { studentId, studentName, remainingClasses, topic, comment, homeworkTask, homeworkRefImage } = confirmModal;
+    const { studentId, studentName, remainingClasses, topic, comment, homeworkTask, homeworkRefImage, scores } = confirmModal;
     
     if (!topic.trim()) {
       showToast("请填写课题名称", "error");
@@ -224,7 +253,8 @@ ${tagsStr}
       topic,
       comment || '表现良好，继续保持！',
       homeworkTask,
-      homeworkRefImage
+      homeworkRefImage,
+      scores
     );
     setIsDeducting(false);
 
@@ -241,7 +271,8 @@ ${tagsStr}
         return { 
           ...s, 
           remaining_classes: newRemaining,
-          last_deducted_at: new Date().toISOString()
+          last_deducted_at: new Date().toISOString(),
+          ...scores
         };
       }
       return s;
@@ -631,6 +662,35 @@ ${tagsStr}
                   placeholder="例如：逻辑思维与图形推导"
                   className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50 transition-all"
                 />
+              </div>
+
+              {/* 能力评估雷达图打分 */}
+              <div className="space-y-3 pt-4 border-t border-white/10">
+                <label className="text-xs font-mono text-cyan-400 tracking-widest uppercase flex items-center">
+                  <Hexagon className="w-4 h-4 mr-2" /> 课后能力评估 (1-5分)
+                </label>
+                <div className="grid grid-cols-2 gap-x-6 gap-y-4 bg-white/5 border border-white/10 rounded-xl p-4">
+                  {DIMENSIONS.map(({ key, label }) => (
+                    <div key={key} className="flex flex-col space-y-2">
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-gray-300 font-medium">{label}</span>
+                        <span className="text-cyan-400 font-bold">{confirmModal.scores[key]}</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="1" 
+                        max="5" 
+                        step="1"
+                        value={confirmModal.scores[key]}
+                        onChange={(e) => setConfirmModal({
+                          ...confirmModal, 
+                          scores: { ...confirmModal.scores, [key]: parseInt(e.target.value) }
+                        })}
+                        className="w-full accent-cyan-500 bg-gray-700 rounded-lg appearance-none h-1.5 cursor-pointer"
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* AI 智能评语区域 */}

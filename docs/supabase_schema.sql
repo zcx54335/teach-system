@@ -14,6 +14,11 @@ create table public.students (
     price_per_lesson numeric(10, 2) default 0, -- 单价
     total_amount numeric(10, 2) default 0, -- 总学费
     enrollment_date date, -- 报名日期
+    calc_score integer default 3 check (calc_score between 1 and 5), -- 计算力
+    logic_score integer default 3 check (logic_score between 1 and 5), -- 逻辑推理
+    spatial_score integer default 3 check (spatial_score between 1 and 5), -- 空间想象
+    app_score integer default 3 check (app_score between 1 and 5), -- 应用意识
+    data_score integer default 3 check (data_score between 1 and 5), -- 数据分析
     last_deducted_at timestamp with time zone,
     created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );

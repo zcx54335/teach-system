@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Phone, Quote, CalendarCheck, BookOpen, Camera, CheckCircle2, FileText, Image as ImageIcon, ChevronLeft, ChevronRight, Plus, AlertCircle, XCircle, ArrowDown } from "lucide-react";
+import { Phone, Quote, CalendarCheck, BookOpen, Camera, CheckCircle2, FileText, Image as ImageIcon, ChevronLeft, ChevronRight, Plus, AlertCircle, XCircle, ArrowDown, Hexagon } from "lucide-react";
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 import { supabase } from '../lib/supabaseClient';
 
 // 定义 ClassRecord 接口
@@ -34,6 +35,11 @@ interface StudentRecord {
   last_deducted_at: string | null;
   phone?: string;
   time?: string;
+  calc_score?: number;
+  logic_score?: number;
+  spatial_score?: number;
+  app_score?: number;
+  data_score?: number;
 }
 
 // 扩展 StudentRecord 以包含 class_records
@@ -106,24 +112,16 @@ const ParentDashboard: React.FC = () => {
     observerRef.current = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          setActiveSection(entry.target.id);
-          
-          // 底部跳转缓冲逻辑
-          if (entry.target.id === 'section-buffer') {
-            setIsJumping(true);
-            setTimeout(() => {
-              // 1秒后跳转到老师端首页 (根据实际业务可调整)
-              navigate('/');
-            }, 1000);
-          } else {
-            setIsJumping(false);
+          // 只把 activeSection 设置为这四个实际的卡片
+          if (['section-hero', 'section-radar', 'section-timeline', 'section-contact'].includes(entry.target.id)) {
+            setActiveSection(entry.target.id);
           }
         }
       });
     }, { threshold: 0.5 }); // 元素有一半进入视野时触发
 
     // 观察所有的 Section
-    const sectionIds = ['section-hero', 'section-timeline', 'section-contact', 'section-buffer'];
+    const sectionIds = ['section-hero', 'section-radar', 'section-timeline', 'section-contact'];
     sectionIds.forEach(id => {
       const el = document.getElementById(id);
       if (el) observerRef.current?.observe(el);
@@ -132,7 +130,7 @@ const ParentDashboard: React.FC = () => {
     return () => {
       observerRef.current?.disconnect();
     };
-  }, [student, navigate]);
+  }, [student]);
 
   // 计算当前月份的日历数据
   const calendarData = useMemo(() => {
@@ -294,27 +292,74 @@ const ParentDashboard: React.FC = () => {
     );
   }
 
+  // 计算雷达图数据
+  const radarData = useMemo(() => {
+    if (!student) return [];
+    return [
+      { subject: '计算力', A: student.calc_score || 3, fullMark: 5 },
+      { subject: '逻辑推理', A: student.logic_score || 3, fullMark: 5 },
+      { subject: '空间想象', A: student.spatial_score || 3, fullMark: 5 },
+      { subject: '应用意识', A: student.app_score || 3, fullMark: 5 },
+      { subject: '数据分析', A: student.data_score || 3, fullMark: 5 },
+    ];
+  }, [student]);
+
+  // 自定义雷达图刻度样式
+  const renderPolarAngleAxis = ({ payload, x, y, cx, cy, ...rest }: any) => {
+    return (
+      <text
+        {...rest}
+        x={x}
+        y={y}
+        cx={cx}
+        cy={cy}
+        fill="#9ca3af" // text-gray-400
+        fontSize="10px"
+        fontFamily="monospace"
+        textAnchor={x > cx ? 'start' : x < cx ? 'end' : 'middle'}
+      >
+        {payload.value}
+      </text>
+    );
+  };
+
   return (
     // 强制全局极深色背景，启用 CSS Scroll Snap 和 overscroll-contain
-    <div className="h-[100dvh] overflow-y-auto snap-y snap-mandatory overscroll-contain bg-slate-950 font-sans selection:bg-cyan-500/30 text-white scroll-smooth relative">
+    // 增加 scroll-pt-20 (80px) 确保顶部不被遮挡
+    // 为滑动容器增加平滑滚动
+    <div 
+      className="h-[100dvh] overflow-y-auto snap-y snap-mandatory overscroll-contain bg-slate-950 font-sans selection:bg-cyan-500/30 text-white scroll-smooth scroll-pt-20 relative transition-all duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
+    >
       
       {/* 侧边小圆点导航 */}
       <div className="fixed right-4 top-1/2 -translate-y-1/2 z-50 flex flex-col space-y-4">
         {[
-          { id: 'section-hero', title: '学情总览' },
-          { id: 'section-timeline', title: '成长轨迹' },
+          { id: 'section-hero', title: '今日战报' },
+          { id: 'section-radar', title: '能力评估' },
+          { id: 'section-timeline', title: '历史轨迹' },
           { id: 'section-contact', title: '专属导师' }
         ].map((item) => (
           <button
             key={item.id}
             title={item.title}
             onClick={() => document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth' })}
-            className={`w-2.5 h-2.5 rounded-full transition-all duration-500 ${
-              activeSection === item.id 
-                ? 'bg-cyan-400 scale-150 shadow-[0_0_15px_rgba(34,211,238,0.8)]' 
-                : 'bg-white/20 hover:bg-white/40'
+            className={`group relative flex items-center justify-end transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+              activeSection === item.id ? 'w-24' : 'w-2.5'
             }`}
-          />
+          >
+            {/* 文字提示 (激活时显示) */}
+            <span className={`absolute right-6 text-[10px] font-mono whitespace-nowrap transition-all duration-500 ${
+              activeSection === item.id ? 'opacity-100 text-cyan-400 translate-x-0' : 'opacity-0 text-gray-500 translate-x-4 pointer-events-none'
+            }`}>
+              {item.title}
+            </span>
+            {/* 圆点 / 长条 */}
+            <div className={`h-2.5 rounded-full transition-all duration-500 ${
+              activeSection === item.id 
+                ? 'w-1.5 h-6 bg-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.8)]' 
+                : 'w-2.5 bg-white/20 hover:bg-white/40'
+            }`} />
+          </button>
         ))}
       </div>
 
@@ -440,6 +485,56 @@ const ParentDashboard: React.FC = () => {
           </div>
         </div>
       </header>
+
+      {/* 新增：数学能力评估 (Radar Chart) */}
+      <section id="section-radar" className="snap-start min-h-[100dvh] relative px-6 flex flex-col items-center justify-center will-change-transform">
+        <div className="mb-10 flex items-center space-x-3">
+          <div className="w-8 h-px bg-cyan-500/50"></div>
+          <h2 className="text-sm font-medium tracking-[0.2em] text-gray-300 uppercase">
+            综合能力评估
+          </h2>
+          <div className="w-8 h-px bg-cyan-500/50"></div>
+        </div>
+
+        <div className="w-full max-w-sm bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-stem-orange/10 rounded-full blur-[60px] pointer-events-none"></div>
+          <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-[60px] pointer-events-none"></div>
+          
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
+                <PolarGrid gridType="polygon" stroke="rgba(255,255,255,0.1)" />
+                <PolarAngleAxis 
+                  dataKey="subject" 
+                  tick={renderPolarAngleAxis} 
+                />
+                <PolarRadiusAxis angle={30} domain={[0, 5]} tick={false} axisLine={false} />
+                <Radar
+                  name="Ability"
+                  dataKey="A"
+                  stroke="#ff6b00" /* stem-orange */
+                  strokeWidth={2}
+                  fill="#ff6b00"
+                  fillOpacity={0.3}
+                  isAnimationActive={true}
+                  animationDuration={1500}
+                />
+              </RadarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="mt-4 flex justify-center space-x-4">
+            <div className="flex items-center space-x-1.5">
+              <div className="w-2 h-2 rounded-full bg-stem-orange"></div>
+              <span className="text-[10px] font-mono text-gray-400">当前能力值</span>
+            </div>
+            <div className="flex items-center space-x-1.5">
+              <div className="w-2 h-2 rounded-full bg-gray-600 border border-gray-500"></div>
+              <span className="text-[10px] font-mono text-gray-400">满分基准(5)</span>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* 中部成长时间轴 (Timeline) */}
       <section id="section-timeline" className="snap-start min-h-[100dvh] relative px-6 py-12 z-10 max-w-lg mx-auto will-change-transform">
