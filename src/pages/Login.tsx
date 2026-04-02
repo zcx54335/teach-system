@@ -53,17 +53,8 @@ const Login: React.FC = () => {
     setError(null);
 
     try {
-      // 如果是家长，将手机号伪装成内部邮箱进行验证
-      // 如果是老师（并且输入的是纯数字手机号），我们将它包装为后台设置的管理员专用邮箱
-      let email = identifier;
-      if (loginType === 'parent') {
-        email = `${identifier}@student.yang.com`;
-      } else if (loginType === 'admin' && /^\d{11}$/.test(identifier)) {
-        email = `${identifier}@admin.yang.com`; // SQL 中预设的管理员邮箱
-      }
-
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        phone: identifier,
         password,
       });
 
@@ -151,11 +142,11 @@ const Login: React.FC = () => {
                 账号/手机号
               </label>
               <input
-                type={loginType === 'admin' ? 'text' : 'tel'}
+                type="tel"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-white/30 focus:bg-black/80 transition-all font-mono"
-                placeholder={loginType === 'admin' ? '导师邮箱或手机号' : '13800138000'}
+                placeholder="请输入手机号"
                 required
               />
             </div>

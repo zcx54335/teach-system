@@ -137,11 +137,11 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
       const supabaseSecondary = createClient(supabaseUrl, supabaseAnonKey, { auth: { persistSession: false } });
 
-      const email = `${newStudent.phone}@student.yang.com`;
+      const phone = newStudent.phone;
       const password = newStudent.phone.slice(-6);
 
       const { data: authData, error: authError } = await supabaseSecondary.auth.signUp({
-        email,
+        phone,
         password,
       });
 
@@ -169,8 +169,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
       await supabase.from('profiles').upsert({
         id: authData.user?.id,
         role: 'parent',
-        phone: newStudent.phone,
-        email: email
+        phone: newStudent.phone
       });
 
       setCreatedStudent({
