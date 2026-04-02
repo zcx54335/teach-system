@@ -286,6 +286,12 @@ ${tagsStr}
 
   // 生成海报逻辑
   const generatePoster = async (student: StudentRecord) => {
+    // 增加容错：检查 studentId
+    if (!student || !student.id) {
+      showToast("学生信息缺失，无法生成专属海报", "error");
+      return;
+    }
+
     // 1. 先打开弹窗，将 student 数据放入，此时渲染隐藏的 DOM
     setPosterModal({ isOpen: true, imageUrl: null, student });
     setIsGenerating(true);
@@ -555,75 +561,6 @@ ${tagsStr}
         )}
       </div>
 
-      {/* 隐藏的 Canvas 海报渲染区 */}
-      <div className="fixed top-[-9999px] left-[-9999px]">
-        {posterModal.student && (
-          <div 
-            ref={posterRef}
-            className="w-[375px] h-[667px] bg-slate-950 relative overflow-hidden flex flex-col font-sans text-white"
-            style={{
-              backgroundImage: 'radial-gradient(circle at 50% 0%, #1e3a8a 0%, transparent 70%)',
-            }}
-          >
-            {/* 科技感网格与发光点 */}
-            <div className="absolute inset-0 bg-blueprint bg-blueprint opacity-20"></div>
-            <div className="absolute top-10 right-10 w-32 h-32 bg-cyan-500/20 rounded-full blur-[50px]"></div>
-            
-            {/* 顶部 Hero 区 */}
-            <div className="relative z-10 px-8 pt-16 pb-8">
-              <h1 className="text-5xl font-black text-white tracking-widest mb-2">
-                {posterModal.student.name}
-              </h1>
-              <div className="h-px w-8 bg-cyan-400"></div>
-            </div>
-
-            {/* 中部核心数据区 */}
-            <div className="relative z-10 flex-1 px-8 flex flex-col justify-center">
-              <div className="bg-white/5 backdrop-blur-xl border border-cyan-500/30 rounded-3xl p-8 shadow-[0_0_50px_rgba(34,211,238,0.1)] relative overflow-hidden flex items-center justify-between">
-                {/* 装饰发光边角 */}
-                <div className="absolute top-0 left-0 w-16 h-16 border-t-2 border-l-2 border-cyan-400 rounded-tl-3xl opacity-50"></div>
-                
-                {/* 左侧：巨大的剩余课时及明确的中文标签 */}
-                <div className="flex flex-col items-center justify-center space-y-6 pt-4">
-                  <div className="text-8xl font-light tracking-tighter text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.3)] leading-none h-[96px] flex items-center">
-                    {posterModal.student.remaining_classes}
-                  </div>
-                  <p className="text-sm font-bold text-cyan-400 tracking-[0.2em] uppercase">
-                    剩余课时
-                  </p>
-                </div>
-
-                {/* 右侧：次要数据 */}
-                <div className="flex flex-col justify-center space-y-4 border-l border-white/10 pl-6 h-full">
-                  <p className="text-xs font-mono text-gray-400">
-                    累计已上: <span className="text-white font-bold text-sm ml-1">{posterModal.student.total_classes - posterModal.student.remaining_classes}</span>
-                  </p>
-                  <p className="text-xs font-mono text-gray-400">
-                    最近上课: <span className="text-white font-bold text-sm ml-1">{posterModal.student.last_deducted_at ? new Date(posterModal.student.last_deducted_at).toLocaleDateString() : '-'}</span>
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* 底部引导区 */}
-            <div className="relative z-10 px-8 pb-12 flex items-center justify-between">
-              <div className="flex flex-col justify-center">
-                <p className="text-xs font-bold tracking-widest text-cyan-400 mb-1">Aalon 专属导师</p>
-                <p className="text-[10px] font-mono text-gray-400">132 8125 0502</p>
-                <p className="text-[9px] text-gray-500 mt-2">扫码查看详细成长轨迹与作业</p>
-              </div>
-              <div className="w-20 h-20 bg-white p-1 rounded-xl shadow-[0_0_20px_rgba(255,255,255,0.1)] shrink-0">
-                <img 
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent('https://xiongxiong.top/parent?id=' + posterModal.student.id)}`}
-                  alt="专属学情二维码" 
-                  className="w-full h-full object-contain"
-                />
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
       {/* 强化版二次确认与 AI 评语生成弹窗 */}
       {confirmModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md">
@@ -871,7 +808,7 @@ ${tagsStr}
               </div>
               <div className="w-20 h-20 bg-white p-1.5 rounded-xl">
                 <img 
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`${window.location.origin}/parent?id=${posterModal.student.id}`)}`}
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`https://xiongxiong.top/parent?id=${posterModal.student.id}`)}`}
                   alt="专属学情看板" 
                   className="w-full h-full object-contain"
                 />
