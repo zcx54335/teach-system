@@ -354,9 +354,7 @@ const SystemManagement: React.FC = () => {
         {activeTab === 'teachers' && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex justify-between items-center bg-black/20 p-5 rounded-2xl border border-white/5">
-              <div>
-                <h3 className="text-lg font-bold text-white tracking-widest">在职教师列表</h3>
-              </div>
+      
               <button 
                 onClick={handleAddTeacherClick}
                 className="bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 font-bold py-2.5 px-5 rounded-xl transition-colors flex items-center whitespace-nowrap shrink-0"
