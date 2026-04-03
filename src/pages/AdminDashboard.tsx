@@ -57,18 +57,21 @@ const AdminDashboard: React.FC = () => {
   const [deleteStudentModalOpen, setDeleteStudentModalOpen] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState<StudentRecord | null>(null);
 
-  const SUBJECT_OPTIONS = ['数学', '物理', '化学', '英语', '语文'];
+  const [systemSubjects, setSystemSubjects] = useState<string[]>([]);
   const GRADE_OPTIONS = ['学前', '一年级', '二年级', '三年级', '四年级', '五年级', '六年级', '初一', '初二', '初三'];
 
   const fetchStudents = async () => {
     setIsLoading(true);
-    const { data, error } = await supabase
-      .from('students')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const [stuRes, settingsRes] = await Promise.all([
+      supabase.from('students').select('*').order('created_at', { ascending: false }),
+      supabase.from('system_settings').select('subjects_list').eq('id', 1).single()
+    ]);
       
-    if (!error && data) {
-      setStudents(data);
+    if (stuRes.data) {
+      setStudents(stuRes.data);
+    }
+    if (settingsRes.data?.subjects_list) {
+      setSystemSubjects(settingsRes.data.subjects_list);
     }
     setIsLoading(false);
   };
@@ -589,7 +592,7 @@ const AdminDashboard: React.FC = () => {
               <div>
                 <label className="block text-xs font-mono font-bold text-gray-400 mb-3 uppercase tracking-[0.2em]">报读科目 * (多选)</label>
                 <div className="grid grid-cols-2 gap-3">
-                  {SUBJECT_OPTIONS.map(sub => (
+                  {systemSubjects.map(sub => (
                     <label key={sub} className={`flex items-center p-3 rounded-xl border cursor-pointer transition-all ${newStudent.subjects.includes(sub) ? 'bg-cyan-500/20 border-cyan-500/50' : 'bg-black/50 border-white/10 hover:border-white/30'}`}>
                       <input 
                         type="checkbox" 

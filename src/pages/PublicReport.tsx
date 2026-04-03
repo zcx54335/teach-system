@@ -7,6 +7,7 @@ const PublicReport: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [schedule, setSchedule] = useState<any>(null);
   const [students, setStudents] = useState<any[]>([]);
+  const [systemSettings, setSystemSettings] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,11 +18,14 @@ const PublicReport: React.FC = () => {
         if (!id) throw new Error('无效的报告链接');
 
         // Fetch Schedule & its rich report data
-        const { data: schedData, error: schedError } = await supabase
-          .from('schedules')
-          .select('*')
-          .eq('id', id)
-          .single();
+        const [schedRes, settingsRes] = await Promise.all([
+          supabase.from('schedules').select('*').eq('id', id).single(),
+          supabase.from('system_settings').select('report_footer').eq('id', 1).single()
+        ]);
+
+        if (settingsRes.data) setSystemSettings(settingsRes.data);
+
+        const { data: schedData, error: schedError } = schedRes;
 
         if (schedError || !schedData) throw new Error('找不到该课程记录');
         setSchedule(schedData);
@@ -214,7 +218,7 @@ const PublicReport: React.FC = () => {
 
       <div className="text-center mt-8">
         <p className="text-xs font-medium text-slate-400 tracking-widest">
-          POWERED BY XIAOYU EDUCATION
+          {systemSettings?.report_footer || 'POWERED BY XIAOYU EDUCATION'}
         </p>
       </div>
 

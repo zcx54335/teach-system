@@ -37,6 +37,7 @@ const getCalendarDays = (date: Date) => {
 const AdminSchedule: React.FC = () => {
   const [students, setStudents] = useState<any[]>([]);
   const [schedules, setSchedules] = useState<any[]>([]);
+  const [systemSettings, setSystemSettings] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // View State
@@ -62,6 +63,7 @@ const AdminSchedule: React.FC = () => {
 
     let studentQuery = supabase.from('students').select('*').order('created_at', { ascending: false });
     let scheduleQuery = supabase.from('schedules').select('*').order('start_time', { ascending: true });
+    let settingsQuery = supabase.from('system_settings').select('*').eq('id', 1).single();
 
     if (currentUser) {
       const role = currentUser.role === 'admin' ? 'sysadmin' : currentUser.role;
@@ -70,10 +72,11 @@ const AdminSchedule: React.FC = () => {
       }
     }
 
-    const [studentRes, scheduleRes] = await Promise.all([studentQuery, scheduleQuery]);
+    const [studentRes, scheduleRes, settingsRes] = await Promise.all([studentQuery, scheduleQuery, settingsQuery]);
 
     if (studentRes.data) setStudents(studentRes.data);
     if (scheduleRes.data) setSchedules(scheduleRes.data);
+    if (settingsRes.data) setSystemSettings(settingsRes.data);
     
     setIsLoading(false);
   };
@@ -84,12 +87,15 @@ const AdminSchedule: React.FC = () => {
 
   // --- ADD SCHEDULE MODAL LOGIC ---
   const availableSubjects = useMemo(() => {
+    if (systemSettings?.subjects_list) {
+      return systemSettings.subjects_list;
+    }
     const subs = new Set<string>();
     students.forEach(s => {
       if (Array.isArray(s.subjects)) s.subjects.forEach(sub => subs.add(sub));
     });
     return Array.from(subs);
-  }, [students]);
+  }, [students, systemSettings]);
 
   useEffect(() => {
     if (!newSchedSubject) {
@@ -100,6 +106,17 @@ const AdminSchedule: React.FC = () => {
     setNewSchedStudents(matching.map(s => s.id));
   }, [newSchedSubject, students]);
 
+  const handleStartChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setNewSchedStart(val);
+    if (val && systemSettings?.default_duration) {
+      const [h, m] = val.split(':').map(Number);
+      const totalMins = h * 60 + m + systemSettings.default_duration;
+      const newH = String(Math.floor(totalMins / 60) % 24).padStart(2, '0');
+      const newM = String(totalMins % 60).padStart(2, '0');
+      setNewSchedEnd(`${newH}:${newM}`);
+    }
+  };
   const handleSaveSchedule = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSchedSubject || newSchedStudents.length === 0) {
@@ -305,7 +322,7 @@ const AdminSchedule: React.FC = () => {
                   <div>
                     <label className="block text-xs font-mono font-bold text-gray-400 mb-2 uppercase tracking-[0.2em]">开始时间</label>
                     <input 
-                      type="time" required value={newSchedStart} onChange={(e) => setNewSchedStart(e.target.value)}
+                      type="time" required value={newSchedStart} onChange={handleStartChange}
                       className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white font-mono focus:border-cyan-500/50"
                     />
                   </div>

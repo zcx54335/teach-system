@@ -2,14 +2,12 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { 
   Users, Database, Settings, Plus, UserPlus, CreditCard, Search, ArrowRight,
-  UserCheck, Banknote, ShieldCheck, Edit, Trash2, AlertTriangle
+  UserCheck, Banknote, ShieldCheck, Edit, Trash2, AlertTriangle, Save, X, BookOpen
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 type Tab = 'teachers' | 'finance' | 'settings';
-
-const SUBJECT_OPTIONS = ['数学', '物理', '化学', '英语', '语文'];
 
 const SystemManagement: React.FC = () => {
   const navigate = useNavigate();
@@ -57,6 +55,18 @@ const SystemManagement: React.FC = () => {
     return '0.00';
   }, [orderTotalPrice, orderClasses]);
 
+  // ----------------------------------------
+  // Settings Management State
+  // ----------------------------------------
+  const [settings, setSettings] = useState({
+    studio_name: '小鱼思维',
+    report_footer: 'POWERED BY 小鱼思维',
+    subjects_list: ['数学', '物理', '化学', '英语', '语文'],
+    default_duration: 120
+  });
+  const [newSubjectInput, setNewSubjectInput] = useState('');
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+
   // Auth & Fetch
   useEffect(() => {
     const checkAuthAndFetch = async () => {
@@ -81,15 +91,24 @@ const SystemManagement: React.FC = () => {
   }, [navigate]);
 
   const fetchData = async () => {
-    const [stuRes, teacherRes, orderRes] = await Promise.all([
+    const [stuRes, teacherRes, orderRes, settingsRes] = await Promise.all([
       supabase.from('students').select('*').order('created_at', { ascending: false }),
       supabase.from('profiles').select('*').eq('role', 'teacher').order('created_at', { ascending: false }),
-      supabase.from('orders').select('*').order('created_at', { ascending: false })
+      supabase.from('orders').select('*').order('created_at', { ascending: false }),
+      supabase.from('system_settings').select('*').eq('id', 1).single()
     ]);
 
     if (stuRes.data) setStudents(stuRes.data);
     if (teacherRes.data) setTeachers(teacherRes.data);
     if (orderRes.data) setOrders(orderRes.data);
+    if (settingsRes.data) {
+      setSettings({
+        studio_name: settingsRes.data.studio_name || '小鱼思维',
+        report_footer: settingsRes.data.report_footer || 'POWERED BY 小鱼思维',
+        subjects_list: settingsRes.data.subjects_list || ['数学', '物理', '化学', '英语', '语文'],
+        default_duration: settingsRes.data.default_duration || 120
+      });
+    }
   };
 
   // --- Teacher Actions ---
@@ -303,6 +322,47 @@ const SystemManagement: React.FC = () => {
     return { totalRemainingClasses, estimatedLiability };
   }, [students, orders]);
 
+
+  const handleAddSubject = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && newSubjectInput.trim() !== '') {
+      e.preventDefault();
+      const sub = newSubjectInput.trim();
+      if (!settings.subjects_list.includes(sub)) {
+        setSettings({ ...settings, subjects_list: [...settings.subjects_list, sub] });
+      }
+      setNewSubjectInput('');
+    }
+  };
+
+  const handleRemoveSubject = (subToRemove: string) => {
+    setSettings({
+      ...settings,
+      subjects_list: settings.subjects_list.filter(s => s !== subToRemove)
+    });
+  };
+
+  const handleSaveSettings = async () => {
+    setIsSavingSettings(true);
+    try {
+      const { error } = await supabase
+        .from('system_settings')
+        .upsert({ 
+          id: 1, 
+          studio_name: settings.studio_name,
+          report_footer: settings.report_footer,
+          subjects_list: settings.subjects_list,
+          default_duration: settings.default_duration
+        });
+
+      if (error) throw error;
+      toast.success('全局设置保存成功');
+      fetchData(); // Sync across app
+    } catch (err: any) {
+      toast.error('设置保存失败：' + err.message);
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
 
   if (isLoading) {
     return <div className="p-8 text-cyan-400 font-mono animate-pulse">SYSTEM INITIALIZING...</div>;
@@ -522,10 +582,100 @@ const SystemManagement: React.FC = () => {
 
         {/* ==================== SETTINGS TAB ==================== */}
         {activeTab === 'settings' && (
-          <div className="flex flex-col items-center justify-center h-64 text-gray-500 border border-dashed border-white/10 rounded-3xl bg-black/20">
-            <ShieldCheck className="w-12 h-12 mb-3 opacity-20" />
-            <p className="text-lg font-bold tracking-widest">系统基础设置</p>
-            <p className="text-sm mt-2">（系统参数、角色权限配置等模块建设中...）</p>
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl pb-10">
+            
+            {/* Block 1: Brand Settings */}
+            <div className="bg-white/[0.02] border border-white/10 rounded-3xl p-6 shadow-xl relative overflow-hidden">
+              <h3 className="text-lg font-bold text-white mb-6 tracking-widest flex items-center">
+                <ShieldCheck className="w-5 h-5 mr-2 text-purple-400" />
+                品牌设置 (Brand Settings)
+              </h3>
+              <div className="space-y-5">
+                <div>
+                  <label className="block text-xs font-mono text-gray-400 mb-2">机构名称 (Studio Name)</label>
+                  <input 
+                    type="text" 
+                    value={settings.studio_name}
+                    onChange={(e) => setSettings({...settings, studio_name: e.target.value})}
+                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-purple-500 transition-colors" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-mono text-gray-400 mb-2">专属报告寄语 (Report Footer)</label>
+                  <input 
+                    type="text" 
+                    value={settings.report_footer}
+                    onChange={(e) => setSettings({...settings, report_footer: e.target.value})}
+                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-purple-500 transition-colors" 
+                  />
+                  <p className="text-xs text-gray-500 mt-2">此内容将展示在家长端扫码报告的底部，彰显品牌温度。</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Block 2: Course Dictionary */}
+            <div className="bg-white/[0.02] border border-white/10 rounded-3xl p-6 shadow-xl relative overflow-hidden">
+              <h3 className="text-lg font-bold text-white mb-6 tracking-widest flex items-center">
+                <BookOpen className="w-5 h-5 mr-2 text-cyan-400" />
+                教务字典库 (Course Dictionary)
+              </h3>
+              <div>
+                <label className="block text-xs font-mono text-gray-400 mb-2">授课科目库 (Subjects List)</label>
+                <div className="bg-black/50 border border-white/10 rounded-xl p-3 min-h-[60px] flex flex-wrap gap-2 items-center focus-within:border-cyan-500 transition-colors">
+                  {settings.subjects_list.map((sub) => (
+                    <span key={sub} className="bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 px-3 py-1 rounded-lg text-sm flex items-center gap-2">
+                      {sub}
+                      <button onClick={() => handleRemoveSubject(sub)} className="text-cyan-500 hover:text-cyan-300">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                  <input 
+                    type="text" 
+                    value={newSubjectInput}
+                    onChange={(e) => setNewSubjectInput(e.target.value)}
+                    onKeyDown={handleAddSubject}
+                    placeholder="输入科目并按回车添加..."
+                    className="bg-transparent border-none outline-none text-white text-sm flex-1 min-w-[150px] placeholder:text-gray-600"
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-2">修改后，系统内所有『新增排课』、『新增学员』的科目下拉框将自动同步。</p>
+              </div>
+            </div>
+
+            {/* Block 3: Scheduling Rules */}
+            <div className="bg-white/[0.02] border border-white/10 rounded-3xl p-6 shadow-xl relative overflow-hidden">
+              <h3 className="text-lg font-bold text-white mb-6 tracking-widest flex items-center">
+                <Settings className="w-5 h-5 mr-2 text-amber-400" />
+                排课规则 (Scheduling Rules)
+              </h3>
+              <div>
+                <label className="block text-xs font-mono text-gray-400 mb-2">默认单节课时长 (分钟)</label>
+                <input 
+                  type="number" 
+                  min="1"
+                  value={settings.default_duration}
+                  onChange={(e) => setSettings({...settings, default_duration: parseInt(e.target.value) || 120})}
+                  className="w-full md:w-1/2 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-amber-500 transition-colors" 
+                />
+              </div>
+            </div>
+
+            {/* Save Button */}
+            <div className="pt-4 text-right">
+              <button 
+                onClick={handleSaveSettings}
+                disabled={isSavingSettings}
+                className="bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-bold py-4 px-8 rounded-xl tracking-widest shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:shadow-[0_0_30px_rgba(168,85,247,0.6)] transition-all disabled:opacity-50 flex items-center justify-center ml-auto"
+              >
+                {isSavingSettings ? (
+                  <span className="flex items-center"><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div> 保存中...</span>
+                ) : (
+                  <span className="flex items-center"><Save className="w-5 h-5 mr-2" /> 💾 保存全局设置</span>
+                )}
+              </button>
+            </div>
+
           </div>
         )}
 
@@ -551,7 +701,7 @@ const SystemManagement: React.FC = () => {
                 <label className="block text-xs font-mono text-gray-400 mb-2">授课科目</label>
                 <select required value={newTeacherSubject} onChange={e => setNewTeacherSubject(e.target.value)} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-cyan-500">
                   <option value="" disabled>请选择授课科目</option>
-                  {SUBJECT_OPTIONS.map(sub => <option key={sub} value={sub}>{sub}</option>)}
+                  {settings.subjects_list.map(sub => <option key={sub} value={sub}>{sub}</option>)}
                 </select>
               </div>
               <div className="text-xs text-gray-500 bg-white/5 p-3 rounded-xl border border-white/5 mt-4">
@@ -667,7 +817,7 @@ const SystemManagement: React.FC = () => {
                   <label className="block text-xs font-mono text-gray-400 mb-2">充值科目</label>
                   <select required value={orderSubject} onChange={e => setOrderSubject(e.target.value)} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-amber-500">
                     <option value="" disabled>选择科目...</option>
-                    {SUBJECT_OPTIONS.map(sub => <option key={sub} value={sub}>{sub}</option>)}
+                    {settings.subjects_list.map(sub => <option key={sub} value={sub}>{sub}</option>)}
                   </select>
                 </div>
                 <div>

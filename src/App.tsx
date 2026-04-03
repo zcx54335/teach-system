@@ -7,7 +7,6 @@ import AdminRoute from "./components/Auth/AdminRoute";
 import MainLayout from "./components/Layout/MainLayout";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminSchedule from "./pages/AdminSchedule";
-import AdminSettings from "./pages/AdminSettings";
 import SystemManagement from "./pages/SystemManagement";
 import TeacherWorkbench from "./pages/TeacherWorkbench";
 import PublicReport from "./pages/PublicReport";
@@ -60,7 +59,6 @@ export default function App() {
             <Route path="students" element={<AdminDashboard />} />
             <Route path="schedule" element={<AdminSchedule />} />
             <Route path="system" element={<SystemManagement />} />
-            <Route path="settings" element={<AdminSettings />} />
             <Route path="report" element={<ParentCenter />} />
             <Route path="materials" element={<ParentCenter />} />
             <Route path="profile" element={<Profile />} />

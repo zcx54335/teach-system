@@ -56,8 +56,7 @@ const MainLayout: React.FC = () => {
         { path: '/dashboard/students', icon: Users, label: '学员管理' },
         { path: '/dashboard/schedule', icon: BookOpen, label: '课程排期' },
         ...(userRole === 'sysadmin' ? [
-          { path: '/dashboard/system', icon: Database, label: '系统管理' },
-          { path: '/dashboard/settings', icon: Settings, label: '基础设置' }
+          { path: '/dashboard/system', icon: Database, label: '系统管理' }
         ] : []),
       ];
     } else if (userRole === 'parent') {
