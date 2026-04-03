@@ -233,7 +233,7 @@ const MainLayout: React.FC = () => {
       {/* Main Content Area */}
       <main className="relative z-10 flex-1 h-screen overflow-hidden flex flex-col bg-black/20 w-full">
         {/* Top Navbar */}
-        <header className="h-16 md:h-20 flex items-center justify-between px-4 md:px-8 border-b border-white/5 backdrop-blur-md shrink-0">
+        <header className="h-16 md:h-20 flex items-center justify-between px-4 md:px-8 border-b border-white/5 backdrop-blur-md shrink-0 relative z-[100]">
           <div className="flex items-center">
             {/* Mobile Hamburger */}
             <button 
@@ -277,28 +277,31 @@ const MainLayout: React.FC = () => {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute top-14 right-0 w-48 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50"
+                  className="absolute top-14 right-0 w-56 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden z-[9999]"
                 >
-                  <div className="p-3 border-b border-white/5">
-                    <p className="text-sm font-bold text-white tracking-widest">{userName}</p>
-                    <p className="text-xs text-gray-400 font-mono mt-1">{userRole === 'parent' ? '家长' : userRole === 'teacher' ? '教师' : '管理员'}</p>
+                  <div className="p-4 border-b border-slate-700 bg-slate-800/50">
+                    <p className="text-sm font-bold text-white tracking-widest truncate">{userName}</p>
+                    <p className="text-xs text-cyan-400 font-mono mt-1">{userRole === 'parent' ? '家长' : userRole === 'teacher' ? '教师' : '管理员'}</p>
                   </div>
-                  <div className="p-1">
+                  <div className="p-2">
                     <button 
                       onClick={() => {
                         setIsProfileDropdownOpen(false);
                         navigate('/dashboard/profile');
                       }}
-                      className="w-full flex items-center px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl transition-colors tracking-widest"
+                      className="w-full flex items-center px-3 py-3 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl transition-colors tracking-widest"
                     >
-                      <UserCircle className="w-4 h-4 mr-2 text-cyan-400" />
+                      <UserCircle className="w-5 h-5 mr-3 text-cyan-400" />
                       账号详细信息
                     </button>
+                    
+                    <div className="my-1 border-t border-slate-700"></div>
+                    
                     <button 
                       onClick={handleLogout}
-                      className="w-full flex items-center px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-colors tracking-widest mt-1"
+                      className="w-full flex items-center px-3 py-3 text-sm text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-colors tracking-widest"
                     >
-                      <LogOut className="w-4 h-4 mr-2" />
+                      <LogOut className="w-5 h-5 mr-3" />
                       退出登录
                     </button>
                   </div>
