@@ -6,6 +6,8 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import toast from 'react-hot-toast';
+import { EmptyState } from '../components/UI/EmptyState';
+import { Skeleton } from '../components/UI/Skeleton';
 
 const toDateString = (d: Date) => {
   const year = d.getFullYear();
@@ -274,30 +276,30 @@ const TeacherWorkbench: React.FC = () => {
       
       <header className="mb-6 shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl md:text-3xl font-bold tracking-widest text-white flex items-center">
-            <Laptop className="w-6 h-6 md:w-8 md:h-8 mr-3 text-cyan-400" />
+          <h2 className="text-2xl md:text-3xl font-bold tracking-widest text-slate-800 dark:text-white flex items-center">
+            <Laptop className="w-6 h-6 md:w-8 md:h-8 mr-3 text-cyan-600 dark:text-cyan-400" />
             日历驱动消课台
           </h2>
-          <p className="text-xs md:text-sm text-gray-400 font-mono tracking-widest mt-2">CALENDAR-DRIVEN WORKBENCH</p>
+          <p className="text-xs md:text-sm text-slate-500 dark:text-gray-400 font-mono tracking-widest mt-2">CALENDAR-DRIVEN WORKBENCH</p>
         </div>
       </header>
 
       {/* Full Month Calendar & Date Info */}
-      <div className="bg-white/[0.02] border border-white/5 backdrop-blur-md rounded-3xl p-5 mb-6 shrink-0 shadow-2xl flex flex-col md:flex-row gap-6">
+      <div className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 backdrop-blur-md rounded-3xl p-5 mb-6 shrink-0 shadow-sm dark:shadow-2xl flex flex-col md:flex-row gap-6">
         <div className="flex-1">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-white tracking-widest">教学日历</h3>
-            <div className="flex items-center gap-4 bg-black/30 rounded-full px-3 py-1 border border-white/5">
-              <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))} className="p-1 hover:text-cyan-400 text-gray-400 transition-colors"><ChevronLeft className="w-5 h-5" /></button>
-              <span className="text-sm font-mono text-white font-bold w-20 text-center">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-white tracking-widest">教学日历</h3>
+            <div className="flex items-center gap-4 bg-slate-100 dark:bg-black/30 rounded-full px-3 py-1 border border-slate-200 dark:border-white/5">
+              <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))} className="p-1 hover:text-cyan-600 dark:hover:text-cyan-400 text-slate-500 dark:text-gray-400 transition-colors"><ChevronLeft className="w-5 h-5" /></button>
+              <span className="text-sm font-mono text-slate-800 dark:text-white font-bold w-20 text-center">
                 {currentMonth.getFullYear()}年{currentMonth.getMonth() + 1}月
               </span>
-              <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))} className="p-1 hover:text-cyan-400 text-gray-400 transition-colors"><ChevronRight className="w-5 h-5" /></button>
+              <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))} className="p-1 hover:text-cyan-600 dark:hover:text-cyan-400 text-slate-500 dark:text-gray-400 transition-colors"><ChevronRight className="w-5 h-5" /></button>
             </div>
           </div>
           <div className="grid grid-cols-7 gap-2 mb-2">
             {weekDays.map(d => (
-              <div key={d} className="text-center text-xs font-bold text-gray-500">{d}</div>
+              <div key={d} className="text-center text-xs font-bold text-slate-500">{d}</div>
             ))}
           </div>
           <div className="grid grid-cols-7 gap-2">
@@ -315,8 +317,8 @@ const TeacherWorkbench: React.FC = () => {
                   className={`
                     aspect-square rounded-xl flex flex-col items-center justify-center relative transition-all duration-300
                     ${isSelected 
-                      ? 'bg-cyan-500/20 border border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.3)] text-cyan-300' 
-                      : 'hover:bg-white/5 border border-transparent text-gray-400'
+                      ? 'bg-cyan-100 dark:bg-cyan-500/20 border border-cyan-300 dark:border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.1)] dark:shadow-[0_0_15px_rgba(6,182,212,0.3)] text-cyan-700 dark:text-cyan-300' 
+                      : 'hover:bg-slate-50 dark:hover:bg-white/5 border border-transparent text-slate-600 dark:text-gray-400'
                     }
                   `}
                 >
@@ -328,34 +330,44 @@ const TeacherWorkbench: React.FC = () => {
           </div>
         </div>
         
-        <div className="md:w-64 border-t md:border-t-0 md:border-l border-white/5 pt-4 md:pt-0 md:pl-6 flex flex-col justify-center">
-           <div className="text-4xl font-black text-white tracking-wider mb-2">{selectedDate.getDate()}</div>
-           <div className="text-gray-400 font-mono tracking-widest uppercase">{selectedDate.getFullYear()} - {String(selectedDate.getMonth() + 1).padStart(2, '0')}</div>
-           <div className="mt-6 text-sm text-gray-500 leading-relaxed">
+        <div className="md:w-64 border-t md:border-t-0 md:border-l border-slate-200 dark:border-white/5 pt-4 md:pt-0 md:pl-6 flex flex-col justify-center">
+           <div className="text-4xl font-black text-slate-800 dark:text-white tracking-wider mb-2">{selectedDate.getDate()}</div>
+           <div className="text-slate-500 dark:text-gray-400 font-mono tracking-widest uppercase">{selectedDate.getFullYear()} - {String(selectedDate.getMonth() + 1).padStart(2, '0')}</div>
+           <div className="mt-6 text-sm text-slate-500 leading-relaxed">
              点击日历日期，即可在下方查看并操作该日期的所有待上课程。
            </div>
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col bg-white/[0.02] backdrop-blur-3xl border border-white/10 rounded-3xl p-5 shadow-2xl overflow-y-auto">
+      <div className="flex-1 flex flex-col bg-white dark:bg-white/[0.02] backdrop-blur-3xl border border-slate-200 dark:border-white/10 rounded-3xl p-5 shadow-sm dark:shadow-2xl overflow-y-auto">
         
         {/* VIEW 1: Schedules for Selected Date */}
         {!activeSchedule && (
           <div className="flex-1 flex flex-col">
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/5 shrink-0">
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200 dark:border-white/5 shrink-0">
               <div>
-                <h3 className="text-xl font-bold text-white tracking-widest flex items-center">
+                <h3 className="text-xl font-bold text-slate-800 dark:text-white tracking-widest flex items-center">
                   {selectedDate.getMonth() + 1}月{selectedDate.getDate()}日 待消课表
                 </h3>
               </div>
-              {isLoading && <div className="text-cyan-400 animate-pulse text-sm font-mono">SYNCING...</div>}
             </div>
 
             <div className="flex-1 space-y-4">
-              {schedules.length === 0 && !isLoading ? (
-                <div className="flex flex-col items-center justify-center h-full text-gray-500 border border-dashed border-white/10 rounded-2xl bg-black/20 min-h-[300px]">
-                  <CheckSquare className="w-12 h-12 mb-3 opacity-20" />
-                  <p className="text-lg">该日期暂无排课记录</p>
+              {isLoading ? (
+                // Skeleton Loading State
+                <div className="space-y-4">
+                  <Skeleton className="w-full h-32" />
+                  <Skeleton className="w-full h-32" />
+                  <Skeleton className="w-full h-32" />
+                </div>
+              ) : schedules.length === 0 ? (
+                // Empty State
+                <div className="h-full flex items-center justify-center min-h-[300px]">
+                  <EmptyState 
+                    icon={CheckSquare}
+                    title="该日期暂无排课记录"
+                    description="杨老师可以好好休息一下，或者点击顶部去排课规划未来的课程。"
+                  />
                 </div>
               ) : (
                 schedules.map(sched => {
@@ -366,33 +378,33 @@ const TeacherWorkbench: React.FC = () => {
                       onClick={() => enterDeductionMode(sched)}
                       className={`p-5 rounded-2xl border transition-all duration-300 relative overflow-hidden group cursor-pointer ${
                         isCompleted 
-                          ? 'bg-black/40 border-green-500/20 opacity-80 hover:opacity-100 hover:border-green-500/40' 
-                          : 'border-cyan-500/30 bg-cyan-900/10 hover:border-cyan-400/80 hover:bg-cyan-900/20 shadow-[inset_0_0_20px_rgba(6,182,212,0.05)]'
+                          ? 'bg-slate-50 dark:bg-black/40 border-green-500/20 opacity-80 hover:opacity-100 hover:border-green-500/40' 
+                          : 'border-cyan-300 dark:border-cyan-500/30 bg-cyan-50 dark:bg-cyan-900/10 hover:border-cyan-500 hover:bg-cyan-100 dark:hover:border-cyan-400/80 dark:hover:bg-cyan-900/20 shadow-[inset_0_0_20px_rgba(6,182,212,0.05)]'
                       }`}
                     >
                       {isCompleted ? (
-                        <div className="absolute top-4 right-4 text-green-500/80 flex items-center text-xs font-mono font-bold tracking-widest bg-green-500/10 px-3 py-1 rounded-full border border-green-500/20">
+                        <div className="absolute top-4 right-4 text-green-600 dark:text-green-500/80 flex items-center text-xs font-mono font-bold tracking-widest bg-green-100 dark:bg-green-500/10 px-3 py-1 rounded-full border border-green-200 dark:border-green-500/20">
                           <CheckCircle className="w-4 h-4 mr-1" /> 已消课
                         </div>
                       ) : (
-                        <div className="absolute top-4 right-4 text-yellow-500/80 flex items-center text-xs font-mono font-bold tracking-widest">
+                        <div className="absolute top-4 right-4 text-amber-600 dark:text-yellow-500/80 flex items-center text-xs font-mono font-bold tracking-widest">
                           <Clock className="w-4 h-4 mr-1" /> 待上课
                         </div>
                       )}
                       
                       <div className="flex flex-col sm:flex-row gap-4 sm:items-center mt-2">
                         <div className={`flex-shrink-0 px-4 py-3 rounded-xl border flex flex-col items-center justify-center w-28 ${
-                          isCompleted ? 'bg-black/60 border-white/5' : 'bg-black/40 border-white/5'
+                          isCompleted ? 'bg-slate-100 dark:bg-black/60 border-slate-200 dark:border-white/5' : 'bg-white dark:bg-black/40 border-slate-200 dark:border-white/5 shadow-sm dark:shadow-none'
                         }`}>
-                          <Clock className={`w-5 h-5 mb-1 ${isCompleted ? 'text-gray-500' : 'text-cyan-400'}`} />
-                          <span className={`font-mono font-bold text-sm ${isCompleted ? 'text-gray-400' : 'text-white'}`}>{sched.start_time}</span>
-                          <span className="text-gray-500 font-mono text-xs">{sched.end_time}</span>
+                          <Clock className={`w-5 h-5 mb-1 ${isCompleted ? 'text-slate-400 dark:text-gray-500' : 'text-cyan-600 dark:text-cyan-400'}`} />
+                          <span className={`font-mono font-bold text-sm ${isCompleted ? 'text-slate-500 dark:text-gray-400' : 'text-slate-800 dark:text-white'}`}>{sched.start_time}</span>
+                          <span className="text-slate-400 dark:text-gray-500 font-mono text-xs">{sched.end_time}</span>
                         </div>
                         <div className="flex-1">
-                          <h4 className={`text-lg font-bold tracking-widest mb-1 ${isCompleted ? 'text-gray-400' : 'text-white'}`}>
+                          <h4 className={`text-lg font-bold tracking-widest mb-1 ${isCompleted ? 'text-slate-500 dark:text-gray-400' : 'text-slate-800 dark:text-white'}`}>
                             {sched.subject}
                           </h4>
-                          <div className="text-sm text-gray-400 flex items-start gap-2 mt-2">
+                          <div className="text-sm text-slate-500 dark:text-gray-400 flex items-start gap-2 mt-2">
                             <Users className="w-4 h-4 mt-0.5 shrink-0" />
                             <span className="leading-relaxed">
                               {getStudentNames(sched.student_ids || []) || '未分配学生'}
@@ -402,11 +414,11 @@ const TeacherWorkbench: React.FC = () => {
                         
                         <div className="mt-4 sm:mt-0 flex-shrink-0 self-end sm:self-center">
                           {isCompleted ? (
-                            <button className="bg-transparent border border-gray-600 hover:border-gray-400 text-gray-400 hover:text-white font-bold py-2 px-4 rounded-xl transition-all text-sm flex items-center">
+                            <button className="bg-transparent border border-slate-300 dark:border-gray-600 hover:border-slate-400 dark:hover:border-gray-400 text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:hover:text-white font-bold py-2 px-4 rounded-xl transition-all text-sm flex items-center">
                               <MessageSquare className="w-4 h-4 mr-2" /> 补充/修改报告
                             </button>
                           ) : (
-                            <button className="bg-cyan-500/20 hover:bg-cyan-500/40 border border-cyan-500/50 text-cyan-300 font-bold py-2 px-6 rounded-xl transition-all">
+                            <button className="bg-cyan-100 dark:bg-cyan-500/20 hover:bg-cyan-200 dark:hover:bg-cyan-500/40 border border-cyan-300 dark:border-cyan-500/50 text-cyan-700 dark:text-cyan-300 font-bold py-2 px-6 rounded-xl transition-all shadow-sm dark:shadow-none">
                               去消课
                             </button>
                           )}

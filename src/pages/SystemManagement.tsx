@@ -7,6 +7,9 @@ import {
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
+import { EmptyState } from '../components/UI/EmptyState';
+import { Skeleton } from '../components/UI/Skeleton';
+
 type Tab = 'teachers' | 'finance' | 'settings';
 
 const SystemManagement: React.FC = () => {
@@ -373,8 +376,8 @@ const SystemManagement: React.FC = () => {
       
       {/* Header */}
       <header className="mb-8 shrink-0">
-        <h2 className="text-2xl md:text-3xl font-bold tracking-widest text-white flex items-center">
-          <Database className="w-6 h-6 md:w-8 md:h-8 mr-3 text-cyan-400" />
+        <h2 className="text-2xl md:text-3xl font-bold tracking-widest text-slate-800 dark:text-white flex items-center">
+          <Database className="w-6 h-6 md:w-8 md:h-8 mr-3 text-cyan-600 dark:text-cyan-400" />
           系统管理
         </h2>
       </header>
@@ -413,82 +416,97 @@ const SystemManagement: React.FC = () => {
         {/* ==================== TEACHERS TAB ==================== */}
         {activeTab === 'teachers' && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="flex justify-between items-center bg-black/20 p-5 rounded-2xl border border-white/5">
+            <div className="flex justify-between items-center bg-white dark:bg-black/20 p-5 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-none">
       
               <button 
                 onClick={handleAddTeacherClick}
-                className="bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 font-bold py-2.5 px-5 rounded-xl transition-colors flex items-center whitespace-nowrap shrink-0"
+                className="bg-cyan-100 dark:bg-cyan-500/10 hover:bg-cyan-200 dark:hover:bg-cyan-500/20 border border-cyan-300 dark:border-cyan-500/30 text-cyan-700 dark:text-cyan-400 font-bold py-2.5 px-5 rounded-xl transition-colors flex items-center whitespace-nowrap shrink-0"
               >
                 <UserPlus className="w-5 h-5 mr-2" /> 新增教师
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-              {teachers.map(teacher => {
-                const assignedStudents = students.filter(s => s.teacher_id === teacher.id);
-                return (
-                  <div key={teacher.id} className="bg-white/[0.02] border border-white/10 rounded-3xl p-6 hover:bg-white/[0.04] transition-all relative group">
-                    <div className="flex items-center gap-4 mb-5">
-                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border border-cyan-500/30 flex items-center justify-center">
-                        <span className="text-xl font-bold text-cyan-300">{teacher.full_name?.charAt(0) || 'T'}</span>
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-xl font-bold text-white tracking-widest">{teacher.full_name}</h4>
-                          {teacher.subject && (
-                            <span className="bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 px-2 py-0.5 rounded text-[10px] font-bold">
-                              {teacher.subject}
-                            </span>
-                          )}
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                <Skeleton className="h-64 w-full" />
+                <Skeleton className="h-64 w-full" />
+                <Skeleton className="h-64 w-full" />
+              </div>
+            ) : teachers.length === 0 ? (
+              <EmptyState 
+                icon={Users}
+                title="暂无师资数据"
+                description="目前系统内还没有添加任何教师，请点击上方『新增教师』按钮来创建第一位老师档案。"
+                className="my-8"
+              />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                {teachers.map(teacher => {
+                  const assignedStudents = students.filter(s => s.teacher_id === teacher.id);
+                  return (
+                    <div key={teacher.id} className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 rounded-3xl p-6 hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-all relative group shadow-sm dark:shadow-none">
+                      <div className="flex items-center gap-4 mb-5">
+                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-100 dark:from-cyan-500/20 to-blue-200 dark:to-blue-600/20 border border-cyan-300 dark:border-cyan-500/30 flex items-center justify-center">
+                          <span className="text-xl font-bold text-cyan-700 dark:text-cyan-300">{teacher.full_name?.charAt(0) || 'T'}</span>
                         </div>
-                        <p className="text-sm font-mono text-gray-400 mt-0.5">{teacher.phone}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="bg-black/30 rounded-2xl p-4 mb-5">
-                      <div className="text-xs font-mono text-gray-500 uppercase mb-2 flex items-center justify-between">
-                        <span>名下学员 ({assignedStudents.length})</span>
-                      </div>
-                      {assignedStudents.length === 0 ? (
-                        <div className="text-sm text-gray-500 italic py-2">暂无分配学员</div>
-                      ) : (
-                        <div className="flex flex-wrap gap-2">
-                          {assignedStudents.map(s => (
-                            <span key={s.id} className="bg-cyan-900/30 border border-cyan-500/20 text-cyan-300 text-xs px-2.5 py-1 rounded-lg">
-                              {s.name}
-                            </span>
-                          ))}
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-xl font-bold text-slate-800 dark:text-white tracking-widest">{teacher.full_name}</h4>
+                            {teacher.subject && (
+                              <span className="bg-cyan-100 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-300 dark:border-cyan-500/30 px-2 py-0.5 rounded text-[10px] font-bold">
+                                {teacher.subject}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm font-mono text-slate-500 dark:text-gray-400 mt-0.5">{teacher.phone}</p>
                         </div>
-                      )}
-                    </div>
+                      </div>
+                      
+                      <div className="bg-slate-50 dark:bg-black/30 rounded-2xl p-4 mb-5">
+                        <div className="text-xs font-mono text-slate-500 dark:text-gray-500 uppercase mb-2 flex items-center justify-between">
+                          <span>名下学员 ({assignedStudents.length})</span>
+                        </div>
+                        {assignedStudents.length === 0 ? (
+                          <div className="text-sm text-slate-400 dark:text-gray-500 italic py-2">暂无分配学员</div>
+                        ) : (
+                          <div className="flex flex-wrap gap-2">
+                            {assignedStudents.map(s => (
+                              <span key={s.id} className="bg-cyan-50 dark:bg-cyan-900/30 border border-cyan-200 dark:border-cyan-500/20 text-cyan-700 dark:text-cyan-300 text-xs px-2.5 py-1 rounded-lg">
+                                {s.name}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
 
-                    <div className="flex gap-2 mt-4">
-                      <button 
-                        onClick={() => {
-                          setSelectedTeacherId(teacher.id);
-                          setIsAssignStudentOpen(true);
-                        }}
-                        className="flex-1 bg-white/5 hover:bg-cyan-500/20 border border-white/5 hover:border-cyan-500/50 text-gray-300 hover:text-cyan-300 font-bold py-3 rounded-xl transition-colors flex items-center justify-center text-sm"
-                      >
-                        <UserCheck className="w-4 h-4 mr-2" /> 分配
-                      </button>
-                      <button 
-                        onClick={() => handleEditTeacherClick(teacher)}
-                        className="flex-1 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-gray-500 text-gray-400 hover:text-white font-bold py-3 rounded-xl transition-colors flex items-center justify-center text-sm"
-                      >
-                        <Edit className="w-4 h-4 mr-2" /> 编辑
-                      </button>
-                      <button 
-                        onClick={() => handleDeleteTeacherClick(teacher)}
-                        className="flex-1 bg-white/5 hover:bg-red-500/10 border border-white/5 hover:border-red-500/50 text-red-500/70 hover:text-red-400 font-bold py-3 rounded-xl transition-colors flex items-center justify-center text-sm"
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" /> 删除
-                      </button>
+                      <div className="flex gap-2 mt-4">
+                        <button 
+                          onClick={() => {
+                            setSelectedTeacherId(teacher.id);
+                            setIsAssignStudentOpen(true);
+                          }}
+                          className="flex-1 bg-slate-50 dark:bg-white/5 hover:bg-cyan-50 dark:hover:bg-cyan-500/20 border border-slate-200 dark:border-white/5 hover:border-cyan-300 dark:hover:border-cyan-500/50 text-slate-600 dark:text-gray-300 hover:text-cyan-700 dark:hover:text-cyan-300 font-bold py-3 rounded-xl transition-colors flex items-center justify-center text-sm shadow-sm dark:shadow-none"
+                        >
+                          <UserCheck className="w-4 h-4 mr-2" /> 分配
+                        </button>
+                        <button 
+                          onClick={() => handleEditTeacherClick(teacher)}
+                          className="flex-1 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 border border-slate-200 dark:border-white/5 hover:border-slate-400 dark:hover:border-gray-500 text-slate-600 dark:text-gray-400 hover:text-slate-800 dark:hover:text-white font-bold py-3 rounded-xl transition-colors flex items-center justify-center text-sm shadow-sm dark:shadow-none"
+                        >
+                          <Edit className="w-4 h-4 mr-2" /> 编辑
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteTeacherClick(teacher)}
+                          className="flex-1 bg-slate-50 dark:bg-white/5 hover:bg-red-50 dark:hover:bg-red-500/10 border border-slate-200 dark:border-white/5 hover:border-red-300 dark:hover:border-red-500/50 text-red-500 dark:text-red-500/70 hover:text-red-600 dark:hover:text-red-400 font-bold py-3 rounded-xl transition-colors flex items-center justify-center text-sm shadow-sm dark:shadow-none"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" /> 删除
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
@@ -523,51 +541,69 @@ const SystemManagement: React.FC = () => {
             </div>
 
             {/* Orders Header */}
-            <div className="flex justify-between items-center bg-black/20 p-5 rounded-2xl border border-white/5 mt-8">
+            <div className="flex justify-between items-center bg-white dark:bg-black/20 p-5 rounded-2xl border border-slate-200 dark:border-white/5 mt-8 shadow-sm dark:shadow-none">
               <div>
-                <h3 className="text-lg font-bold text-white tracking-widest">财务充值订单流水</h3>
-                <p className="text-sm text-gray-400 mt-1">严格记录每一笔课时充值明细及单价</p>
+                <h3 className="text-lg font-bold text-slate-800 dark:text-white tracking-widest">财务充值订单流水</h3>
+                <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">严格记录每一笔课时充值明细及单价</p>
               </div>
               <button 
                 onClick={() => setIsNewOrderOpen(true)}
-                className="bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 font-bold py-2.5 px-5 rounded-xl transition-colors flex items-center whitespace-nowrap shrink-0"
+                className="bg-amber-100 dark:bg-amber-500/10 hover:bg-amber-200 dark:hover:bg-amber-500/20 border border-amber-300 dark:border-amber-500/30 text-amber-700 dark:text-amber-400 font-bold py-2.5 px-5 rounded-xl transition-colors flex items-center whitespace-nowrap shrink-0 shadow-sm dark:shadow-none"
               >
                 <Plus className="w-5 h-5 mr-2" /> 新建订单
               </button>
             </div>
 
             {/* Orders List */}
-            <div className="bg-white/[0.02] border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
+            <div className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-3xl overflow-hidden shadow-sm dark:shadow-2xl">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-black/40 border-b border-white/10">
-                      <th className="p-4 text-xs font-mono text-gray-400 uppercase tracking-widest">订单时间</th>
-                      <th className="p-4 text-xs font-mono text-gray-400 uppercase tracking-widest">学员姓名</th>
-                      <th className="p-4 text-xs font-mono text-gray-400 uppercase tracking-widest">充值科目</th>
-                      <th className="p-4 text-xs font-mono text-gray-400 uppercase tracking-widest">增加课时</th>
-                      <th className="p-4 text-xs font-mono text-gray-400 uppercase tracking-widest text-right">总金额</th>
-                      <th className="p-4 text-xs font-mono text-gray-400 uppercase tracking-widest text-right">核算单价</th>
+                    <tr className="bg-slate-50 dark:bg-black/40 border-b border-slate-200 dark:border-white/10">
+                      <th className="p-4 text-xs font-mono text-slate-500 dark:text-gray-400 uppercase tracking-widest">订单时间</th>
+                      <th className="p-4 text-xs font-mono text-slate-500 dark:text-gray-400 uppercase tracking-widest">学员姓名</th>
+                      <th className="p-4 text-xs font-mono text-slate-500 dark:text-gray-400 uppercase tracking-widest">充值科目</th>
+                      <th className="p-4 text-xs font-mono text-slate-500 dark:text-gray-400 uppercase tracking-widest">增加课时</th>
+                      <th className="p-4 text-xs font-mono text-slate-500 dark:text-gray-400 uppercase tracking-widest text-right">总金额</th>
+                      <th className="p-4 text-xs font-mono text-slate-500 dark:text-gray-400 uppercase tracking-widest text-right">核算单价</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5">
-                    {orders.length === 0 ? (
-                      <tr><td colSpan={6} className="p-8 text-center text-gray-500">暂无订单数据</td></tr>
+                  <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+                    {isLoading ? (
+                      <tr>
+                        <td colSpan={6} className="p-4">
+                          <div className="space-y-3">
+                            <Skeleton className="h-10 w-full" />
+                            <Skeleton className="h-10 w-full" />
+                            <Skeleton className="h-10 w-full" />
+                          </div>
+                        </td>
+                      </tr>
+                    ) : orders.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="p-8">
+                          <EmptyState 
+                            icon={Banknote}
+                            title="暂无财务订单"
+                            description="目前系统还没有产生任何课时充值订单。您可以点击上方新建订单为学员充值。"
+                          />
+                        </td>
+                      </tr>
                     ) : (
                       orders.map(order => {
                         const stu = students.find(s => s.id === order.student_id);
                         return (
-                          <tr key={order.id} className="hover:bg-white/[0.02] transition-colors">
-                            <td className="p-4 text-sm text-gray-400 font-mono">
+                          <tr key={order.id} className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
+                            <td className="p-4 text-sm text-slate-500 dark:text-gray-400 font-mono">
                               {new Date(order.created_at).toLocaleString('zh-CN', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit'})}
                             </td>
-                            <td className="p-4 text-sm font-bold text-white">{stu?.name || '未知学员'}</td>
-                            <td className="p-4 text-sm text-cyan-300">
-                              <span className="bg-cyan-900/30 px-2 py-1 rounded-md border border-cyan-500/20">{order.subject}</span>
+                            <td className="p-4 text-sm font-bold text-slate-800 dark:text-white">{stu?.name || '未知学员'}</td>
+                            <td className="p-4 text-sm text-cyan-600 dark:text-cyan-300">
+                              <span className="bg-cyan-50 dark:bg-cyan-900/30 px-2 py-1 rounded-md border border-cyan-200 dark:border-cyan-500/20">{order.subject}</span>
                             </td>
-                            <td className="p-4 text-sm font-bold text-white">+{order.total_classes} 课时</td>
-                            <td className="p-4 text-sm font-mono font-bold text-amber-400 text-right">¥{order.total_price.toFixed(2)}</td>
-                            <td className="p-4 text-xs font-mono text-gray-500 text-right">¥{order.unit_price.toFixed(2)} /课时</td>
+                            <td className="p-4 text-sm font-bold text-slate-800 dark:text-white">+{order.total_classes} 课时</td>
+                            <td className="p-4 text-sm font-mono font-bold text-amber-600 dark:text-amber-400 text-right">¥{order.total_price.toFixed(2)}</td>
+                            <td className="p-4 text-xs font-mono text-slate-500 dark:text-gray-500 text-right">¥{order.unit_price.toFixed(2)} /课时</td>
                           </tr>
                         )
                       })

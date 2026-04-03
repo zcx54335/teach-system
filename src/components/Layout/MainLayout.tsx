@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Hexagon, Users, BookOpen, Settings, LogOut, 
-  Menu, ChevronLeft, ChevronRight, Activity, Laptop, X, Database, UserCircle
+  Menu, ChevronLeft, ChevronRight, Activity, Laptop, X, Database, UserCircle, Sun, Moon, Monitor
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTheme } from '../Theme/ThemeProvider';
 
 const MainLayout: React.FC = () => {
   const navigate = useNavigate();
@@ -12,8 +13,11 @@ const MainLayout: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const themeDropdownRef = useRef<HTMLDivElement>(null);
   const [userRole, setUserRole] = useState<'sysadmin' | 'teacher' | 'parent' | null>(null);
+  const { theme, setTheme } = useTheme();
   const [userName, setUserName] = useState('');
 
   useEffect(() => {
@@ -37,6 +41,9 @@ const MainLayout: React.FC = () => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsProfileDropdownOpen(false);
+      }
+      if (themeDropdownRef.current && !themeDropdownRef.current.contains(event.target as Node)) {
+        setIsThemeDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -71,7 +78,7 @@ const MainLayout: React.FC = () => {
   const navItems = getNavItems();
 
   return (
-    <div className="min-h-screen flex bg-[#020617] text-white font-inter selection:bg-cyan-500/30 overflow-hidden">
+    <div className="min-h-screen flex bg-slate-50 dark:bg-[#020617] text-slate-800 dark:text-white font-inter selection:bg-cyan-500/30 overflow-hidden">
       {/* Background Glow */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-blue-900/10 blur-[120px]"></div>
@@ -82,7 +89,7 @@ const MainLayout: React.FC = () => {
       <motion.aside 
         initial={false}
         animate={{ width: isCollapsed ? 80 : 240 }}
-        className="hidden md:flex relative z-10 bg-black/40 border-r border-white/5 backdrop-blur-2xl flex-col shrink-0 overflow-hidden"
+        className="hidden md:flex relative z-10 bg-white dark:bg-black/40 border-r border-slate-200 dark:border-white/5 backdrop-blur-2xl flex-col shrink-0 overflow-hidden"
       >
         <div className="h-20 flex items-center justify-between px-4 border-b border-white/5">
           <div className="flex items-center space-x-3 overflow-hidden">
@@ -97,8 +104,8 @@ const MainLayout: React.FC = () => {
                   exit={{ opacity: 0, x: -10 }}
                   className="whitespace-nowrap"
                 >
-                  <h1 className="text-lg font-black tracking-widest text-white">小鱼思维</h1>
-                  <p className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">{userRole}</p>
+                  <h1 className="text-lg font-black tracking-widest text-slate-800 dark:text-white">小鱼思维</h1>
+                  <p className="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 uppercase tracking-widest">{userRole}</p>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -204,8 +211,8 @@ const MainLayout: React.FC = () => {
                       }}
                       className={`w-full flex items-center px-4 py-4 rounded-xl transition-all duration-300 space-x-4 ${
                         isActive 
-                          ? 'bg-cyan-500/10 text-cyan-400 shadow-[inset_3px_0_0_rgba(34,211,238,1)]' 
-                          : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                          ? 'bg-cyan-100/50 dark:bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 shadow-[inset_3px_0_0_rgba(34,211,238,1)]' 
+                          : 'text-slate-600 dark:text-gray-400 hover:bg-slate-200/50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       <item.icon className="w-5 h-5 shrink-0" />
@@ -232,12 +239,12 @@ const MainLayout: React.FC = () => {
       {/* Main Content Area */}
       <main className="relative z-10 flex-1 h-screen overflow-hidden flex flex-col bg-black/20 w-full">
         {/* Top Navbar */}
-        <header className="h-16 md:h-20 flex items-center justify-between px-4 md:px-8 border-b border-white/5 backdrop-blur-md shrink-0 relative z-[100]">
+        <header className="h-16 md:h-20 flex items-center justify-between px-4 md:px-8 bg-white/80 dark:bg-black/20 border-b border-slate-200 dark:border-white/5 backdrop-blur-md shrink-0 relative z-[100]">
           <div className="flex items-center">
             {/* Mobile Hamburger */}
             <button 
               onClick={() => setIsMobileMenuOpen(true)}
-              className="p-2 mr-3 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors md:hidden"
+              className="p-2 mr-3 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors md:hidden"
             >
               <Menu className="w-5 h-5" />
             </button>
@@ -245,26 +252,60 @@ const MainLayout: React.FC = () => {
             {/* Desktop Collapse Toggle */}
             <button 
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="hidden md:block p-2 mr-4 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors"
+              className="hidden md:block p-2 mr-4 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors"
             >
               <Menu className="w-5 h-5" />
             </button>
             
-            <h2 className="text-base md:text-lg font-bold tracking-widest text-white/90">
+            <h2 className="text-base md:text-lg font-bold tracking-widest text-slate-800 dark:text-white/90">
               {navItems.find(item => location.pathname.startsWith(item.path))?.label || '概览'}
             </h2>
           </div>
-          <div className="flex items-center space-x-4 relative" ref={dropdownRef}>
+          <div className="flex items-center space-x-4 relative">
+            {/* Theme Toggle */}
+            <div className="relative" ref={themeDropdownRef}>
+              <button 
+                onClick={() => setIsThemeDropdownOpen(!isThemeDropdownOpen)}
+                className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors"
+              >
+                {theme === 'light' ? <Sun className="w-5 h-5" /> : theme === 'dark' ? <Moon className="w-5 h-5" /> : <Monitor className="w-5 h-5" />}
+              </button>
+              
+              <AnimatePresence>
+                {isThemeDropdownOpen && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-14 right-0 w-36 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden z-[9999]"
+                  >
+                    <div className="p-1">
+                      <button onClick={() => { setTheme('light'); setIsThemeDropdownOpen(false); }} className={`w-full flex items-center px-3 py-2 text-sm rounded-xl transition-colors ${theme === 'light' ? 'bg-cyan-50 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
+                        <Sun className="w-4 h-4 mr-2" /> 明亮模式
+                      </button>
+                      <button onClick={() => { setTheme('dark'); setIsThemeDropdownOpen(false); }} className={`w-full flex items-center px-3 py-2 text-sm rounded-xl transition-colors ${theme === 'dark' ? 'bg-cyan-50 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
+                        <Moon className="w-4 h-4 mr-2" /> 暗黑模式
+                      </button>
+                      <button onClick={() => { setTheme('system'); setIsThemeDropdownOpen(false); }} className={`w-full flex items-center px-3 py-2 text-sm rounded-xl transition-colors ${theme === 'system' ? 'bg-cyan-50 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
+                        <Monitor className="w-4 h-4 mr-2" /> 跟随系统
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             <div className="text-right hidden sm:block cursor-pointer" onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}>
-              <p className="text-sm font-bold text-white tracking-widest hover:text-cyan-400 transition-colors">{userName}</p>
-              <p className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">Active Session</p>
+              <p className="text-sm font-bold text-slate-800 dark:text-white tracking-widest hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors">{userName}</p>
+              <p className="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 uppercase tracking-widest">Active Session</p>
             </div>
             <div 
               onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-              className="w-10 h-10 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 p-[2px] cursor-pointer hover:shadow-[0_0_15px_rgba(34,211,238,0.5)] transition-all"
+              className="w-10 h-10 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 p-[2px] cursor-pointer shadow-sm hover:shadow-[0_0_15px_rgba(34,211,238,0.5)] transition-all"
             >
-              <div className="w-full h-full bg-[#020617] rounded-full flex items-center justify-center">
-                <span className="text-sm font-bold text-white">{userName.charAt(0)}</span>
+              <div className="w-full h-full bg-white dark:bg-[#020617] rounded-full flex items-center justify-center">
+                <span className="text-sm font-bold text-slate-800 dark:text-white">{userName.charAt(0)}</span>
               </div>
             </div>
 
@@ -276,29 +317,29 @@ const MainLayout: React.FC = () => {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute top-14 right-0 w-56 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden z-[9999]"
+                  className="absolute top-14 right-0 w-56 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl overflow-hidden z-[9999]"
                 >
-                  <div className="p-4 border-b border-slate-700 bg-slate-800/50">
-                    <p className="text-sm font-bold text-white tracking-widest truncate">{userName}</p>
-                    <p className="text-xs text-cyan-400 font-mono mt-1">{userRole === 'parent' ? '家长' : userRole === 'teacher' ? '教师' : '管理员'}</p>
+                  <div className="p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                    <p className="text-sm font-bold text-slate-800 dark:text-white tracking-widest truncate">{userName}</p>
+                    <p className="text-xs text-cyan-600 dark:text-cyan-400 font-mono mt-1">{userRole === 'parent' ? '家长' : userRole === 'teacher' ? '教师' : '管理员'}</p>
                   </div>
-                  <div className="p-2">
+                  <div className="p-2 bg-white dark:bg-slate-900">
                     <button 
                       onClick={() => {
                         setIsProfileDropdownOpen(false);
                         navigate('/dashboard/profile');
                       }}
-                      className="w-full flex items-center px-3 py-3 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl transition-colors tracking-widest"
+                      className="w-full flex items-center px-3 py-3 text-sm text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl transition-colors tracking-widest"
                     >
-                      <UserCircle className="w-5 h-5 mr-3 text-cyan-400" />
+                      <UserCircle className="w-5 h-5 mr-3 text-cyan-600 dark:text-cyan-400" />
                       账号详细信息
                     </button>
                     
-                    <div className="my-1 border-t border-slate-700"></div>
+                    <div className="my-1 border-t border-slate-100 dark:border-slate-700"></div>
                     
                     <button 
                       onClick={handleLogout}
-                      className="w-full flex items-center px-3 py-3 text-sm text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-colors tracking-widest"
+                      className="w-full flex items-center px-3 py-3 text-sm text-red-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-colors tracking-widest"
                     >
                       <LogOut className="w-5 h-5 mr-3" />
                       退出登录

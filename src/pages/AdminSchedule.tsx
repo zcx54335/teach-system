@@ -4,6 +4,8 @@ import {
   Calendar as CalendarIcon, ChevronLeft, ChevronRight, Users, BookOpen, 
   Sparkles, CheckSquare, Square, Plus, Clock, ArrowLeft, CheckCircle
 } from 'lucide-react';
+import { Skeleton } from '../components/UI/Skeleton';
+import { EmptyState } from '../components/UI/EmptyState';
 import toast from 'react-hot-toast';
 
 // Helper to format date consistently to YYYY-MM-DD
@@ -162,18 +164,18 @@ const AdminSchedule: React.FC = () => {
     <div className="w-full h-full flex flex-col relative max-w-7xl mx-auto p-4 md:p-6 overflow-hidden">
       <header className="mb-6 shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl md:text-3xl font-bold tracking-widest text-white flex items-center">
-            <CalendarIcon className="w-6 h-6 md:w-8 md:h-8 mr-3 text-cyan-400" />
+          <h2 className="text-2xl md:text-3xl font-bold tracking-widest text-slate-800 dark:text-white flex items-center">
+            <CalendarIcon className="w-6 h-6 md:w-8 md:h-8 mr-3 text-cyan-600 dark:text-cyan-400" />
             课程排期规划
           </h2>
-          <p className="text-xs md:text-sm text-gray-400 font-mono tracking-widest mt-2">FUTURE SCHEDULE MANAGEMENT</p>
+          <p className="text-xs md:text-sm text-slate-500 dark:text-gray-400 font-mono tracking-widest mt-2">FUTURE SCHEDULE MANAGEMENT</p>
         </div>
         <button 
           onClick={() => {
             setNewSchedDate(selectedDateStr);
             setIsAddModalOpen(true);
           }}
-          className="bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-2.5 px-5 rounded-xl flex items-center transition-all shadow-[0_0_15px_rgba(6,182,212,0.4)]"
+          className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-2.5 px-5 rounded-xl flex items-center transition-all shadow-[0_0_15px_rgba(6,182,212,0.4)]"
         >
           <Plus className="w-5 h-5 mr-1" /> 新增排课
         </button>
@@ -181,77 +183,92 @@ const AdminSchedule: React.FC = () => {
 
       <div className="flex-1 flex flex-col lg:flex-row gap-6 min-h-0">
         {/* Left: Calendar Board */}
-        <div className="w-full lg:w-1/3 flex flex-col bg-white/[0.02] backdrop-blur-3xl border border-white/10 rounded-3xl p-5 shadow-2xl shrink-0 overflow-y-auto">
+        <div className="w-full lg:w-1/3 flex flex-col bg-white dark:bg-white/[0.02] backdrop-blur-3xl border border-slate-200 dark:border-white/10 rounded-3xl p-5 shadow-sm dark:shadow-2xl shrink-0 overflow-y-auto">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-bold text-white tracking-widest">教学日历</h3>
-            <div className="flex items-center gap-4 bg-black/30 rounded-full px-3 py-1 border border-white/5">
-              <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))} className="p-1 hover:text-cyan-400 text-gray-400 transition-colors"><ChevronLeft className="w-5 h-5" /></button>
-              <span className="text-sm font-mono text-white font-bold w-20 text-center">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-white tracking-widest">教学日历</h3>
+            <div className="flex items-center gap-4 bg-slate-100 dark:bg-black/30 rounded-full px-3 py-1 border border-slate-200 dark:border-white/5">
+              <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))} className="p-1 hover:text-cyan-600 dark:hover:text-cyan-400 text-slate-500 dark:text-gray-400 transition-colors"><ChevronLeft className="w-5 h-5" /></button>
+              <span className="text-sm font-mono text-slate-800 dark:text-white font-bold w-20 text-center">
                 {currentMonth.getFullYear()}年{currentMonth.getMonth() + 1}月
               </span>
-              <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))} className="p-1 hover:text-cyan-400 text-gray-400 transition-colors"><ChevronRight className="w-5 h-5" /></button>
+              <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))} className="p-1 hover:text-cyan-600 dark:hover:text-cyan-400 text-slate-500 dark:text-gray-400 transition-colors"><ChevronRight className="w-5 h-5" /></button>
             </div>
           </div>
 
           <div className="grid grid-cols-7 gap-2 mb-2">
             {weekDays.map(d => (
-              <div key={d} className="text-center text-xs font-bold text-gray-500">{d}</div>
+              <div key={d} className="text-center text-xs font-bold text-slate-500 dark:text-gray-500">{d}</div>
             ))}
           </div>
 
           <div className="grid grid-cols-7 gap-2">
-            {days.map((d, i) => {
-              if (!d) return <div key={`empty-${i}`} className="aspect-square"></div>;
-              
-              const dStr = toDateString(d);
-              const isSelected = dStr === selectedDateStr;
-              const hasClass = schedules.some(s => s.date === dStr);
+            {isLoading ? (
+              Array.from({ length: 35 }).map((_, i) => (
+                <Skeleton key={`sk-${i}`} className="aspect-square rounded-xl" />
+              ))
+            ) : (
+              days.map((d, i) => {
+                if (!d) return <div key={`empty-${i}`} className="aspect-square"></div>;
+                
+                const dStr = toDateString(d);
+                const isSelected = dStr === selectedDateStr;
+                const hasClass = schedules.some(s => s.date === dStr);
 
-              return (
-                <div 
-                  key={d.toISOString()}
-                  onClick={() => {
-                    setSelectedDate(d);
-                  }}
-                  className={`
-                    aspect-square rounded-xl flex flex-col items-center justify-center cursor-pointer relative transition-all duration-300
-                    ${isSelected ? 'bg-cyan-500/20 border border-cyan-500/50 text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.3)]' : 'hover:bg-white/5 text-gray-300 border border-transparent'}
-                  `}
-                >
-                  <span className={`text-sm md:text-base font-medium ${isSelected ? 'font-bold' : ''}`}>{d.getDate()}</span>
-                  {hasClass && (
-                    <div className={`w-1.5 h-1.5 rounded-full mt-1 ${isSelected ? 'bg-cyan-400 shadow-[0_0_5px_#22d3ee]' : 'bg-cyan-500/50'}`}></div>
-                  )}
-                </div>
-              );
-            })}
+                return (
+                  <div 
+                    key={d.toISOString()}
+                    onClick={() => {
+                      setSelectedDate(d);
+                    }}
+                    className={`
+                      aspect-square rounded-xl flex flex-col items-center justify-center cursor-pointer relative transition-all duration-300
+                      ${isSelected ? 'bg-cyan-100 dark:bg-cyan-500/20 border border-cyan-300 dark:border-cyan-500/50 text-cyan-700 dark:text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.1)] dark:shadow-[0_0_15px_rgba(6,182,212,0.3)]' : 'hover:bg-slate-50 dark:hover:bg-white/5 text-slate-600 dark:text-gray-300 border border-transparent'}
+                    `}
+                  >
+                    <span className={`text-sm md:text-base font-medium ${isSelected ? 'font-bold' : ''}`}>{d.getDate()}</span>
+                    {hasClass && (
+                      <div className={`w-1.5 h-1.5 rounded-full mt-1 ${isSelected ? 'bg-cyan-600 dark:bg-cyan-400 shadow-[0_0_5px_#0891b2] dark:shadow-[0_0_5px_#22d3ee]' : 'bg-cyan-400 dark:bg-cyan-500/50'}`}></div>
+                    )}
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
 
         {/* Right: Daily Schedule View */}
-        <div className="w-full lg:w-2/3 flex flex-col bg-white/[0.02] backdrop-blur-3xl border border-white/10 rounded-3xl p-5 shadow-2xl overflow-y-auto">
+        <div className="w-full lg:w-2/3 flex flex-col bg-white dark:bg-white/[0.02] backdrop-blur-3xl border border-slate-200 dark:border-white/10 rounded-3xl p-5 shadow-sm dark:shadow-2xl overflow-y-auto">
           
-          <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/5">
+          <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200 dark:border-white/5">
             <div>
-              <h3 className="text-xl font-bold text-white tracking-widest flex items-center">
-                {selectedDate.getMonth() + 1}月{selectedDate.getDate()}日 <span className="mx-2 text-gray-500">|</span> 计划课表
+              <h3 className="text-xl font-bold text-slate-800 dark:text-white tracking-widest flex items-center">
+                {selectedDate.getMonth() + 1}月{selectedDate.getDate()}日 <span className="mx-2 text-slate-300 dark:text-gray-500">|</span> 计划课表
               </h3>
-              <p className="text-xs text-gray-400 mt-1">查看该日期的排课安排</p>
+              <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">查看该日期的排课安排</p>
             </div>
-            {isLoading && <div className="text-cyan-400 animate-pulse text-sm font-mono">SYNCING...</div>}
           </div>
 
           <div className="flex-1 space-y-4">
-            {todaysSchedules.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-64 text-gray-500 border border-dashed border-white/10 rounded-2xl bg-black/20">
-                <CalendarIcon className="w-12 h-12 mb-3 opacity-20" />
-                <p>该日期暂无排课安排</p>
-                <button 
-                  onClick={() => { setNewSchedDate(selectedDateStr); setIsAddModalOpen(true); }}
-                  className="mt-4 text-cyan-400 text-sm hover:underline"
-                >
-                  + 立即排课
-                </button>
+            {isLoading ? (
+              <div className="space-y-4">
+                <Skeleton className="w-full h-32" />
+                <Skeleton className="w-full h-32" />
+              </div>
+            ) : todaysSchedules.length === 0 ? (
+              <div className="h-full flex items-center justify-center min-h-[300px]">
+                <EmptyState 
+                  icon={CalendarIcon}
+                  title="该日期暂无排课安排"
+                  description="杨老师可以好好休息一下，或者点击右上方『新增排课』按钮开始规划。"
+                  action={
+                    <button 
+                      onClick={() => { setNewSchedDate(selectedDateStr); setIsAddModalOpen(true); }}
+                      className="mt-4 text-cyan-600 dark:text-cyan-400 text-sm font-bold tracking-widest hover:underline"
+                    >
+                      + 立即排课
+                    </button>
+                  }
+                />
               </div>
             ) : (
               todaysSchedules.map(sched => (

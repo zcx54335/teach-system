@@ -12,10 +12,11 @@ import TeacherWorkbench from "./pages/TeacherWorkbench";
 import PublicReport from "./pages/PublicReport";
 import Profile from "./pages/Profile";
 import { Toaster } from 'react-hot-toast';
+import { ThemeProvider } from './components/Theme/ThemeProvider';
 
 export default function App() {
   return (
-    <>
+    <ThemeProvider defaultTheme="system" storageKey="xiaoyu-ui-theme">
       <Toaster 
         position="top-center"
         toastOptions={{
@@ -79,6 +80,6 @@ export default function App() {
         <Route path="/report/:id" element={<PublicReport />} />
       </Routes>
     </Router>
-    </>
+    </ThemeProvider>
   );
 }
