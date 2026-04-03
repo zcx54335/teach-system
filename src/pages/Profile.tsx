@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Settings, Shield, BookOpen, ChevronRight, Activity, Cpu, DollarSign, Users, Clock, X, ChevronLeft, CalendarCheck, FileText, Image as ImageIcon, Quote, LogOut, CheckCircle2 } from "lucide-react";
+import toast from 'react-hot-toast';
 import { PageProps } from "../components/Layout/RollerNavigation";
 import { supabase } from '../lib/supabaseClient';
 
@@ -126,7 +127,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
   const handleAddStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newStudent.phone.length !== 11) {
-      alert('请输入11位有效手机号');
+      toast.error('请输入11位有效手机号');
       return;
     }
     
@@ -176,7 +177,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
       if (fetchStudents) fetchStudents();
 
     } catch (err: any) {
-      alert(`创建学员失败: ${err.message}`);
+      toast.error(`创建学员失败: ${err.message}`);
     } finally {
       setIsAdding(false);
     }
@@ -185,22 +186,20 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
   const handleCopyLink = (id: string) => {
     const url = `https://xiongxiong.top/#/parent?id=${id}`;
     navigator.clipboard.writeText(url).then(() => {
-      alert('家长专属链接已复制到剪贴板！');
+      toast.success('家长专属链接已复制到剪贴板！');
     }).catch(() => {
-      alert('复制失败，请手动选择复制');
+      toast.error('复制失败，请手动选择复制');
     });
   };
 
   // 扣除课时逻辑
   const handleDeductClass = async (studentId: string, currentRemaining: number, studentName: string) => {
     if (currentRemaining <= 0) {
-      alert('剩余课时不足，无法消课！');
+      toast.error('剩余课时不足，无法消课！');
       return;
     }
     
-    if (!window.confirm(`确认要为学员 ${studentName} 扣除 1 个课时吗？`)) {
-      return;
-    }
+    // Removed window.confirm to comply with no-blocking-dialog rule
 
     try {
       const newRemaining = currentRemaining - 1;
@@ -214,14 +213,14 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
 
       if (error) throw error;
 
-      alert(`已扣除 1 课时，${studentName} 剩余 ${newRemaining} 课时。`);
+      toast.success(`已扣除 1 课时，${studentName} 剩余 ${newRemaining} 课时。`);
       
       // 预留接口：发送通知
       sendNotification(studentId, newRemaining);
 
       if (fetchStudents) fetchStudents();
     } catch (err: any) {
-      alert('消课失败：' + err.message);
+      toast.error('消课失败：' + err.message);
     }
   };
 

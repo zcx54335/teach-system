@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Hexagon, Users, BookOpen, Settings, LogOut, 
-  Menu, ChevronLeft, ChevronRight, Activity, Laptop, X
+  Menu, ChevronLeft, ChevronRight, Activity, Laptop, X, Database
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -43,7 +43,10 @@ const MainLayout: React.FC = () => {
         { path: '/dashboard/workbench', icon: Laptop, label: '消课工作台' },
         { path: '/dashboard/students', icon: Users, label: '学员管理' },
         { path: '/dashboard/schedule', icon: BookOpen, label: '课程排期' },
-        ...(userRole === 'sysadmin' ? [{ path: '/dashboard/settings', icon: Settings, label: '系统设置' }] : []),
+        ...(userRole === 'sysadmin' ? [
+          { path: '/dashboard/system', icon: Database, label: '系统管理' },
+          { path: '/dashboard/settings', icon: Settings, label: '基础设置' }
+        ] : []),
       ];
     } else if (userRole === 'parent') {
       return [

@@ -4,6 +4,7 @@ import {
   Calendar as CalendarIcon, ChevronLeft, ChevronRight, Users, BookOpen, 
   Sparkles, CheckSquare, Square, Plus, Clock, ArrowLeft, CheckCircle
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 // Helper to format date consistently to YYYY-MM-DD
 const toDateString = (d: Date) => {
@@ -102,7 +103,8 @@ const AdminSchedule: React.FC = () => {
   const handleSaveSchedule = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSchedSubject || newSchedStudents.length === 0) {
-      alert('请选择科目并至少勾选一名学员'); return;
+      toast.error('请选择科目并至少勾选一名学员'); 
+      return;
     }
     setIsSavingSchedule(true);
     try {
@@ -116,12 +118,12 @@ const AdminSchedule: React.FC = () => {
       });
       if (error) throw error;
       
-      alert('✅ 排课成功！');
+      toast.success('排课成功！');
       setIsAddModalOpen(false);
       setNewSchedSubject('');
       fetchData(); // Refetch to show on calendar
     } catch (err: any) {
-      alert('保存失败: ' + err.message);
+      toast.error('保存失败: ' + err.message);
     } finally {
       setIsSavingSchedule(false);
     }

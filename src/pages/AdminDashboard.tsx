@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { 
   Users, Clock, Activity, LogOut, Hexagon, 
-  Settings, BookOpen, Edit, MinusCircle, ExternalLink, X, CheckCircle
+  Settings, BookOpen, Edit, MinusCircle, ExternalLink, X, CheckCircle, Trash2, AlertTriangle
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface StudentRecord {
   id: string;
@@ -50,6 +51,11 @@ const AdminDashboard: React.FC = () => {
     subjects: [] as string[]
   });
   const [isAdding, setIsAdding] = useState(false);
+  const [isEditStudentMode, setIsEditStudentMode] = useState(false);
+  const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
+
+  const [deleteStudentModalOpen, setDeleteStudentModalOpen] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState<StudentRecord | null>(null);
 
   const SUBJECT_OPTIONS = ['数学', '物理', '化学', '英语', '语文'];
   const GRADE_OPTIONS = ['学前', '一年级', '二年级', '三年级', '四年级', '五年级', '六年级', '初一', '初二', '初三'];
@@ -82,80 +88,133 @@ const AdminDashboard: React.FC = () => {
     navigate('/');
   };
 
+  const handleAddStudentClick = () => {
+    setIsEditStudentMode(false);
+    setEditingStudentId(null);
+    setNewStudent({ name: '', phone: '', parent_phone: '', school: '', grade: '一年级', subjects: [] });
+    setIsAddModalOpen(true);
+  };
+
+  const handleEditStudentClick = (student: StudentRecord) => {
+    setIsEditStudentMode(true);
+    setEditingStudentId(student.id);
+    setNewStudent({
+      name: student.name || '',
+      phone: student.phone || '',
+      parent_phone: student.parent_phone || student.phone || '',
+      school: student.school || '',
+      grade: student.grade || '一年级',
+      subjects: student.subjects || []
+    });
+    setIsAddModalOpen(true);
+  };
+
+  const handleDeleteStudentClick = (student: StudentRecord) => {
+    setStudentToDelete(student);
+    setDeleteStudentModalOpen(true);
+  };
+
+  const handleConfirmDeleteStudent = async () => {
+    if (!studentToDelete) return;
+    try {
+      const { error } = await supabase.from('students').delete().eq('id', studentToDelete.id);
+      if (error) throw error;
+      toast.success('✅ 学员已删除');
+      setDeleteStudentModalOpen(false);
+      setStudentToDelete(null);
+      fetchStudents();
+    } catch (err: any) {
+      toast.error('删除失败: ' + err.message);
+    }
+  };
+
   const handleAddStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newStudent.parent_phone.length !== 11) {
-      alert('请输入11位有效家长手机号');
+      toast.error('请输入11位有效家长手机号');
       return;
     }
     if (newStudent.subjects.length === 0) {
-      alert('请至少选择一个报读科目');
+      toast.error('请至少选择一个报读科目');
       return;
     }
     
     setIsAdding(true);
     try {
-      const password = newStudent.parent_phone.slice(-6);
+      if (isEditStudentMode && editingStudentId) {
+        // Edit mode
+        const { error } = await supabase.from('students').update({
+          name: newStudent.name,
+          phone: newStudent.phone || newStudent.parent_phone,
+          parent_phone: newStudent.parent_phone,
+          school: newStudent.school,
+          grade: newStudent.grade,
+          subjects: newStudent.subjects
+        }).eq('id', editingStudentId);
 
-      // 1. 创建家长账号
-      // 既然数据库解除了外键枷锁并自动生成 id，我们直接走纯数据库的 insert / update
-      // 先查是否存在
-      let profileId;
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('phone', newStudent.parent_phone)
-        .single();
-
-      if (existingProfile) {
-        profileId = existingProfile.id;
-        // 可选：如果已存在，可以选择只更新 full_name 或 password
+        if (error) {
+          if (error.code === '23505') throw new Error('手机号已被占用，请检查');
+          throw error;
+        }
+        toast.success('✅ 学员信息修改成功！');
       } else {
-        // 如果不存在，执行 insert，不传 id，让数据库触发 gen_random_uuid()
-        const { data: insertedProfile, error: profileError } = await supabase
+        // Add mode
+        const password = newStudent.parent_phone.slice(-6);
+
+        let profileId;
+        const { data: existingProfile } = await supabase
           .from('profiles')
-          .insert([{
-            phone: newStudent.parent_phone,
-            password: password,
-            role: 'parent',
-            full_name: newStudent.name + '的家长'
-          }])
           .select('id')
+          .eq('phone', newStudent.parent_phone)
           .single();
 
-        if (profileError) throw new Error(`创建家长账号失败: ${profileError.message}`);
-        profileId = insertedProfile.id;
+        if (existingProfile) {
+          profileId = existingProfile.id;
+        } else {
+          const { data: insertedProfile, error: profileError } = await supabase
+            .from('profiles')
+            .insert([{
+              phone: newStudent.parent_phone,
+              password: password,
+              role: 'parent',
+              full_name: newStudent.name + '的家长'
+            }])
+            .select('id')
+            .single();
+
+          if (profileError) throw new Error(`创建家长账号失败: ${profileError.message}`);
+          profileId = insertedProfile.id;
+        }
+
+        const initialBalances: Record<string, number> = {};
+        newStudent.subjects.forEach(sub => {
+          initialBalances[sub] = 0;
+        });
+
+        const { error: dbError } = await supabase.from('students').insert([{
+          name: newStudent.name,
+          phone: newStudent.phone || newStudent.parent_phone,
+          parent_phone: newStudent.parent_phone,
+          school: newStudent.school,
+          grade: newStudent.grade,
+          subjects: newStudent.subjects,
+          course_balances: initialBalances,
+          status: 'enrolled',
+          auth_id: profileId,
+          password_hash: password,
+          remaining_classes: 0 
+        }]);
+
+        if (dbError) throw new Error(`DB Error: ${dbError.message}`);
+
+        toast.success('✅ 新增学员成功！');
       }
 
-      // 2. 初始化 course_balances (全0)
-      const initialBalances: Record<string, number> = {};
-      newStudent.subjects.forEach(sub => {
-        initialBalances[sub] = 0;
-      });
-
-      // 3. 在 students 表中插入数据
-      const { error: dbError } = await supabase.from('students').insert([{
-        name: newStudent.name,
-        phone: newStudent.phone || newStudent.parent_phone,
-        parent_phone: newStudent.parent_phone,
-        school: newStudent.school,
-        grade: newStudent.grade,
-        subjects: newStudent.subjects,
-        course_balances: initialBalances,
-        status: 'enrolled',
-        auth_id: profileId,
-        password_hash: password,
-        remaining_classes: 0 // 保留作兼容
-      }]);
-
-      if (dbError) throw new Error(`DB Error: ${dbError.message}`);
-
-      alert('✅ 新增学员成功！');
       setNewStudent({ name: '', phone: '', parent_phone: '', school: '', grade: '一年级', subjects: [] });
       setIsAddModalOpen(false);
       fetchStudents();
     } catch (err: any) {
-      alert(`创建学员失败: ${err.message}`);
+      toast.error(`${isEditStudentMode ? '修改' : '创建'}学员失败: ${err.message}`);
     } finally {
       setIsAdding(false);
     }
@@ -187,24 +246,22 @@ const AdminDashboard: React.FC = () => {
 
       if (error) throw error;
 
-      alert(`✅ 充值成功！已为 ${selectedTopupStudent.name} 的 ${topupSubject} 增加 ${topupAmount} 课时。`);
+      toast.success(`✅ 充值成功！已为 ${selectedTopupStudent.name} 的 ${topupSubject} 增加 ${topupAmount} 课时。`);
       setIsTopupModalOpen(false);
       setTopupAmount(0);
       setTopupSubject('');
       fetchStudents();
     } catch (err: any) {
-      alert('充值失败：' + err.message);
+      toast.error('充值失败：' + err.message);
     }
   };
   const handleDeductClass = async (studentId: string, currentRemaining: number, studentName: string) => {
     if (currentRemaining <= 0) {
-      alert('剩余课时不足，无法消课！');
+      toast.error('剩余课时不足，无法消课！');
       return;
     }
     
-    if (!window.confirm(`确认要为学员 ${studentName} 扣除 1 个课时吗？`)) {
-      return;
-    }
+    // Removed window.confirm to comply with no-blocking-dialog rule
 
     try {
       const newRemaining = currentRemaining - 1;
@@ -218,10 +275,10 @@ const AdminDashboard: React.FC = () => {
 
       if (error) throw error;
 
-      alert(`已扣除 1 课时，${studentName} 剩余 ${newRemaining} 课时。`);
+      toast.success(`已扣除 1 课时，${studentName} 剩余 ${newRemaining} 课时。`);
       fetchStudents();
     } catch (err: any) {
-      alert('消课失败：' + err.message);
+      toast.error('消课失败：' + err.message);
     }
   };
 
@@ -244,11 +301,11 @@ const AdminDashboard: React.FC = () => {
         .eq('id', editingStudent.id);
 
       if (error) throw error;
-      alert('分数更新成功！');
+      toast.success('分数更新成功！');
       setIsEditModalOpen(false);
       fetchStudents();
     } catch (err: any) {
-      alert('更新失败：' + err.message);
+      toast.error('更新失败：' + err.message);
     }
   };
 
@@ -308,7 +365,7 @@ const AdminDashboard: React.FC = () => {
             学员列表
           </h3>
           <button 
-            onClick={() => setIsAddModalOpen(true)}
+            onClick={handleAddStudentClick}
             className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl text-sm font-bold tracking-widest shadow-[0_0_20px_rgba(34,211,238,0.4)] hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] transition-all active:scale-95"
           >
             + 新增学员
@@ -361,6 +418,18 @@ const AdminDashboard: React.FC = () => {
                     </td>
                     <td className="px-8 py-5 text-right">
                       <div className="flex items-center justify-end space-x-3">
+                        <button 
+                          onClick={() => handleEditStudentClick(student)}
+                          className="flex items-center px-4 py-2 bg-transparent text-gray-400 hover:text-white border border-transparent hover:border-gray-500 rounded-xl text-xs font-bold tracking-widest transition-colors"
+                        >
+                          <Edit className="w-3.5 h-3.5 mr-1.5" /> 编辑
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteStudentClick(student)}
+                          className="flex items-center px-4 py-2 bg-transparent text-red-500/70 hover:text-red-400 border border-transparent hover:border-red-500/50 rounded-xl text-xs font-bold tracking-widest transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 mr-1.5" /> 删除
+                        </button>
                         <button 
                           onClick={() => { setSelectedTopupStudent(student); setIsTopupModalOpen(true); }}
                           className="flex items-center px-4 py-2 bg-green-500/10 text-green-400 hover:bg-green-500/20 border border-green-500/30 rounded-xl text-xs font-bold tracking-widest transition-colors shadow-[0_0_10px_rgba(34,197,94,0.1)]"
@@ -426,7 +495,19 @@ const AdminDashboard: React.FC = () => {
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-4 gap-2 pt-4 border-t border-white/5">
+                <div className="grid grid-cols-6 gap-2 pt-4 border-t border-white/5">
+                  <button 
+                    onClick={() => handleEditStudentClick(student)}
+                    className="flex flex-col items-center justify-center py-2 bg-transparent text-gray-400 hover:text-white rounded-xl text-xs font-bold tracking-widest transition-colors"
+                  >
+                    <Edit className="w-4 h-4 mb-1" /> 编辑
+                  </button>
+                  <button 
+                    onClick={() => handleDeleteStudentClick(student)}
+                    className="flex flex-col items-center justify-center py-2 bg-transparent text-red-500/70 hover:text-red-400 rounded-xl text-xs font-bold tracking-widest transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4 mb-1" /> 删除
+                  </button>
                   <button 
                     onClick={() => { setSelectedTopupStudent(student); setIsTopupModalOpen(true); }}
                     className="flex flex-col items-center justify-center py-2 bg-green-500/10 text-green-400 hover:bg-green-500/20 rounded-xl text-xs font-bold tracking-widest transition-colors"
@@ -467,7 +548,7 @@ const AdminDashboard: React.FC = () => {
               <X className="w-5 h-5" />
             </button>
             <h3 className="text-xl font-bold text-white tracking-widest mb-6 border-b border-white/5 pb-4">
-              录入新学员
+              {isEditStudentMode ? '编辑学员信息' : '录入新学员'}
             </h3>
             
             <form onSubmit={handleAddStudent} className="space-y-5">
@@ -533,7 +614,7 @@ const AdminDashboard: React.FC = () => {
 
               <div className="pt-6">
                 <button type="submit" disabled={isAdding} className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-4 rounded-xl tracking-widest transition-all shadow-[0_0_20px_rgba(34,211,238,0.4)] active:scale-95 disabled:opacity-50 flex justify-center items-center">
-                  {isAdding ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : '确认创建并分配初始密码'}
+                  {isAdding ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : (isEditStudentMode ? '确认保存修改' : '确认创建并分配初始密码')}
                 </button>
               </div>
             </form>
@@ -626,6 +707,37 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
       )}
+      {/* Delete Student Modal */}
+      {deleteStudentModalOpen && studentToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setDeleteStudentModalOpen(false)}></div>
+          <div className="relative bg-slate-900 border border-red-500/30 w-full max-w-sm rounded-3xl p-6 shadow-[0_0_50px_rgba(239,68,68,0.2)] animate-in zoom-in-95 duration-200">
+            <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4 mx-auto">
+              <AlertTriangle className="w-6 h-6 text-red-500" />
+            </div>
+            <h3 className="text-xl font-bold text-white text-center mb-2">确认删除学员？</h3>
+            <p className="text-sm text-gray-400 text-center mb-6">
+              您正在删除学员 <span className="text-white font-bold">{studentToDelete.name}</span>。<br/>
+              此操作不可逆，学员的所有课时和记录将被永久删除。
+            </p>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setDeleteStudentModalOpen(false)}
+                className="flex-1 py-3 rounded-xl font-bold bg-white/5 text-gray-400 hover:bg-white/10 transition-colors"
+              >
+                取消
+              </button>
+              <button 
+                onClick={handleConfirmDeleteStudent}
+                className="flex-1 py-3 rounded-xl font-bold bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/50 transition-colors"
+              >
+                确认删除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

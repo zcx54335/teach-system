@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
+import toast from 'react-hot-toast';
 
 const toDateString = (d: Date) => {
   const year = d.getFullYear();
@@ -60,14 +61,6 @@ const TeacherWorkbench: React.FC = () => {
   const [showQRModal, setShowQRModal] = useState(false);
   const [completedScheduleId, setCompletedScheduleId] = useState('');
   
-  // Custom Toast State
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
-  };
-
   const topicInputRef = useRef<HTMLInputElement>(null);
   const homeworkInputRef = useRef<HTMLInputElement>(null);
 
@@ -173,7 +166,7 @@ const TeacherWorkbench: React.FC = () => {
 
   const handleDeductSubmit = async () => {
     if (selectedStudentIds.length === 0) {
-      showToast('请至少勾选一名学员'); return;
+      toast.error('请至少勾选一名学员'); return;
     }
 
     setIsSubmitting(true);
@@ -244,16 +237,16 @@ const TeacherWorkbench: React.FC = () => {
 
       // Success! Show Toast & QR Code
       if (activeSchedule.status === 'pending') {
-        showToast('✅ 消课成功，课时已自动扣除！');
+        toast.success('✅ 消课成功，课时已自动扣除！');
       } else {
-        showToast('✅ 报告补充/修改成功！');
+        toast.success('✅ 报告补充/修改成功！');
       }
 
       setCompletedScheduleId(activeSchedule.id);
       setShowQRModal(true);
       
     } catch (err: any) {
-      showToast('消课失败：' + err.message);
+      toast.error('消课失败：' + err.message);
       // Clean up UI state to allow retry if it failed
       setShowQRModal(false);
     } finally {
@@ -279,22 +272,6 @@ const TeacherWorkbench: React.FC = () => {
   return (
     <div className="w-full h-full flex flex-col relative max-w-5xl mx-auto p-4 md:p-6 overflow-hidden">
       
-      {/* Global Custom Toast */}
-      {toastMessage && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-top-4 fade-in duration-300">
-          <div className="bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl border border-white/10 flex items-center gap-3">
-            {toastMessage.includes('✅') ? (
-              <CheckCircle className="w-5 h-5 text-green-400" />
-            ) : toastMessage.includes('失败') ? (
-              <X className="w-5 h-5 text-red-400" />
-            ) : (
-              <Sparkles className="w-5 h-5 text-cyan-400" />
-            )}
-            <span className="font-bold tracking-wide">{toastMessage.replace('✅ ', '')}</span>
-          </div>
-        </div>
-      )}
-
       <header className="mb-6 shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl md:text-3xl font-bold tracking-widest text-white flex items-center">
@@ -664,7 +641,7 @@ const TeacherWorkbench: React.FC = () => {
                 <button 
                   onClick={() => {
                     navigator.clipboard.writeText(publicReportUrl);
-                    showToast('链接已复制！');
+                    toast.success('链接已复制！');
                   }}
                   className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-xl text-sm font-bold transition-colors shrink-0"
                 >

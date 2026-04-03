@@ -8,12 +8,42 @@ import MainLayout from "./components/Layout/MainLayout";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminSchedule from "./pages/AdminSchedule";
 import AdminSettings from "./pages/AdminSettings";
+import SystemManagement from "./pages/SystemManagement";
 import TeacherWorkbench from "./pages/TeacherWorkbench";
 import PublicReport from "./pages/PublicReport";
+import { Toaster } from 'react-hot-toast';
 
 export default function App() {
   return (
-    <Router>
+    <>
+      <Toaster 
+        position="top-center"
+        toastOptions={{
+          className: 'bg-slate-900 text-white border border-white/10 shadow-2xl',
+          style: {
+            borderRadius: '9999px',
+            background: '#0f172a',
+            color: '#fff',
+            padding: '12px 24px',
+            fontSize: '14px',
+            fontWeight: 'bold',
+            letterSpacing: '0.05em'
+          },
+          success: {
+            iconTheme: {
+              primary: '#4ade80',
+              secondary: '#0f172a',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#f87171',
+              secondary: '#0f172a',
+            },
+          },
+        }} 
+      />
+      <Router>
       <Routes>
         {/* 公开展示页 */}
         <Route path="/" element={<LandingPage />} />
@@ -28,6 +58,7 @@ export default function App() {
             <Route path="workbench" element={<TeacherWorkbench />} />
             <Route path="students" element={<AdminDashboard />} />
             <Route path="schedule" element={<AdminSchedule />} />
+            <Route path="system" element={<SystemManagement />} />
             <Route path="settings" element={<AdminSettings />} />
             <Route path="report" element={<ParentCenter />} />
             <Route path="materials" element={<ParentCenter />} />
@@ -48,5 +79,6 @@ export default function App() {
         <Route path="/report/:id" element={<PublicReport />} />
       </Routes>
     </Router>
+    </>
   );
 }
