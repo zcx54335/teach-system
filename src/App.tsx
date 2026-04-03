@@ -9,6 +9,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminSchedule from "./pages/AdminSchedule";
 import AdminSettings from "./pages/AdminSettings";
 import TeacherWorkbench from "./pages/TeacherWorkbench";
+import PublicReport from "./pages/PublicReport";
 
 export default function App() {
   return (
@@ -42,6 +43,9 @@ export default function App() {
 
         {/* 家长端 (免登录，仅凭 ID 访问的公开版，保留兼容老链接) */}
         <Route path="/parent" element={<ParentDashboard />} />
+
+        {/* 公开扫码报告页 */}
+        <Route path="/report/:id" element={<PublicReport />} />
       </Routes>
     </Router>
   );

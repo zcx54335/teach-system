@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Hexagon, Users, BookOpen, Settings, LogOut, 
-  Menu, ChevronLeft, ChevronRight, Activity, Laptop
+  Menu, ChevronLeft, ChevronRight, Activity, Laptop, X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -10,6 +10,7 @@ const MainLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [userRole, setUserRole] = useState<'sysadmin' | 'teacher' | 'parent' | null>(null);
   const [userName, setUserName] = useState('');
 
@@ -63,11 +64,11 @@ const MainLayout: React.FC = () => {
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-purple-900/10 blur-[100px]"></div>
       </div>
 
-      {/* Collapsible Sidebar */}
+      {/* Desktop Sidebar */}
       <motion.aside 
         initial={false}
         animate={{ width: isCollapsed ? 80 : 240 }}
-        className="relative z-10 bg-black/40 border-r border-white/5 backdrop-blur-2xl flex flex-col shrink-0 overflow-hidden"
+        className="hidden md:flex relative z-10 bg-black/40 border-r border-white/5 backdrop-blur-2xl flex-col shrink-0 overflow-hidden"
       >
         <div className="h-20 flex items-center justify-between px-4 border-b border-white/5">
           <div className="flex items-center space-x-3 overflow-hidden">
@@ -145,18 +146,97 @@ const MainLayout: React.FC = () => {
         </div>
       </motion.aside>
 
+      {/* Mobile Drawer Overlay & Sidebar */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
+            />
+            <motion.aside
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-y-0 left-0 w-64 bg-slate-950 border-r border-white/10 z-50 flex flex-col md:hidden shadow-2xl"
+            >
+              <div className="h-20 flex items-center justify-between px-6 border-b border-white/5">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(34,211,238,0.4)]">
+                    <Hexagon className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-base font-black tracking-widest text-white">小鱼思维</h1>
+                  </div>
+                </div>
+                <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-gray-400 hover:text-white rounded-full bg-white/5">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <nav className="flex-1 px-4 space-y-2 mt-6 overflow-y-auto">
+                {navItems.map((item) => {
+                  const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
+                  return (
+                    <button
+                      key={item.path}
+                      onClick={() => {
+                        navigate(item.path);
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`w-full flex items-center px-4 py-4 rounded-xl transition-all duration-300 space-x-4 ${
+                        isActive 
+                          ? 'bg-cyan-500/10 text-cyan-400 shadow-[inset_3px_0_0_rgba(34,211,238,1)]' 
+                          : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                      }`}
+                    >
+                      <item.icon className="w-5 h-5 shrink-0" />
+                      <span className="text-sm font-bold tracking-widest">{item.label}</span>
+                    </button>
+                  );
+                })}
+              </nav>
+
+              <div className="p-6 border-t border-white/5">
+                <button 
+                  onClick={handleLogout}
+                  className="w-full flex items-center px-4 py-4 rounded-xl bg-white/5 text-gray-400 hover:bg-red-500/10 hover:text-red-400 border border-white/5 transition-all space-x-4"
+                >
+                  <LogOut className="w-5 h-5 shrink-0" />
+                  <span className="text-sm font-bold tracking-widest">退出系统</span>
+                </button>
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
       {/* Main Content Area */}
-      <main className="relative z-10 flex-1 h-screen overflow-hidden flex flex-col bg-black/20">
+      <main className="relative z-10 flex-1 h-screen overflow-hidden flex flex-col bg-black/20 w-full">
         {/* Top Navbar */}
-        <header className="h-20 flex items-center justify-between px-8 border-b border-white/5 backdrop-blur-md shrink-0">
+        <header className="h-16 md:h-20 flex items-center justify-between px-4 md:px-8 border-b border-white/5 backdrop-blur-md shrink-0">
           <div className="flex items-center">
+            {/* Mobile Hamburger */}
             <button 
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              className="p-2 mr-4 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors"
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="p-2 mr-3 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors md:hidden"
             >
               <Menu className="w-5 h-5" />
             </button>
-            <h2 className="text-lg font-bold tracking-widest text-white/80 hidden sm:block">
+            
+            {/* Desktop Collapse Toggle */}
+            <button 
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="hidden md:block p-2 mr-4 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            
+            <h2 className="text-base md:text-lg font-bold tracking-widest text-white/90">
               {navItems.find(item => location.pathname.startsWith(item.path))?.label || '概览'}
             </h2>
           </div>

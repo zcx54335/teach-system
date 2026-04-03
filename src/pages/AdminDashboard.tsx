@@ -3,14 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { 
   Users, Clock, Activity, LogOut, Hexagon, 
-  Settings, BookOpen, Edit, MinusCircle, ExternalLink, X
+  Settings, BookOpen, Edit, MinusCircle, ExternalLink, X, CheckCircle
 } from 'lucide-react';
 
 interface StudentRecord {
   id: string;
   name: string;
   phone: string;
+  parent_phone: string;
+  school: string;
   grade: string;
+  subjects: string[];
+  course_balances: Record<string, number>;
   remaining_classes: number;
   total_classes: number;
   calc_score: number;
@@ -28,8 +32,27 @@ const AdminDashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [uptime, setUptime] = useState(0);
   
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isTopupModalOpen, setIsTopupModalOpen] = useState(false);
+  const [selectedTopupStudent, setSelectedTopupStudent] = useState<StudentRecord | null>(null);
+  const [topupSubject, setTopupSubject] = useState('');
+  const [topupAmount, setTopupAmount] = useState(0);
+
   const [editingStudent, setEditingStudent] = useState<StudentRecord | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const [newStudent, setNewStudent] = useState({
+    name: '',
+    phone: '',
+    parent_phone: '',
+    school: '',
+    grade: '一年级',
+    subjects: [] as string[]
+  });
+  const [isAdding, setIsAdding] = useState(false);
+
+  const SUBJECT_OPTIONS = ['数学', '物理', '化学', '英语', '语文'];
+  const GRADE_OPTIONS = ['学前', '一年级', '二年级', '三年级', '四年级', '五年级', '六年级', '初一', '初二', '初三'];
 
   const fetchStudents = async () => {
     setIsLoading(true);
@@ -59,6 +82,120 @@ const AdminDashboard: React.FC = () => {
     navigate('/');
   };
 
+  const handleAddStudent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newStudent.parent_phone.length !== 11) {
+      alert('请输入11位有效家长手机号');
+      return;
+    }
+    if (newStudent.subjects.length === 0) {
+      alert('请至少选择一个报读科目');
+      return;
+    }
+    
+    setIsAdding(true);
+    try {
+      const password = newStudent.parent_phone.slice(-6);
+
+      // 1. 创建家长账号
+      // 既然数据库解除了外键枷锁并自动生成 id，我们直接走纯数据库的 insert / update
+      // 先查是否存在
+      let profileId;
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('phone', newStudent.parent_phone)
+        .single();
+
+      if (existingProfile) {
+        profileId = existingProfile.id;
+        // 可选：如果已存在，可以选择只更新 full_name 或 password
+      } else {
+        // 如果不存在，执行 insert，不传 id，让数据库触发 gen_random_uuid()
+        const { data: insertedProfile, error: profileError } = await supabase
+          .from('profiles')
+          .insert([{
+            phone: newStudent.parent_phone,
+            password: password,
+            role: 'parent',
+            full_name: newStudent.name + '的家长'
+          }])
+          .select('id')
+          .single();
+
+        if (profileError) throw new Error(`创建家长账号失败: ${profileError.message}`);
+        profileId = insertedProfile.id;
+      }
+
+      // 2. 初始化 course_balances (全0)
+      const initialBalances: Record<string, number> = {};
+      newStudent.subjects.forEach(sub => {
+        initialBalances[sub] = 0;
+      });
+
+      // 3. 在 students 表中插入数据
+      const { error: dbError } = await supabase.from('students').insert([{
+        name: newStudent.name,
+        phone: newStudent.phone || newStudent.parent_phone,
+        parent_phone: newStudent.parent_phone,
+        school: newStudent.school,
+        grade: newStudent.grade,
+        subjects: newStudent.subjects,
+        course_balances: initialBalances,
+        status: 'enrolled',
+        auth_id: profileId,
+        password_hash: password,
+        remaining_classes: 0 // 保留作兼容
+      }]);
+
+      if (dbError) throw new Error(`DB Error: ${dbError.message}`);
+
+      alert('✅ 新增学员成功！');
+      setNewStudent({ name: '', phone: '', parent_phone: '', school: '', grade: '一年级', subjects: [] });
+      setIsAddModalOpen(false);
+      fetchStudents();
+    } catch (err: any) {
+      alert(`创建学员失败: ${err.message}`);
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  const handleTopup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedTopupStudent || !topupSubject || topupAmount <= 0) return;
+
+    try {
+      const currentBalances = selectedTopupStudent.course_balances || {};
+      const currentAmount = currentBalances[topupSubject] || 0;
+      
+      const newBalances = {
+        ...currentBalances,
+        [topupSubject]: currentAmount + topupAmount
+      };
+
+      const { error } = await supabase
+        .from('students')
+        .update({ 
+          course_balances: newBalances,
+          // 为了兼容老页面，如果是首个科目，同时加到 remaining_classes
+          ...(Object.keys(currentBalances).length === 0 || topupSubject === selectedTopupStudent.subjects[0] ? {
+            remaining_classes: (selectedTopupStudent.remaining_classes || 0) + topupAmount
+          } : {})
+        })
+        .eq('id', selectedTopupStudent.id);
+
+      if (error) throw error;
+
+      alert(`✅ 充值成功！已为 ${selectedTopupStudent.name} 的 ${topupSubject} 增加 ${topupAmount} 课时。`);
+      setIsTopupModalOpen(false);
+      setTopupAmount(0);
+      setTopupSubject('');
+      fetchStudents();
+    } catch (err: any) {
+      alert('充值失败：' + err.message);
+    }
+  };
   const handleDeductClass = async (studentId: string, currentRemaining: number, studentName: string) => {
     if (currentRemaining <= 0) {
       alert('剩余课时不足，无法消课！');
@@ -119,61 +256,67 @@ const AdminDashboard: React.FC = () => {
   const totalRemainingClasses = students.reduce((acc, curr) => acc + (curr.remaining_classes || 0), 0);
 
   return (
-    <div className="w-full p-10 h-full flex flex-col">
-      <header className="mb-12">
-        <h2 className="text-3xl font-bold tracking-widest text-white mb-2 drop-shadow-md">学员资产概览</h2>
-        <p className="text-sm text-gray-400 font-mono tracking-widest">REAL-TIME DATA DASHBOARD</p>
+    <div className="w-full p-4 md:p-10 h-full flex flex-col">
+      <header className="mb-6 md:mb-12 flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-widest text-white mb-2 drop-shadow-md">学员资产概览</h2>
+          <p className="text-xs md:text-sm text-gray-400 font-mono tracking-widest">REAL-TIME DATA DASHBOARD</p>
+        </div>
       </header>
 
-      {/* 顶部三个数据卡片 - CSS Grid 强制横向三列 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 relative overflow-hidden group shadow-[0_0_20px_rgba(0,0,0,0.3)]">
-          <div className="absolute -right-6 -top-6 w-32 h-32 bg-cyan-500/20 rounded-full blur-2xl group-hover:bg-cyan-500/30 transition-all"></div>
-          <div className="flex items-center space-x-4 mb-6">
-            <div className="p-3.5 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 shadow-[0_0_15px_rgba(34,211,238,0.2)]">
-              <Users className="w-6 h-6 text-cyan-400" />
+      {/* 顶部三个数据卡片 - 移动端横向滚动，桌面端 Grid */}
+      <div className="flex overflow-x-auto md:grid md:grid-cols-3 gap-4 md:gap-8 mb-8 md:mb-12 pb-4 md:pb-0 snap-x">
+        <div className="min-w-[240px] md:min-w-0 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 relative overflow-hidden group shadow-[0_0_20px_rgba(0,0,0,0.3)] snap-center shrink-0">
+          <div className="absolute -right-6 -top-6 w-24 h-24 md:w-32 md:h-32 bg-cyan-500/20 rounded-full blur-2xl group-hover:bg-cyan-500/30 transition-all"></div>
+          <div className="flex items-center space-x-3 md:space-x-4 mb-4 md:mb-6">
+            <div className="p-2 md:p-3.5 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 shadow-[0_0_15px_rgba(34,211,238,0.2)]">
+              <Users className="w-5 h-5 md:w-6 md:h-6 text-cyan-400" />
             </div>
-            <h3 className="text-sm font-bold text-gray-300 tracking-widest uppercase">总学员数</h3>
+            <h3 className="text-xs md:text-sm font-bold text-gray-300 tracking-widest uppercase">总学员数</h3>
           </div>
-          <div className="text-5xl font-bold font-inter text-white tracking-tighter drop-shadow-sm">{totalStudents} <span className="text-base text-gray-500 ml-2 font-mono font-normal">人</span></div>
+          <div className="text-4xl md:text-5xl font-bold font-inter text-white tracking-tighter drop-shadow-sm">{totalStudents} <span className="text-sm md:text-base text-gray-500 ml-1 md:ml-2 font-mono font-normal">人</span></div>
         </div>
 
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 relative overflow-hidden group shadow-[0_0_20px_rgba(0,0,0,0.3)]">
-          <div className="absolute -right-6 -top-6 w-32 h-32 bg-purple-500/20 rounded-full blur-2xl group-hover:bg-purple-500/30 transition-all"></div>
-          <div className="flex items-center space-x-4 mb-6">
-            <div className="p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
-              <Clock className="w-6 h-6 text-purple-400" />
+        <div className="min-w-[240px] md:min-w-0 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 relative overflow-hidden group shadow-[0_0_20px_rgba(0,0,0,0.3)] snap-center shrink-0">
+          <div className="absolute -right-6 -top-6 w-24 h-24 md:w-32 md:h-32 bg-purple-500/20 rounded-full blur-2xl group-hover:bg-purple-500/30 transition-all"></div>
+          <div className="flex items-center space-x-3 md:space-x-4 mb-4 md:mb-6">
+            <div className="p-2 md:p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
+              <Clock className="w-5 h-5 md:w-6 md:h-6 text-purple-400" />
             </div>
-            <h3 className="text-sm font-bold text-gray-300 tracking-widest uppercase">待消课时</h3>
+            <h3 className="text-xs md:text-sm font-bold text-gray-300 tracking-widest uppercase">待消课时</h3>
           </div>
-          <div className="text-5xl font-bold font-inter text-white tracking-tighter drop-shadow-sm">{totalRemainingClasses} <span className="text-base text-gray-500 ml-2 font-mono font-normal">课时</span></div>
+          <div className="text-4xl md:text-5xl font-bold font-inter text-white tracking-tighter drop-shadow-sm">{totalRemainingClasses} <span className="text-sm md:text-base text-gray-500 ml-1 md:ml-2 font-mono font-normal">课时</span></div>
         </div>
 
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 relative overflow-hidden group shadow-[0_0_20px_rgba(0,0,0,0.3)]">
-          <div className="absolute -right-6 -top-6 w-32 h-32 bg-blue-500/20 rounded-full blur-2xl group-hover:bg-blue-500/30 transition-all"></div>
-          <div className="flex items-center space-x-4 mb-6">
-            <div className="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.2)]">
-              <Activity className="w-6 h-6 text-blue-400" />
+        <div className="min-w-[240px] md:min-w-0 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 relative overflow-hidden group shadow-[0_0_20px_rgba(0,0,0,0.3)] snap-center shrink-0">
+          <div className="absolute -right-6 -top-6 w-24 h-24 md:w-32 md:h-32 bg-blue-500/20 rounded-full blur-2xl group-hover:bg-blue-500/30 transition-all"></div>
+          <div className="flex items-center space-x-3 md:space-x-4 mb-4 md:mb-6">
+            <div className="p-2 md:p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.2)]">
+              <Activity className="w-5 h-5 md:w-6 md:h-6 text-blue-400" />
             </div>
-            <h3 className="text-sm font-bold text-gray-300 tracking-widest uppercase">系统运行</h3>
+            <h3 className="text-xs md:text-sm font-bold text-gray-300 tracking-widest uppercase">系统运行</h3>
           </div>
-          <div className="text-5xl font-bold font-inter text-white tracking-tighter drop-shadow-sm">{uptime} <span className="text-base text-gray-500 ml-2 font-mono font-normal">天</span></div>
+          <div className="text-4xl md:text-5xl font-bold font-inter text-white tracking-tighter drop-shadow-sm">{uptime} <span className="text-sm md:text-base text-gray-500 ml-1 md:ml-2 font-mono font-normal">天</span></div>
         </div>
       </div>
 
-      {/* 核心列表：学员管理表格 */}
+      {/* 核心列表：学员管理 */}
       <div className="bg-white/[0.02] backdrop-blur-3xl border border-white/10 rounded-[2rem] overflow-hidden shadow-2xl flex-1 flex flex-col">
-        <div className="p-8 border-b border-white/5 flex items-center justify-between bg-black/20">
-          <h3 className="text-xl font-bold tracking-widest text-white flex items-center">
+        <div className="p-6 md:p-8 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between bg-black/20 gap-4">
+          <h3 className="text-lg md:text-xl font-bold tracking-widest text-white flex items-center">
             <Users className="w-5 h-5 mr-3 text-cyan-500" />
             学员列表
           </h3>
-          <button className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl text-sm font-bold tracking-widest shadow-[0_0_20px_rgba(34,211,238,0.4)] hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] transition-all active:scale-95">
+          <button 
+            onClick={() => setIsAddModalOpen(true)}
+            className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl text-sm font-bold tracking-widest shadow-[0_0_20px_rgba(34,211,238,0.4)] hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] transition-all active:scale-95"
+          >
             + 新增学员
           </button>
         </div>
         
-        <div className="overflow-x-auto flex-1">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto flex-1">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-black/40">
@@ -219,6 +362,12 @@ const AdminDashboard: React.FC = () => {
                     <td className="px-8 py-5 text-right">
                       <div className="flex items-center justify-end space-x-3">
                         <button 
+                          onClick={() => { setSelectedTopupStudent(student); setIsTopupModalOpen(true); }}
+                          className="flex items-center px-4 py-2 bg-green-500/10 text-green-400 hover:bg-green-500/20 border border-green-500/30 rounded-xl text-xs font-bold tracking-widest transition-colors shadow-[0_0_10px_rgba(34,197,94,0.1)]"
+                        >
+                          <Activity className="w-3.5 h-3.5 mr-1.5" /> 充值
+                        </button>
+                        <button 
                           onClick={() => handleDeductClass(student.id, student.remaining_classes, student.name)}
                           className="flex items-center px-4 py-2 bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 border border-orange-500/30 rounded-xl text-xs font-bold tracking-widest transition-colors shadow-[0_0_10px_rgba(249,115,22,0.1)]"
                         >
@@ -244,7 +393,198 @@ const AdminDashboard: React.FC = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden flex-1 overflow-y-auto p-4 space-y-4">
+          {isLoading ? (
+            <div className="py-20 text-center text-cyan-400/50 font-mono tracking-widest">
+              <div className="w-8 h-8 border-4 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin mx-auto mb-4"></div>
+              LOADING DATA...
+            </div>
+          ) : students.length === 0 ? (
+            <div className="py-20 text-center text-gray-500 font-mono text-sm tracking-widest">
+              NO DATA FOUND
+            </div>
+          ) : (
+            students.map(student => (
+              <div key={student.id} className="bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 font-bold text-sm shadow-[0_0_10px_rgba(34,211,238,0.1)]">
+                      {student.name.charAt(0)}
+                    </div>
+                    <div>
+                      <span className="font-bold text-white tracking-widest text-base block">{student.name}</span>
+                      <span className="text-xs text-gray-400">{student.grade || '未分配年级'}</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[10px] text-gray-500 font-mono block mb-1">剩余课时</span>
+                    <span className={`text-2xl font-bold font-inter ${student.remaining_classes <= 3 ? 'text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.6)]' : 'text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.4)]'}`}>
+                      {student.remaining_classes}
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-4 gap-2 pt-4 border-t border-white/5">
+                  <button 
+                    onClick={() => { setSelectedTopupStudent(student); setIsTopupModalOpen(true); }}
+                    className="flex flex-col items-center justify-center py-2 bg-green-500/10 text-green-400 hover:bg-green-500/20 rounded-xl text-xs font-bold tracking-widest transition-colors"
+                  >
+                    <Activity className="w-4 h-4 mb-1" /> 充值
+                  </button>
+                  <button 
+                    onClick={() => handleDeductClass(student.id, student.remaining_classes, student.name)}
+                    className="flex flex-col items-center justify-center py-2 bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 rounded-xl text-xs font-bold tracking-widest transition-colors"
+                  >
+                    <MinusCircle className="w-4 h-4 mb-1" /> 消课
+                  </button>
+                  <button 
+                    onClick={() => { setEditingStudent(student); setIsEditModalOpen(true); }}
+                    className="flex flex-col items-center justify-center py-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 rounded-xl text-xs font-bold tracking-widest transition-colors"
+                  >
+                    <Edit className="w-4 h-4 mb-1" /> 评分
+                  </button>
+                  <button 
+                    onClick={() => window.open(`/#/parent?id=${student.id}`, '_blank')}
+                    className="flex flex-col items-center justify-center py-2 bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white rounded-xl text-xs font-bold tracking-widest transition-colors"
+                  >
+                    <ExternalLink className="w-4 h-4 mb-1" /> 报告
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
+
+      {/* 新增学员弹窗 */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => !isAdding && setIsAddModalOpen(false)}></div>
+          <div className="relative bg-slate-900 border border-white/10 w-full max-w-lg rounded-3xl p-8 shadow-[0_0_50px_rgba(0,0,0,0.8)] animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+            <button onClick={() => !isAdding && setIsAddModalOpen(false)} className="absolute top-6 right-6 text-gray-400 hover:text-white transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+            <h3 className="text-xl font-bold text-white tracking-widest mb-6 border-b border-white/5 pb-4">
+              录入新学员
+            </h3>
+            
+            <form onSubmit={handleAddStudent} className="space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-xs font-mono font-bold text-gray-400 mb-2 uppercase tracking-[0.2em]">学员姓名 *</label>
+                  <input 
+                    type="text" required value={newStudent.name} onChange={(e) => setNewStudent({...newStudent, name: e.target.value})}
+                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white font-bold focus:outline-none focus:border-cyan-500/50 focus:bg-black/80 transition-all shadow-inner"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-mono font-bold text-gray-400 mb-2 uppercase tracking-[0.2em]">家长手机号 * (用于登录)</label>
+                  <input 
+                    type="tel" required value={newStudent.parent_phone} onChange={(e) => setNewStudent({...newStudent, parent_phone: e.target.value})}
+                    placeholder="11位手机号"
+                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white font-mono font-bold focus:outline-none focus:border-cyan-500/50 focus:bg-black/80 transition-all shadow-inner"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-mono font-bold text-gray-400 mb-2 uppercase tracking-[0.2em]">就读学校</label>
+                  <input 
+                    type="text" value={newStudent.school} onChange={(e) => setNewStudent({...newStudent, school: e.target.value})}
+                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 focus:bg-black/80 transition-all shadow-inner"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-mono font-bold text-gray-400 mb-2 uppercase tracking-[0.2em]">年级 *</label>
+                  <select 
+                    value={newStudent.grade} onChange={(e) => setNewStudent({...newStudent, grade: e.target.value})}
+                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 focus:bg-black/80 transition-all shadow-inner appearance-none"
+                  >
+                    {GRADE_OPTIONS.map(g => <option key={g} value={g} className="bg-slate-900">{g}</option>)}
+                  </select>
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-xs font-mono font-bold text-gray-400 mb-3 uppercase tracking-[0.2em]">报读科目 * (多选)</label>
+                <div className="grid grid-cols-2 gap-3">
+                  {SUBJECT_OPTIONS.map(sub => (
+                    <label key={sub} className={`flex items-center p-3 rounded-xl border cursor-pointer transition-all ${newStudent.subjects.includes(sub) ? 'bg-cyan-500/20 border-cyan-500/50' : 'bg-black/50 border-white/10 hover:border-white/30'}`}>
+                      <input 
+                        type="checkbox" 
+                        className="hidden"
+                        checked={newStudent.subjects.includes(sub)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setNewStudent({...newStudent, subjects: [...newStudent.subjects, sub]});
+                          } else {
+                            setNewStudent({...newStudent, subjects: newStudent.subjects.filter(s => s !== sub)});
+                          }
+                        }}
+                      />
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center mr-3 ${newStudent.subjects.includes(sub) ? 'bg-cyan-500 border-cyan-500' : 'border-gray-500'}`}>
+                        {newStudent.subjects.includes(sub) && <CheckCircle className="w-3 h-3 text-white" />}
+                      </div>
+                      <span className={`text-sm font-bold ${newStudent.subjects.includes(sub) ? 'text-cyan-400' : 'text-gray-300'}`}>{sub}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-6">
+                <button type="submit" disabled={isAdding} className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-4 rounded-xl tracking-widest transition-all shadow-[0_0_20px_rgba(34,211,238,0.4)] active:scale-95 disabled:opacity-50 flex justify-center items-center">
+                  {isAdding ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : '确认创建并分配初始密码'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 课时充值弹窗 */}
+      {isTopupModalOpen && selectedTopupStudent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsTopupModalOpen(false)}></div>
+          <div className="relative bg-slate-900 border border-white/10 w-full max-w-md rounded-3xl p-8 shadow-[0_0_50px_rgba(0,0,0,0.8)] animate-in zoom-in-95 duration-200">
+            <button onClick={() => setIsTopupModalOpen(false)} className="absolute top-6 right-6 text-gray-400 hover:text-white transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+            <h3 className="text-xl font-bold text-white tracking-widest mb-6 border-b border-white/5 pb-4">
+              为 {selectedTopupStudent.name} 充值课时
+            </h3>
+            
+            <form onSubmit={handleTopup} className="space-y-5">
+              <div>
+                <label className="block text-xs font-mono font-bold text-gray-400 mb-2 uppercase tracking-[0.2em]">选择充值科目</label>
+                <select 
+                  required value={topupSubject} onChange={(e) => setTopupSubject(e.target.value)}
+                  className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500/50 focus:bg-black/80 transition-all shadow-inner appearance-none"
+                >
+                  <option value="" disabled>请选择科目</option>
+                  {(selectedTopupStudent.subjects || []).map(sub => (
+                    <option key={sub} value={sub} className="bg-slate-900">{sub} (当前余额: {(selectedTopupStudent.course_balances || {})[sub] || 0})</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-xs font-mono font-bold text-gray-400 mb-2 uppercase tracking-[0.2em]">充值数量 (课时)</label>
+                <input 
+                  type="number" required min="1" step="1"
+                  value={topupAmount || ''} onChange={(e) => setTopupAmount(parseInt(e.target.value) || 0)}
+                  className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white font-bold focus:outline-none focus:border-green-500/50 focus:bg-black/80 transition-all shadow-inner text-2xl"
+                />
+              </div>
+
+              <div className="pt-6">
+                <button type="submit" className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold py-4 rounded-xl tracking-widest transition-all shadow-[0_0_20px_rgba(34,197,94,0.4)] active:scale-95">
+                  确认充值
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* 编辑分数弹窗 */}
       {isEditModalOpen && editingStudent && (
