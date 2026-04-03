@@ -90,7 +90,7 @@ const LandingPage: React.FC = () => {
             <Hexagon className="w-6 h-6 text-white" />
           </div>
           <span className="text-xl font-black tracking-widest text-white drop-shadow-md">
-            {isLoggedIn ? '小鱼 · 杨老师控制台' : '小鱼思维'}
+            小鱼
           </span>
         </div>
         {!isLoggedIn && (
@@ -108,11 +108,6 @@ const LandingPage: React.FC = () => {
 
       {/* 核心展示区 */}
       <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 text-center max-w-4xl mx-auto w-full">
-        <div className="inline-block px-4 py-1.5 mb-8 rounded-full bg-white/5 border border-cyan-500/30 backdrop-blur-md">
-          <span className="text-xs font-medium tracking-[0.2em] text-cyan-400 uppercase">
-            
-          </span>
-        </div>
         
         <h1 className="text-5xl md:text-7xl font-black tracking-tight text-white mb-6 leading-tight">
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">小鱼思维</span>
