@@ -346,13 +346,13 @@ const SystemManagement: React.FC = () => {
     try {
       const { error } = await supabase
         .from('system_settings')
-        .upsert({ 
-          id: 1, 
+        .update({ 
           studio_name: settings.studio_name,
           report_footer: settings.report_footer,
           subjects_list: settings.subjects_list,
           default_duration: settings.default_duration
-        });
+        })
+        .eq('id', 1);
 
       if (error) throw error;
       toast.success('全局设置保存成功');
