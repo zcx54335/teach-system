@@ -20,6 +20,8 @@ export default {
         // 增加 Inter 字体作为主要科技感字体
         inter: ['Inter', 'sans-serif'],
         sans: [
+          'Inter',
+          'Roboto',
           'system-ui',
           '-apple-system',
           'BlinkMacSystemFont',
