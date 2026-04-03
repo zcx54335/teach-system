@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Hexagon, Users, BookOpen, Settings, LogOut, 
-  Menu, ChevronLeft, ChevronRight, Activity, Laptop, X, Database
+  Menu, ChevronLeft, ChevronRight, Activity, Laptop, X, Database, UserCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -11,6 +11,8 @@ const MainLayout: React.FC = () => {
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const [userRole, setUserRole] = useState<'sysadmin' | 'teacher' | 'parent' | null>(null);
   const [userName, setUserName] = useState('');
 
@@ -30,6 +32,16 @@ const MainLayout: React.FC = () => {
       navigate('/login');
     }
   }, [navigate]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsProfileDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('xiaoyu_user');
@@ -243,16 +255,56 @@ const MainLayout: React.FC = () => {
               {navItems.find(item => location.pathname.startsWith(item.path))?.label || '概览'}
             </h2>
           </div>
-          <div className="flex items-center space-x-4">
-            <div className="text-right hidden sm:block">
-              <p className="text-sm font-bold text-white tracking-widest">{userName}</p>
+          <div className="flex items-center space-x-4 relative" ref={dropdownRef}>
+            <div className="text-right hidden sm:block cursor-pointer" onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}>
+              <p className="text-sm font-bold text-white tracking-widest hover:text-cyan-400 transition-colors">{userName}</p>
               <p className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">Active Session</p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 p-[2px]">
+            <div 
+              onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+              className="w-10 h-10 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 p-[2px] cursor-pointer hover:shadow-[0_0_15px_rgba(34,211,238,0.5)] transition-all"
+            >
               <div className="w-full h-full bg-[#020617] rounded-full flex items-center justify-center">
                 <span className="text-sm font-bold text-white">{userName.charAt(0)}</span>
               </div>
             </div>
+
+            {/* Profile Dropdown */}
+            <AnimatePresence>
+              {isProfileDropdownOpen && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute top-14 right-0 w-48 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50"
+                >
+                  <div className="p-3 border-b border-white/5">
+                    <p className="text-sm font-bold text-white tracking-widest">{userName}</p>
+                    <p className="text-xs text-gray-400 font-mono mt-1">{userRole === 'parent' ? '家长' : userRole === 'teacher' ? '教师' : '管理员'}</p>
+                  </div>
+                  <div className="p-1">
+                    <button 
+                      onClick={() => {
+                        setIsProfileDropdownOpen(false);
+                        navigate('/dashboard/profile');
+                      }}
+                      className="w-full flex items-center px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl transition-colors tracking-widest"
+                    >
+                      <UserCircle className="w-4 h-4 mr-2 text-cyan-400" />
+                      账号详细信息
+                    </button>
+                    <button 
+                      onClick={handleLogout}
+                      className="w-full flex items-center px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-colors tracking-widest mt-1"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      退出登录
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </header>
 

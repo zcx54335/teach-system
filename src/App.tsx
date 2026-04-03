@@ -11,6 +11,7 @@ import AdminSettings from "./pages/AdminSettings";
 import SystemManagement from "./pages/SystemManagement";
 import TeacherWorkbench from "./pages/TeacherWorkbench";
 import PublicReport from "./pages/PublicReport";
+import Profile from "./pages/Profile";
 import { Toaster } from 'react-hot-toast';
 
 export default function App() {
@@ -62,6 +63,7 @@ export default function App() {
             <Route path="settings" element={<AdminSettings />} />
             <Route path="report" element={<ParentCenter />} />
             <Route path="materials" element={<ParentCenter />} />
+            <Route path="profile" element={<Profile />} />
           </Route>
         </Route>
 

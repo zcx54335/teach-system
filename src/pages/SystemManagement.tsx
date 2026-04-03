@@ -321,10 +321,10 @@ const SystemManagement: React.FC = () => {
       </header>
 
       {/* Tabs */}
-      <div className="flex space-x-2 mb-6 border-b border-white/10 shrink-0">
+      <div className="flex space-x-2 mb-6 border-b border-white/10 shrink-0 overflow-x-auto flex-nowrap no-scrollbar">
         <button 
           onClick={() => setActiveTab('teachers')}
-          className={`flex items-center px-6 py-3 font-bold tracking-widest transition-all border-b-2 ${
+          className={`flex items-center px-6 py-3 font-bold tracking-widest transition-all border-b-2 whitespace-nowrap shrink-0 ${
             activeTab === 'teachers' ? 'border-cyan-400 text-cyan-400' : 'border-transparent text-gray-500 hover:text-gray-300'
           }`}
         >
@@ -332,7 +332,7 @@ const SystemManagement: React.FC = () => {
         </button>
         <button 
           onClick={() => setActiveTab('finance')}
-          className={`flex items-center px-6 py-3 font-bold tracking-widest transition-all border-b-2 ${
+          className={`flex items-center px-6 py-3 font-bold tracking-widest transition-all border-b-2 whitespace-nowrap shrink-0 ${
             activeTab === 'finance' ? 'border-amber-400 text-amber-400' : 'border-transparent text-gray-500 hover:text-gray-300'
           }`}
         >
@@ -340,7 +340,7 @@ const SystemManagement: React.FC = () => {
         </button>
         <button 
           onClick={() => setActiveTab('settings')}
-          className={`flex items-center px-6 py-3 font-bold tracking-widest transition-all border-b-2 ${
+          className={`flex items-center px-6 py-3 font-bold tracking-widest transition-all border-b-2 whitespace-nowrap shrink-0 ${
             activeTab === 'settings' ? 'border-purple-400 text-purple-400' : 'border-transparent text-gray-500 hover:text-gray-300'
           }`}
         >
@@ -361,7 +361,7 @@ const SystemManagement: React.FC = () => {
               </div>
               <button 
                 onClick={handleAddTeacherClick}
-                className="bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 font-bold py-2.5 px-5 rounded-xl transition-colors flex items-center"
+                className="bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 font-bold py-2.5 px-5 rounded-xl transition-colors flex items-center whitespace-nowrap shrink-0"
               >
                 <UserPlus className="w-5 h-5 mr-2" /> 新增教师
               </button>
@@ -474,7 +474,7 @@ const SystemManagement: React.FC = () => {
               </div>
               <button 
                 onClick={() => setIsNewOrderOpen(true)}
-                className="bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 font-bold py-2.5 px-5 rounded-xl transition-colors flex items-center"
+                className="bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 font-bold py-2.5 px-5 rounded-xl transition-colors flex items-center whitespace-nowrap shrink-0"
               >
                 <Plus className="w-5 h-5 mr-2" /> 新建订单
               </button>

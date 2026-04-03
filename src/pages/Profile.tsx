@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Settings, Shield, BookOpen, ChevronRight, Activity, Cpu, DollarSign, Users, Clock, X, ChevronLeft, CalendarCheck, FileText, Image as ImageIcon, Quote, LogOut, CheckCircle2 } from "lucide-react";
+import { User, Settings, Shield, BookOpen, ChevronRight, Activity, Cpu, DollarSign, Users, Clock, X, ChevronLeft, CalendarCheck, FileText, Image as ImageIcon, Quote, LogOut, CheckCircle2, Lock } from "lucide-react";
 import toast from 'react-hot-toast';
 import { PageProps } from "../components/Layout/RollerNavigation";
 import { supabase } from '../lib/supabaseClient';
@@ -119,9 +119,76 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
   const [isAdding, setIsAdding] = useState(false);
   const [createdStudent, setCreatedStudent] = useState<{name: string, phone: string, id: string} | null>(null);
 
+  // Current User Context
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  
+  // Password Reset State
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
+
+  useEffect(() => {
+    const sessionStr = localStorage.getItem('xiaoyu_user');
+    if (sessionStr) {
+      try { setCurrentUser(JSON.parse(sessionStr)); } catch (e) {}
+    }
+  }, []);
+
   const handleLogout = () => {
     localStorage.removeItem('xiaoyu_user');
-    navigate('/');
+    navigate('/login');
+  };
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUser) return;
+
+    if (newPassword !== confirmNewPassword) {
+      toast.error('两次输入的新密码不一致');
+      return;
+    }
+    
+    if (newPassword.length < 6) {
+      toast.error('新密码长度不能少于6位');
+      return;
+    }
+
+    setIsResettingPassword(true);
+    try {
+      // 1. Verify old password (fetch current profile)
+      const { data: profile, error: fetchError } = await supabase
+        .from('profiles')
+        .select('password')
+        .eq('id', currentUser.id)
+        .single();
+        
+      if (fetchError) throw new Error('无法验证原密码');
+      
+      // In a real app with hashed passwords this check would be done via an RPC or backend.
+      // Here we check plaintext for the simplified MVP auth.
+      if (profile.password !== oldPassword) {
+        throw new Error('原密码错误');
+      }
+
+      // 2. Update password
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ password: newPassword })
+        .eq('id', currentUser.id);
+
+      if (updateError) throw updateError;
+
+      toast.success('密码修改成功！请重新登录');
+      setTimeout(() => {
+        handleLogout();
+      }, 1500);
+
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setIsResettingPassword(false);
+    }
   };
 
   const handleAddStudent = async (e: React.FormEvent) => {
@@ -235,13 +302,17 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
     console.log('资产中心接收到的云端学生数据:', students);
   }, [students]);
 
-  // 计算顶部概览数据
+  // 计算顶部概览数据 (Admin/Teacher only)
+  const isParent = currentUser?.role === 'parent';
+  
   const enrolledStudents = students.filter(s => s.status === 'enrolled').length;
   const totalRemainingClasses = students.reduce((acc, curr) => acc + (curr.remaining_classes || 0), 0);
   const expectedRevenue = students.reduce((acc, curr) => {
-    // 简单模拟待收尾款：剩余课时 * 单价
     return acc + ((curr.remaining_classes || 0) * (curr.price_per_lesson || 0));
   }, 0);
+
+  // Parent specific logic
+  const myChildren = isParent ? students.filter(s => s.parent_phone === currentUser?.phone) : [];
 
   // 辅助函数：状态翻译
   const getStatusDisplay = (status: string) => {
@@ -276,25 +347,29 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
         <div>
           <h1 className="text-3xl font-light tracking-widest flex items-center space-x-3 text-white">
             <Shield className="w-8 h-8 text-stem-orange opacity-80" />
-            <span>学生资产管理</span>
+            <span>{isParent ? '家长中心' : '学生资产管理'}</span>
           </h1>
           <p className="text-[10px] text-stem-orange/60 tracking-[0.3em] uppercase mt-2 font-mono">
-            Yang CRM System
+            {isParent ? 'PARENT PORTAL' : 'YANG CRM SYSTEM'}
           </p>
         </div>
         <div className="flex space-x-3">
-          <button 
-            onClick={() => setIsAddModalOpen(true)}
-            className="text-xs font-mono text-white border border-stem-orange/50 px-3 py-1.5 rounded bg-stem-orange hover:bg-stem-orange/80 transition-colors shadow-[0_0_15px_rgba(255,107,0,0.4)]"
-          >
-            + 新增学员
-          </button>
-          <button 
-            onClick={fetchStudents}
-            className="text-xs font-mono text-stem-orange border border-stem-orange/30 px-3 py-1.5 rounded bg-stem-orange/10 hover:bg-stem-orange/20 transition-colors"
-          >
-            刷新数据
-          </button>
+          {!isParent && (
+            <>
+              <button 
+                onClick={() => setIsAddModalOpen(true)}
+                className="text-xs font-mono text-white border border-stem-orange/50 px-3 py-1.5 rounded bg-stem-orange hover:bg-stem-orange/80 transition-colors shadow-[0_0_15px_rgba(255,107,0,0.4)]"
+              >
+                + 新增学员
+              </button>
+              <button 
+                onClick={fetchStudents}
+                className="text-xs font-mono text-stem-orange border border-stem-orange/30 px-3 py-1.5 rounded bg-stem-orange/10 hover:bg-stem-orange/20 transition-colors"
+              >
+                刷新数据
+              </button>
+            </>
+          )}
           <button 
             onClick={handleLogout}
             className="text-xs font-mono text-red-400 border border-red-400/30 px-3 py-1.5 rounded bg-red-400/10 hover:bg-red-400/20 transition-colors flex items-center"
@@ -305,113 +380,224 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
         </div>
       </div>
 
-      {/* 顶部数据概览 */}
-      <div className="relative z-10 w-full max-w-4xl grid grid-cols-3 gap-4 mb-8">
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5 relative overflow-hidden group">
-          <div className="absolute -right-4 -top-4 w-16 h-16 bg-stem-green/20 rounded-full blur-xl group-hover:bg-stem-green/30 transition-colors"></div>
-          <div className="flex items-center space-x-3 mb-2">
-            <Users className="w-4 h-4 text-stem-green" />
-            <span className="text-[10px] font-mono text-gray-400 tracking-widest uppercase">在读总数</span>
-          </div>
-          <div className="text-3xl font-light text-white tracking-tighter">{enrolledStudents}</div>
+      {/* Profile Overview Card */}
+      <div className="relative z-10 w-full max-w-4xl bg-white/[0.02] backdrop-blur-2xl border border-white/10 rounded-3xl p-8 shadow-2xl mb-8 flex flex-col md:flex-row items-center md:items-start gap-8">
+        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-stem-orange/20 to-amber-500/20 border border-stem-orange/50 flex items-center justify-center shadow-[0_0_20px_rgba(255,107,0,0.2)] shrink-0">
+          <User className="w-10 h-10 text-stem-orange" />
         </div>
-        
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5 relative overflow-hidden group">
-          <div className="absolute -right-4 -top-4 w-16 h-16 bg-cyan-500/20 rounded-full blur-xl group-hover:bg-cyan-500/30 transition-colors"></div>
-          <div className="flex items-center space-x-3 mb-2">
-            <Clock className="w-4 h-4 text-cyan-400" />
-            <span className="text-[10px] font-mono text-gray-400 tracking-widest uppercase">总待消课时</span>
+        <div className="flex-1 text-center md:text-left">
+          <h2 className="text-2xl font-bold text-white tracking-widest mb-1">{currentUser?.full_name || '用户'}</h2>
+          <p className="text-sm font-mono text-gray-400 mb-4">{currentUser?.phone || '手机号未绑定'}</p>
+          <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+            <span className="bg-white/5 border border-white/10 px-3 py-1 rounded-full text-xs font-mono text-gray-300">角色: {currentUser?.role === 'parent' ? '家长' : currentUser?.role === 'teacher' ? '教师' : '管理员'}</span>
           </div>
-          <div className="text-3xl font-light text-white tracking-tighter">{totalRemainingClasses}</div>
         </div>
 
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5 relative overflow-hidden group">
-          <div className="absolute -right-4 -top-4 w-16 h-16 bg-stem-orange/20 rounded-full blur-xl group-hover:bg-stem-orange/30 transition-colors"></div>
-          <div className="flex items-center space-x-3 mb-2">
-            <DollarSign className="w-4 h-4 text-stem-orange" />
-            <span className="text-[10px] font-mono text-gray-400 tracking-widest uppercase">预计待收</span>
-          </div>
-          <div className="text-3xl font-light text-white tracking-tighter flex items-baseline">
-            <span className="text-sm text-gray-500 mr-1">¥</span>{expectedRevenue.toLocaleString()}
-          </div>
+        {/* Change Password Form */}
+        <div className="w-full md:w-80 bg-black/30 p-5 rounded-2xl border border-white/5">
+          <h3 className="text-sm font-bold text-white mb-4 flex items-center tracking-widest">
+            <Lock className="w-4 h-4 mr-2 text-gray-400" />
+            安全设置
+          </h3>
+          <form onSubmit={handlePasswordReset} className="space-y-3">
+            <input 
+              type="password" 
+              placeholder="当前密码" 
+              required
+              value={oldPassword}
+              onChange={e => setOldPassword(e.target.value)}
+              className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-stem-orange outline-none"
+            />
+            <input 
+              type="password" 
+              placeholder="新密码 (至少6位)" 
+              required
+              value={newPassword}
+              onChange={e => setNewPassword(e.target.value)}
+              className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-stem-orange outline-none"
+            />
+            <input 
+              type="password" 
+              placeholder="确认新密码" 
+              required
+              value={confirmNewPassword}
+              onChange={e => setConfirmNewPassword(e.target.value)}
+              className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-stem-orange outline-none"
+            />
+            <button 
+              type="submit"
+              disabled={isResettingPassword}
+              className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-2 rounded-lg text-xs tracking-widest transition-colors mt-2 disabled:opacity-50"
+            >
+              {isResettingPassword ? '更新中...' : '修改密码'}
+            </button>
+          </form>
         </div>
       </div>
 
-      {/* 高级学生列表表格 */}
-      <div className="relative z-10 w-full max-w-4xl bg-white/[0.02] backdrop-blur-2xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-white/10 bg-white/5">
-                <th className="px-6 py-4 text-xs font-mono text-gray-400 tracking-widest uppercase">学生姓名</th>
-                <th className="px-6 py-4 text-xs font-mono text-gray-400 tracking-widest uppercase">年级</th>
-                <th className="px-6 py-4 text-xs font-mono text-gray-400 tracking-widest uppercase">状态</th>
-                <th className="px-6 py-4 text-xs font-mono text-gray-400 tracking-widest uppercase">课时进度</th>
-                <th className="px-6 py-4 text-xs font-mono text-gray-400 tracking-widest uppercase text-right">操作</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {students.map(student => {
-                const isWarning = student.remaining_classes <= 3 && student.status === 'enrolled';
-                const statusStyle = getStatusDisplay(student.status);
-                
-                return (
-                  <tr 
-                    key={student.id} 
-                    className={`transition-colors hover:bg-white/5 ${isWarning ? 'bg-red-500/5' : ''}`}
-                  >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center font-bold text-sm border border-white/20">
-                          {student.name.charAt(0)}
-                        </div>
-                        <span className="font-bold text-white tracking-wider">{student.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-300 font-light">{student.grade}</td>
-                    <td className="px-6 py-4">
-                      <span className={`text-[10px] font-mono px-2 py-1 rounded border ${statusStyle.color}`}>
-                        {statusStyle.text}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center space-x-2">
-                        <div className={`text-sm font-bold ${isWarning ? 'text-red-400' : 'text-cyan-400'}`}>
-                          {student.remaining_classes}
-                        </div>
-                        <span className="text-xs text-gray-500">/ {student.total_classes}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end space-x-2">
-                        <button 
-                          onClick={() => handleDeductClass(student.id, student.remaining_classes, student.name)}
-                          className="text-[10px] font-mono text-stem-orange border border-stem-orange/30 px-3 py-1.5 rounded hover:bg-stem-orange/20 transition-colors tracking-widest"
-                        >
-                          消课
-                        </button>
-                        <button 
-                          onClick={() => setSelectedStudent(student)}
-                          className="text-[10px] font-mono text-gray-300 border border-white/20 px-3 py-1.5 rounded hover:bg-white/10 hover:text-white transition-colors tracking-widest"
-                        >
-                          档案
-                        </button>
-                      </div>
-                    </td>
+      {isParent ? (
+        // ================= PARENT VIEW =================
+        <div className="relative z-10 w-full max-w-4xl">
+          <h3 className="text-xl font-light tracking-widest text-white mb-6 border-b border-white/10 pb-4">
+            <Users className="w-5 h-5 inline-block mr-2 text-stem-orange" />
+            我的孩子
+          </h3>
+          {myChildren.length === 0 ? (
+            <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-8 text-center text-gray-500 font-mono">
+              暂未关联任何学员档案
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {myChildren.map(child => (
+                <div key={child.id} className="bg-white/[0.02] border border-white/10 rounded-3xl p-6 hover:bg-white/[0.04] transition-all relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl group-hover:bg-cyan-500/20 transition-colors"></div>
+                  
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <h4 className="text-2xl font-bold text-white tracking-widest mb-1">{child.name}</h4>
+                      <span className="text-xs text-gray-400 font-mono">{child.grade || '未设置年级'}</span>
+                    </div>
+                    <button 
+                      onClick={() => navigate(`/parent?id=${child.id}`)}
+                      className="bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-4 py-2 rounded-xl text-xs font-bold hover:bg-cyan-500/20 transition-colors flex items-center"
+                    >
+                      <Activity className="w-3 h-3 mr-1" />
+                      详细学情
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-3 border-t border-white/5 pt-4">
+                    {child.subjects && child.subjects.length > 0 ? (
+                      child.subjects.map((sub: string) => {
+                        const balance = (child.course_balances || {})[sub] || 0;
+                        return (
+                          <div key={sub} className="flex justify-between items-center bg-black/20 p-3 rounded-xl border border-white/5">
+                            <span className="text-sm font-bold text-gray-300">{sub}</span>
+                            <span className="text-sm font-mono text-cyan-400">剩余: <strong className="text-lg">{balance}</strong></span>
+                          </div>
+                        )
+                      })
+                    ) : (
+                      <div className="text-sm text-gray-500 italic">暂无报读科目</div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        // ================= ADMIN/TEACHER VIEW =================
+        <>
+          {/* 顶部数据概览 */}
+          <div className="relative z-10 w-full max-w-4xl grid grid-cols-3 gap-4 mb-8">
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5 relative overflow-hidden group">
+              <div className="absolute -right-4 -top-4 w-16 h-16 bg-stem-green/20 rounded-full blur-xl group-hover:bg-stem-green/30 transition-colors"></div>
+              <div className="flex items-center space-x-3 mb-2">
+                <Users className="w-4 h-4 text-stem-green" />
+                <span className="text-[10px] font-mono text-gray-400 tracking-widest uppercase">在读总数</span>
+              </div>
+              <div className="text-3xl font-light text-white tracking-tighter">{enrolledStudents}</div>
+            </div>
+            
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5 relative overflow-hidden group">
+              <div className="absolute -right-4 -top-4 w-16 h-16 bg-cyan-500/20 rounded-full blur-xl group-hover:bg-cyan-500/30 transition-colors"></div>
+              <div className="flex items-center space-x-3 mb-2">
+                <Clock className="w-4 h-4 text-cyan-400" />
+                <span className="text-[10px] font-mono text-gray-400 tracking-widest uppercase">总待消课时</span>
+              </div>
+              <div className="text-3xl font-light text-white tracking-tighter">{totalRemainingClasses}</div>
+            </div>
+
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5 relative overflow-hidden group">
+              <div className="absolute -right-4 -top-4 w-16 h-16 bg-stem-orange/20 rounded-full blur-xl group-hover:bg-stem-orange/30 transition-colors"></div>
+              <div className="flex items-center space-x-3 mb-2">
+                <DollarSign className="w-4 h-4 text-stem-orange" />
+                <span className="text-[10px] font-mono text-gray-400 tracking-widest uppercase">预计待收</span>
+              </div>
+              <div className="text-3xl font-light text-white tracking-tighter flex items-baseline">
+                <span className="text-sm text-gray-500 mr-1">¥</span>{expectedRevenue.toLocaleString()}
+              </div>
+            </div>
+          </div>
+
+          {/* 高级学生列表表格 */}
+          <div className="relative z-10 w-full max-w-4xl bg-white/[0.02] backdrop-blur-2xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-white/10 bg-white/5">
+                    <th className="px-6 py-4 text-xs font-mono text-gray-400 tracking-widest uppercase">学生姓名</th>
+                    <th className="px-6 py-4 text-xs font-mono text-gray-400 tracking-widest uppercase">年级</th>
+                    <th className="px-6 py-4 text-xs font-mono text-gray-400 tracking-widest uppercase">状态</th>
+                    <th className="px-6 py-4 text-xs font-mono text-gray-400 tracking-widest uppercase">课时进度</th>
+                    <th className="px-6 py-4 text-xs font-mono text-gray-400 tracking-widest uppercase text-right">操作</th>
                   </tr>
-                );
-              })}
-              {students.length === 0 && !isLoading && (
-                <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500 font-mono text-sm tracking-widest">
-                    NO DATA FOUND
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {students.map(student => {
+                    const isWarning = student.remaining_classes <= 3 && student.status === 'enrolled';
+                    const statusStyle = getStatusDisplay(student.status);
+                    
+                    return (
+                      <tr 
+                        key={student.id} 
+                        className={`transition-colors hover:bg-white/5 ${isWarning ? 'bg-red-500/5' : ''}`}
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center font-bold text-sm border border-white/20">
+                              {student.name.charAt(0)}
+                            </div>
+                            <span className="font-bold text-white tracking-wider">{student.name}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-300 font-light">{student.grade}</td>
+                        <td className="px-6 py-4">
+                          <span className={`text-[10px] font-mono px-2 py-1 rounded border ${statusStyle.color}`}>
+                            {statusStyle.text}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center space-x-2">
+                            <div className={`text-sm font-bold ${isWarning ? 'text-red-400' : 'text-cyan-400'}`}>
+                              {student.remaining_classes}
+                            </div>
+                            <span className="text-xs text-gray-500">/ {student.total_classes}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end space-x-2">
+                            <button 
+                              onClick={() => handleDeductClass(student.id, student.remaining_classes, student.name)}
+                              className="text-[10px] font-mono text-stem-orange border border-stem-orange/30 px-3 py-1.5 rounded hover:bg-stem-orange/20 transition-colors tracking-widest"
+                            >
+                              消课
+                            </button>
+                            <button 
+                              onClick={() => setSelectedStudent(student)}
+                              className="text-[10px] font-mono text-gray-300 border border-white/20 px-3 py-1.5 rounded hover:bg-white/10 hover:text-white transition-colors tracking-widest"
+                            >
+                              档案
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {students.length === 0 && !isLoading && (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-12 text-center text-gray-500 font-mono text-sm tracking-widest">
+                        NO DATA FOUND
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* 抽屉：查看档案 (Drawer) */}
       {selectedStudent && (
