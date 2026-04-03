@@ -108,7 +108,7 @@ const Login: React.FC = () => {
           <div className="w-20 h-20 bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(255,255,255,0.05)] mb-6 transition-transform hover:scale-105 duration-300">
             <Lock className="w-10 h-10 text-white/80" />
           </div>
-          <h1 className="text-4xl font-light tracking-[0.3em] mb-2 drop-shadow-md">
+          <h1 className="text-4xl font-light tracking-[0.3em] mb-2 drop-shadow-[0_0_15px_rgba(255,255,255,0.8)] text-white">
             小鱼思维
           </h1>
           <p className="text-[10px] font-mono tracking-[0.4em] text-gray-500 uppercase">
@@ -132,7 +132,7 @@ const Login: React.FC = () => {
           </button>
         </div>
 
-        <form onSubmit={handleLogin} className="bg-white/[0.02] backdrop-blur-3xl border border-white/10 rounded-[2rem] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative overflow-hidden">
+        <form onSubmit={handleLogin} className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[2rem] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative overflow-hidden animate-breathe">
           {/* 装饰光效 */}
           <div className="absolute -top-20 -right-20 w-40 h-40 bg-white/5 rounded-full blur-[50px] pointer-events-none"></div>
 
@@ -145,28 +145,28 @@ const Login: React.FC = () => {
 
           <div className="space-y-6 relative z-10">
             <div>
-              <label className="block text-xs font-mono text-gray-400 tracking-widest mb-2 uppercase">
+              <label className="block text-xs font-bold text-gray-300 tracking-widest mb-2 uppercase drop-shadow-sm">
                 账号/手机号
               </label>
               <input
                 type="tel"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-white/30 focus:bg-black/80 transition-all font-mono"
+                className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 focus:bg-black/80 transition-all font-mono"
                 placeholder="请输入手机号"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-mono text-gray-400 tracking-widest mb-2 uppercase">
+              <label className="block text-xs font-bold text-gray-300 tracking-widest mb-2 uppercase drop-shadow-sm">
                 密码
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-white/30 focus:bg-black/80 transition-all font-mono"
+                className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 focus:bg-black/80 transition-all font-mono"
                 placeholder="••••••••"
                 required
               />
@@ -195,7 +195,7 @@ const Login: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className={`w-full text-white font-medium py-4 rounded-xl tracking-[0.2em] transition-all active:scale-95 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed mt-6 relative overflow-hidden group bg-white/10 hover:bg-white/20 border border-white/20 shadow-[0_0_20px_rgba(255,255,255,0.05)] hover:shadow-[0_0_30px_rgba(255,255,255,0.1)]`}
+              className="w-full text-white font-bold py-4 rounded-xl tracking-[0.2em] transition-all duration-300 ease-out active:scale-95 hover:scale-[1.02] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed mt-6 relative overflow-hidden group bg-gradient-to-br from-[#00d2ff] to-[#3a7bd5] shadow-[0_0_20px_rgba(0,210,255,0.4)] hover:shadow-[0_0_40px_rgba(0,210,255,0.7)] hover:brightness-110 border border-white/20"
             >
               {/* 光效扫过动画 */}
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
@@ -217,7 +217,7 @@ const Login: React.FC = () => {
         <div className="text-center mt-8">
           <button 
             onClick={() => navigate('/')}
-            className="text-[10px] font-mono text-gray-500 hover:text-white transition-colors tracking-[0.3em] uppercase"
+            className="w-full text-white font-bold py-4 rounded-xl tracking-[0.2em] transition-all duration-300 ease-out active:scale-95 hover:scale-[1.02] flex items-center justify-center relative overflow-hidden group bg-white/5 hover:bg-white/10 border border-white/10 shadow-[0_0_20px_rgba(255,255,255,0.05)] hover:shadow-[0_0_30px_rgba(255,255,255,0.1)]"
           >
             ← 返回首页
           </button>

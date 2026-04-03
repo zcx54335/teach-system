@@ -55,13 +55,24 @@ export default {
           "33%": { transform: "translate(30px, -50px) scale(1.1)" },
           "66%": { transform: "translate(-20px, 20px) scale(0.9)" },
           "100%": { transform: "translate(0px, 0px) scale(1)" },
+        },
+        'breathe': {
+          "0%, 100%": {
+            boxShadow: "0 0 20px rgba(0, 210, 255, 0.2)",
+            borderColor: "rgba(255, 255, 255, 0.1)"
+          },
+          "50%": {
+            boxShadow: "0 0 40px rgba(58, 123, 213, 0.5)",
+            borderColor: "rgba(0, 210, 255, 0.4)"
+          }
         }
       },
       animation: {
         'float-slow': 'float-slow 6s ease-in-out infinite',
         'pulse-glow': 'pulse-glow 4s ease-in-out infinite',
-        'shimmer': 'shimmer 1.5s infinite',
-        'blob': 'blob 15s infinite',
+        'shimmer': 'shimmer 2s linear infinite',
+        'blob': 'blob 7s infinite',
+        'breathe': 'breathe 4s ease-in-out infinite',
       }
     },
   },
