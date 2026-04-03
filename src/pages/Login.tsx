@@ -28,19 +28,17 @@ const Login: React.FC = () => {
   // 检查是否已经登录
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        // 从 profiles 表获取角色
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profile?.role === 'parent') {
-          navigate(redirectUrl || '/parent');
-        } else {
-          navigate('/admin');
+      const sessionStr = localStorage.getItem('xiaoyu_session');
+      if (sessionStr) {
+        try {
+          const session = JSON.parse(sessionStr);
+          if (session.role === 'parent') {
+            navigate(redirectUrl || '/parent');
+          } else if (session.role === 'admin') {
+            navigate('/admin/dashboard');
+          }
+        } catch (e) {
+          // Ignore parse error
         }
       }
     };
@@ -56,18 +54,15 @@ const Login: React.FC = () => {
       // 强制格式化为 +86
       const formattedPhone = identifier.startsWith('+86') ? identifier : '+86' + identifier;
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        phone: formattedPhone,
-        password,
-      });
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('phone', formattedPhone)
+        .single();
 
-      if (error) {
-        if (error.message.includes('invalid') || error.status === 422) {
-          setError('手机号格式不正确或密码不符合规范');
-        } else {
-          setError('账号或密码错误，请重试');
-        }
-      } else if (data.session) {
+      if (error || !profile) {
+        setError('账号不存在');
+      } else if (profile.password === password) {
         // 处理记住账号
         if (rememberMe) {
           localStorage.setItem('rememberedIdentifier', identifier);
@@ -75,18 +70,22 @@ const Login: React.FC = () => {
           localStorage.removeItem('rememberedIdentifier');
         }
 
-        // 登录成功后，根据 profiles 表中的角色进行跳转
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', data.session.user.id)
-          .single();
+        // 密码比对正确后，生成一个本地 Session
+        const sessionData = {
+          id: profile.id,
+          phone: profile.phone,
+          role: profile.role,
+          full_name: profile.full_name || (profile.role === 'admin' ? '杨老师' : '家长')
+        };
+        localStorage.setItem('xiaoyu_session', JSON.stringify(sessionData));
 
-        if (profile?.role === 'parent') {
+        if (profile.role === 'parent') {
           navigate(redirectUrl || '/parent');
         } else {
-          navigate('/admin');
+          navigate('/admin/dashboard');
         }
+      } else {
+        setError('密码不正确');
       }
     } catch (err: any) {
       setError(err.message || '发生未知错误');

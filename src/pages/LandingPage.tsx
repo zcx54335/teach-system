@@ -33,15 +33,17 @@ const LandingPage: React.FC = () => {
             {isLoggedIn ? '小鱼 · 杨老师控制台' : '小鱼思维'}
           </span>
         </div>
-        <button 
-          onClick={() => navigate('/login')}
-          className="relative group overflow-hidden bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-3 rounded-full hover:from-cyan-400 hover:to-blue-400 transition-all duration-300 active:scale-95 shadow-[0_0_20px_rgba(34,211,238,0.5)] hover:shadow-[0_0_30px_rgba(34,211,238,0.7)] border border-cyan-300/50"
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
-          <span className="relative z-10 text-sm font-bold tracking-widest text-white drop-shadow-md">
-            登录
-          </span>
-        </button>
+        {!isLoggedIn && (
+          <button 
+            onClick={() => navigate('/login')}
+            className="relative group overflow-hidden bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-3 rounded-full hover:from-cyan-400 hover:to-blue-400 transition-all duration-300 active:scale-95 shadow-[0_0_20px_rgba(34,211,238,0.5)] hover:shadow-[0_0_30px_rgba(34,211,238,0.7)] border border-cyan-300/50"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+            <span className="relative z-10 text-sm font-bold tracking-widest text-white drop-shadow-md">
+              登录
+            </span>
+          </button>
+        )}
       </header>
 
       {/* 核心展示区 */}

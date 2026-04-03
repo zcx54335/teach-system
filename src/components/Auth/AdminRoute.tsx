@@ -7,52 +7,22 @@ const AdminRoute: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session) {
-        // 从 profiles 获取真实权限
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profile?.role === 'parent') {
-          setIsAuthenticated(false);
-        } else {
-          setIsAuthenticated(true);
+    const checkAuth = () => {
+      const sessionStr = localStorage.getItem('xiaoyu_session');
+      if (sessionStr) {
+        try {
+          const session = JSON.parse(sessionStr);
+          if (session && session.role === 'admin') {
+            setIsAuthenticated(true);
+            return;
+          }
+        } catch (e) {
+          // Ignore
         }
-      } else {
-        setIsAuthenticated(false);
       }
+      setIsAuthenticated(false);
     };
     checkAuth();
-
-    // 监听认证状态变化
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        if (session) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', session.user.id)
-            .single();
-
-          if (profile?.role === 'parent') {
-            setIsAuthenticated(false);
-          } else {
-            setIsAuthenticated(true);
-          }
-        } else {
-          setIsAuthenticated(false);
-        }
-      }
-    );
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
   }, []);
 
   if (isAuthenticated === null) {
