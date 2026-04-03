@@ -315,7 +315,7 @@ const SystemManagement: React.FC = () => {
       <header className="mb-8 shrink-0">
         <h2 className="text-2xl md:text-3xl font-bold tracking-widest text-white flex items-center">
           <Database className="w-6 h-6 md:w-8 md:h-8 mr-3 text-cyan-400" />
-          系统管理与控制台
+          系统管理
         </h2>
       </header>
 
@@ -327,7 +327,7 @@ const SystemManagement: React.FC = () => {
             activeTab === 'teachers' ? 'border-cyan-400 text-cyan-400' : 'border-transparent text-gray-500 hover:text-gray-300'
           }`}
         >
-          <Users className="w-4 h-4 mr-2" /> 👥 师资管理
+          <Users className="w-4 h-4 mr-2" /> 师资管理
         </button>
         <button 
           onClick={() => setActiveTab('finance')}
@@ -335,7 +335,7 @@ const SystemManagement: React.FC = () => {
             activeTab === 'finance' ? 'border-amber-400 text-amber-400' : 'border-transparent text-gray-500 hover:text-gray-300'
           }`}
         >
-          <CreditCard className="w-4 h-4 mr-2" /> 💰 财务与订单
+          <CreditCard className="w-4 h-4 mr-2" /> 财务与订单
         </button>
         <button 
           onClick={() => setActiveTab('settings')}
@@ -343,7 +343,7 @@ const SystemManagement: React.FC = () => {
             activeTab === 'settings' ? 'border-purple-400 text-purple-400' : 'border-transparent text-gray-500 hover:text-gray-300'
           }`}
         >
-          <Settings className="w-4 h-4 mr-2" /> ⚙️ 基础设置
+          <Settings className="w-4 h-4 mr-2" /> 基础设置
         </button>
       </div>
 
