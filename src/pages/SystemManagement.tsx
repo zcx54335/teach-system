@@ -317,7 +317,6 @@ const SystemManagement: React.FC = () => {
           <Database className="w-6 h-6 md:w-8 md:h-8 mr-3 text-cyan-400" />
           系统管理与控制台
         </h2>
-        <p className="text-xs md:text-sm text-gray-400 font-mono tracking-widest mt-2">SYSTEM ADMINISTRATION & FINANCIAL CENTER</p>
       </header>
 
       {/* Tabs */}
@@ -357,7 +356,6 @@ const SystemManagement: React.FC = () => {
             <div className="flex justify-between items-center bg-black/20 p-5 rounded-2xl border border-white/5">
               <div>
                 <h3 className="text-lg font-bold text-white tracking-widest">在职教师列表</h3>
-                <p className="text-sm text-gray-400 mt-1">管理系统教师账号及分配名下学员</p>
               </div>
               <button 
                 onClick={handleAddTeacherClick}
