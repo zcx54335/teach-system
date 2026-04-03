@@ -415,15 +415,20 @@ const ParentDashboard: React.FC = () => {
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
+    const checkSession = () => {
+      const sessionStr = localStorage.getItem('xiaoyu_user');
+      if (sessionStr) {
+        try {
+          const userSession = JSON.parse(sessionStr);
+          setSession({ user: { email: userSession.phone, id: userSession.id, role: userSession.role } });
+        } catch (e) {
+          setSession(null);
+        }
+      } else {
+        setSession(null);
+      }
+    };
+    checkSession();
   }, []);
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
@@ -432,10 +437,18 @@ const ParentDashboard: React.FC = () => {
       showToast("密码长度至少为 6 位");
       return;
     }
+    if (!session || !session.user.id) {
+      showToast("未登录");
+      return;
+    }
     
     setIsUpdatingPassword(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      const { error } = await supabase
+        .from('profiles')
+        .update({ password: newPassword })
+        .eq('id', session.user.id);
+        
       if (error) throw error;
       showToast("密码修改成功！");
       setIsSettingsOpen(false);
@@ -447,10 +460,12 @@ const ParentDashboard: React.FC = () => {
     }
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
+  const handleLogout = () => {
+    localStorage.removeItem('xiaoyu_user');
+    setSession(null);
     setIsSettingsOpen(false);
     showToast("已安全退出登录");
+    navigate('/');
   };
 
   useEffect(() => {

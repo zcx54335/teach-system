@@ -28,14 +28,15 @@ const Login: React.FC = () => {
   // 检查是否已经登录
   useEffect(() => {
     const checkSession = async () => {
-      const sessionStr = localStorage.getItem('xiaoyu_session');
+      const sessionStr = localStorage.getItem('xiaoyu_user');
       if (sessionStr) {
         try {
           const session = JSON.parse(sessionStr);
-          if (session.role === 'parent') {
-            navigate(redirectUrl || '/parent');
-          } else if (session.role === 'admin') {
-            navigate('/admin/dashboard');
+          const role = session.role === 'admin' ? 'sysadmin' : session.role;
+          if (role === 'parent') {
+            navigate('/dashboard/report');
+          } else if (role === 'sysadmin' || role === 'teacher') {
+            navigate('/dashboard/workbench');
           }
         } catch (e) {
           // Ignore parse error
@@ -51,17 +52,14 @@ const Login: React.FC = () => {
     setError(null);
 
     try {
-      // 强制格式化为 +86
-      const formattedPhone = identifier.startsWith('+86') ? identifier : '+86' + identifier;
-
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('phone', formattedPhone)
+        .eq('phone', identifier)
         .single();
 
       if (error || !profile) {
-        setError('账号不存在');
+        setError('该手机号未注册，请联系杨老师开通');
       } else if (profile.password === password) {
         // 处理记住账号
         if (rememberMe) {
@@ -74,15 +72,16 @@ const Login: React.FC = () => {
         const sessionData = {
           id: profile.id,
           phone: profile.phone,
-          role: profile.role,
-          full_name: profile.full_name || (profile.role === 'admin' ? '杨老师' : '家长')
+          role: profile.role === 'admin' ? 'sysadmin' : profile.role,
+          full_name: profile.full_name || (profile.role === 'admin' || profile.role === 'sysadmin' ? '杨老师' : '家长')
         };
-        localStorage.setItem('xiaoyu_session', JSON.stringify(sessionData));
+        localStorage.setItem('xiaoyu_user', JSON.stringify(sessionData));
 
-        if (profile.role === 'parent') {
-          navigate(redirectUrl || '/parent');
+        const role = sessionData.role;
+        if (role === 'parent') {
+          navigate('/dashboard/report');
         } else {
-          navigate('/admin/dashboard');
+          navigate('/dashboard/workbench');
         }
       } else {
         setError('密码不正确');
@@ -115,21 +114,7 @@ const Login: React.FC = () => {
           </p>
         </div>
 
-        {/* 角色切换 - 已经全部采用手机号登录，隐藏此部分以统一界面 */}
-        <div className="hidden flex p-1 bg-white/5 border border-white/10 rounded-xl mb-8 backdrop-blur-md">
-          <button
-            onClick={() => setLoginType('admin')}
-            className={`flex-1 py-2.5 text-xs font-mono tracking-widest rounded-lg transition-all duration-300 ${loginType === 'admin' ? 'bg-cyan-500/20 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.2)]' : 'text-gray-500 hover:text-gray-300'}`}
-          >
-            导师登录
-          </button>
-          <button
-            onClick={() => setLoginType('parent')}
-            className={`flex-1 py-2.5 text-xs font-mono tracking-widest rounded-lg transition-all duration-300 ${loginType === 'parent' ? 'bg-stem-orange/20 text-stem-orange shadow-[0_0_15px_rgba(255,107,0,0.2)]' : 'text-gray-500 hover:text-gray-300'}`}
-          >
-            家长登录
-          </button>
-        </div>
+
 
         <form onSubmit={handleLogin} className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[2rem] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative overflow-hidden animate-breathe">
           {/* 装饰光效 */}

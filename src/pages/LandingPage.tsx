@@ -4,14 +4,74 @@ import { Hexagon, Brain, Zap, Target, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabaseClient';
 
+const FeatureCard: React.FC<{ item: any }> = ({ item }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  return (
+    <motion.div 
+      layout
+      onClick={() => setIsExpanded(!isExpanded)}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      className="relative bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-3xl cursor-pointer group text-left overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.2)]"
+    >
+      {/* 卡片微光边缘效果 */}
+      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-transparent to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+      <div className={`absolute -inset-px bg-gradient-to-r from-cyan-500 to-blue-500 rounded-3xl opacity-0 transition-opacity duration-500 pointer-events-none blur-sm ${isExpanded ? 'opacity-30' : 'group-hover:opacity-20'}`}></div>
+      
+      <motion.div layout className="relative z-10 flex flex-col h-full">
+        <div className="flex items-start justify-between">
+          <item.icon className={`w-8 h-8 text-cyan-400 mb-6 transition-transform duration-500 ${isExpanded ? 'scale-110' : 'group-hover:scale-110'}`} />
+          <motion.div
+            animate={{ rotate: isExpanded ? 180 : 0 }}
+            transition={{ duration: 0.3 }}
+            className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center border border-white/10"
+          >
+            <ChevronDown className="w-3 h-3 text-gray-400" />
+          </motion.div>
+        </div>
+        
+        <motion.h3 layout className="text-lg font-bold text-white mb-3 tracking-wider">{item.title}</motion.h3>
+        <motion.p layout className="text-sm text-gray-400 font-light leading-relaxed">{item.desc}</motion.p>
+        
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ opacity: 0, height: 0, marginTop: 0 }}
+              animate={{ opacity: 1, height: "auto", marginTop: 24 }}
+              exit={{ opacity: 0, height: 0, marginTop: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="overflow-hidden"
+            >
+              <div className="pt-6 border-t border-white/10">
+                <p className="text-xs text-cyan-300/80 leading-relaxed font-mono tracking-wide">
+                  {item.details}
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </motion.div>
+  );
+};
+
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsLoggedIn(!!session);
-    });
+    const sessionStr = localStorage.getItem('xiaoyu_user');
+    if (sessionStr) {
+      try {
+        const session = JSON.parse(sessionStr);
+        setIsLoggedIn(!!session);
+      } catch (e) {
+        setIsLoggedIn(false);
+      }
+    } else {
+      setIsLoggedIn(false);
+    }
   }, []);
 
   return (
@@ -70,12 +130,12 @@ const LandingPage: React.FC = () => {
         {/* 如果已登录，首页中间显示进入控制台按钮，否则移除 */}
         {isLoggedIn && (
           <button 
-            onClick={() => navigate('/admin/dashboard')}
+            onClick={() => navigate('/dashboard/workbench')}
             className="group relative overflow-hidden px-10 py-5 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 shadow-[0_0_40px_rgba(34,211,238,0.4)] hover:shadow-[0_0_60px_rgba(34,211,238,0.6)] hover:scale-105 transition-all duration-300 ease-out active:scale-95 mb-16"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
             <span className="relative z-10 text-lg font-bold tracking-widest text-white">
-              杨老师 · 管理控制台
+              进入管理控制台
             </span>
           </button>
         )}
@@ -101,59 +161,9 @@ const LandingPage: React.FC = () => {
               desc: "将抽象理论融入硬核实践，激发潜能。",
               details: "低级错误，是高阶思维最大的敌人。 不提倡盲目苦练，而是通过‘数感重塑’和‘结构化演算’，让计算像呼吸一样自然、准确。在考场上，时间就是分数。 速度慢的本质是‘思维路径太长’。我们通过‘解题套路内化’和‘计算简便技巧’，剪掉冗余步骤。让孩子掌握‘一眼看结果、提笔即正确’的快节奏感。"
             }
-          ].map((item, idx) => {
-            const [isExpanded, setIsExpanded] = useState(false);
-            
-            return (
-              <motion.div 
-                key={idx} 
-                layout
-                onClick={() => setIsExpanded(!isExpanded)}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                className="relative bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-3xl cursor-pointer group text-left overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.2)]"
-              >
-                {/* 卡片微光边缘效果 */}
-                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-transparent to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-                <div className={`absolute -inset-px bg-gradient-to-r from-cyan-500 to-blue-500 rounded-3xl opacity-0 transition-opacity duration-500 pointer-events-none blur-sm ${isExpanded ? 'opacity-30' : 'group-hover:opacity-20'}`}></div>
-                
-                <motion.div layout className="relative z-10 flex flex-col h-full">
-                  <div className="flex items-start justify-between">
-                    <item.icon className={`w-8 h-8 text-cyan-400 mb-6 transition-transform duration-500 ${isExpanded ? 'scale-110' : 'group-hover:scale-110'}`} />
-                    <motion.div
-                      animate={{ rotate: isExpanded ? 180 : 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center border border-white/10"
-                    >
-                      <ChevronDown className="w-3 h-3 text-gray-400" />
-                    </motion.div>
-                  </div>
-                  
-                  <motion.h3 layout className="text-lg font-bold text-white mb-3 tracking-wider">{item.title}</motion.h3>
-                  <motion.p layout className="text-sm text-gray-400 font-light leading-relaxed">{item.desc}</motion.p>
-                  
-                  <AnimatePresence>
-                    {isExpanded && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                        animate={{ opacity: 1, height: "auto", marginTop: 24 }}
-                        exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                        transition={{ duration: 0.3, ease: "easeInOut" }}
-                        className="overflow-hidden"
-                      >
-                        <div className="pt-6 border-t border-white/10">
-                          <p className="text-xs text-cyan-300/80 leading-relaxed font-mono tracking-wide">
-                            {item.details}
-                          </p>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              </motion.div>
-            );
-          })}
+          ].map((item, idx) => (
+            <FeatureCard key={idx} item={item} />
+          ))}
         </div>
       </main>
 

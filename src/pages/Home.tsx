@@ -121,7 +121,7 @@ const Home: React.FC<PageProps> = ({ localProgress }) => {
         <motion.div className="absolute inset-0 z-0" style={{ y: bgY }}>
           <img 
             src="https://images.unsplash.com/photo-1541888087642-127e7f60037a?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80" 
-            alt="STEM 实践：精美结构桥梁" 
+          
             className="w-full h-full object-cover"
           />
           {/* 极其细腻的深色渐变遮罩 (Smooth Scrim) - 仅在下半部分 */}

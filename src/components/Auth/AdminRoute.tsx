@@ -4,28 +4,28 @@ import { supabase } from '../../lib/supabaseClient';
 import { Hexagon } from 'lucide-react';
 
 const AdminRoute: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [authStatus, setAuthStatus] = useState<'loading' | 'authorized' | 'unauthorized'>('loading');
 
   useEffect(() => {
     const checkAuth = () => {
-      const sessionStr = localStorage.getItem('xiaoyu_session');
+      const sessionStr = localStorage.getItem('xiaoyu_user');
       if (sessionStr) {
         try {
           const session = JSON.parse(sessionStr);
-          if (session && session.role === 'admin') {
-            setIsAuthenticated(true);
+          if (session && (session.role === 'admin' || session.role === 'sysadmin' || session.role === 'teacher' || session.role === 'parent')) {
+            setAuthStatus('authorized');
             return;
           }
         } catch (e) {
           // Ignore
         }
       }
-      setIsAuthenticated(false);
+      setAuthStatus('unauthorized');
     };
     checkAuth();
   }, []);
 
-  if (isAuthenticated === null) {
+  if (authStatus === 'loading') {
     // 认证检查中的全屏 Loading
     return (
       <div className="min-h-screen bg-[#020617] flex items-center justify-center flex-col space-y-6 selection:bg-cyan-500/30">
@@ -42,8 +42,8 @@ const AdminRoute: React.FC = () => {
     );
   }
 
-  // 如果未认证，重定向到 /login
-  if (!isAuthenticated) {
+  // 如果未认证或角色不对
+  if (authStatus === 'unauthorized') {
     return <Navigate to="/login" replace />;
   }
 

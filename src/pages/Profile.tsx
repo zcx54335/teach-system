@@ -4,7 +4,7 @@ import { User, Settings, Shield, BookOpen, ChevronRight, Activity, Cpu, DollarSi
 import { PageProps } from "../components/Layout/RollerNavigation";
 import { supabase } from '../lib/supabaseClient';
 
-import { createClient } from '@supabase/supabase-js';
+
 
 // 扩展类型定义
 interface CRMStudentRecord {
@@ -118,8 +118,8 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
   const [isAdding, setIsAdding] = useState(false);
   const [createdStudent, setCreatedStudent] = useState<{name: string, phone: string, id: string} | null>(null);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
+  const handleLogout = () => {
+    localStorage.removeItem('xiaoyu_user');
     navigate('/');
   };
 
@@ -132,41 +132,32 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
     
     setIsAdding(true);
     try {
-      // 1. 使用备用客户端创建 Supabase Auth 用户，避免当前管理员被踢出
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-      
-      const isProd = import.meta.env.PROD;
-      const origin = window.location.origin || 'https://xiongxiong.top';
-      // 保证使用正确的代理 URL
-      const targetUrl = isProd ? `${origin}/supabase-proxy` : supabaseUrl;
-
-      const supabaseSecondary = createClient(targetUrl, supabaseAnonKey, { 
-        auth: { 
-          persistSession: false
-        } 
-      });
-
-      // 强制格式化为 +86
-      const phone = newStudent.phone.startsWith('+86') ? newStudent.phone : '+86' + newStudent.phone;
       const password = newStudent.phone.slice(-6);
 
-      const { data: authData, error: authError } = await supabaseSecondary.auth.signUp({
-        phone,
-        password,
-      });
+      // 1. 直接在 profiles 表中插入家长用户，完全抛弃 Supabase Auth
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .insert([{
+          phone: newStudent.phone,
+          password: password,
+          role: 'parent',
+          full_name: newStudent.name + '的家长'
+        }])
+        .select()
+        .single();
 
-      if (authError) {
-        throw new Error(`Auth Error: ${authError.message}`);
+      if (profileError) {
+        throw new Error(`创建家长账号失败: ${profileError.message}`);
       }
 
-      // 2. 在 students 表中插入数据并关联 auth_id
+      // 2. 在 students 表中插入数据并关联 auth_id (此时使用 profiles.id) 和 parent_phone
       const { data: insertData, error: dbError } = await supabase.from('students').insert([{
         name: newStudent.name,
         phone: newStudent.phone,
+        parent_phone: newStudent.phone,
         grade: newStudent.grade,
         status: 'enrolled',
-        auth_id: authData.user?.id,
+        auth_id: profileData.id,
         password_hash: password, // 保存初始密码供参考
         remaining_classes: 0
       }]).select().single();
@@ -174,14 +165,6 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
       if (dbError) {
         throw new Error(`DB Error: ${dbError.message}`);
       }
-
-      // 注意：profiles 表的数据由 auth.users 的 Trigger 自动生成，
-      // 若 Trigger 未能生效或需确保双重保险，可在此处额外进行更新：
-      await supabase.from('profiles').upsert({
-        id: authData.user?.id,
-        role: 'parent',
-        phone: newStudent.phone
-      });
 
       setCreatedStudent({
         name: newStudent.name,
@@ -193,7 +176,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
       if (fetchStudents) fetchStudents();
 
     } catch (err: any) {
-      alert(`创建学员失败: ${err.message}\n(注: 若提示 Signups not allowed，请在 Supabase Auth 设置中开启 Enable Signups)`);
+      alert(`创建学员失败: ${err.message}`);
     } finally {
       setIsAdding(false);
     }
