@@ -183,10 +183,10 @@ const AdminSchedule: React.FC = () => {
 
       <div className="flex-1 flex flex-col lg:flex-row gap-6 min-h-0">
         {/* Left: Calendar Board */}
-        <div className="w-full lg:w-1/3 flex flex-col bg-white dark:bg-white/[0.02] backdrop-blur-3xl border border-slate-200 dark:border-white/10 rounded-3xl p-5 shadow-sm dark:shadow-2xl shrink-0 overflow-y-auto">
+        <div className="w-full lg:w-1/3 flex flex-col bg-white dark:bg-white/[0.02] backdrop-blur-3xl border border-slate-100 dark:border-white/10 rounded-3xl p-5 shadow-sm dark:shadow-2xl shrink-0 overflow-y-auto">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-bold text-slate-800 dark:text-white tracking-widest">教学日历</h3>
-            <div className="flex items-center gap-4 bg-slate-100 dark:bg-black/30 rounded-full px-3 py-1 border border-slate-200 dark:border-white/5">
+            <div className="flex items-center gap-4 bg-slate-100 dark:bg-black/30 rounded-full px-3 py-1 border border-slate-100 dark:border-white/5">
               <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))} className="p-1 hover:text-cyan-600 dark:hover:text-cyan-400 text-slate-500 dark:text-gray-400 transition-colors"><ChevronLeft className="w-5 h-5" /></button>
               <span className="text-sm font-mono text-slate-800 dark:text-white font-bold w-20 text-center">
                 {currentMonth.getFullYear()}年{currentMonth.getMonth() + 1}月
@@ -237,9 +237,9 @@ const AdminSchedule: React.FC = () => {
         </div>
 
         {/* Right: Daily Schedule View */}
-        <div className="w-full lg:w-2/3 flex flex-col bg-white dark:bg-white/[0.02] backdrop-blur-3xl border border-slate-200 dark:border-white/10 rounded-3xl p-5 shadow-sm dark:shadow-2xl overflow-y-auto">
+        <div className="w-full lg:w-2/3 flex flex-col bg-white dark:bg-white/[0.02] backdrop-blur-3xl border border-slate-100 dark:border-white/10 rounded-3xl p-5 shadow-sm dark:shadow-2xl overflow-y-auto">
           
-          <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200 dark:border-white/5">
+          <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100 dark:border-white/5">
             <div>
               <h3 className="text-xl font-bold text-slate-800 dark:text-white tracking-widest flex items-center">
                 {selectedDate.getMonth() + 1}月{selectedDate.getDate()}日 <span className="mx-2 text-slate-300 dark:text-gray-500">|</span> 计划课表
@@ -292,16 +292,16 @@ const AdminSchedule: React.FC = () => {
                   )}
                   
                   <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
-                    <div className="flex-shrink-0 bg-black/40 px-4 py-3 rounded-xl border border-white/5 flex flex-col items-center justify-center w-28">
+                    <div className="flex-shrink-0 bg-slate-50 dark:bg-black/40 px-4 py-3 rounded-xl border border-slate-100 dark:border-white/5 flex flex-col items-center justify-center w-28">
                       <Clock className={`w-5 h-5 mb-1 ${sched.status === 'completed' ? 'text-gray-500' : 'text-cyan-400'}`} />
-                      <span className="text-white font-mono font-bold text-sm">{sched.start_time}</span>
+                      <span className="text-slate-800 dark:text-white font-mono font-bold text-sm">{sched.start_time}</span>
                       <span className="text-gray-500 font-mono text-xs">{sched.end_time}</span>
                     </div>
                     <div className="flex-1">
-                      <h4 className={`text-lg font-bold tracking-widest mb-1 ${sched.status === 'completed' ? 'text-gray-400' : 'text-white'}`}>
+                      <h4 className={`text-lg font-bold tracking-widest mb-1 ${sched.status === 'completed' ? 'text-slate-500 dark:text-gray-400' : 'text-slate-800 dark:text-white'}`}>
                         {sched.subject}
                       </h4>
-                      <div className="text-sm text-gray-400 flex items-start gap-2 mt-2">
+                      <div className="text-sm text-slate-500 dark:text-gray-400 flex items-start gap-2 mt-2">
                         <Users className="w-4 h-4 mt-0.5 shrink-0" />
                         <span className="leading-relaxed">
                           {getStudentNames(sched.student_ids || []) || '未分配学生'}
@@ -319,44 +319,44 @@ const AdminSchedule: React.FC = () => {
       {/* ADD SCHEDULE MODAL */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 p-4">
-          <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/10 rounded-2xl w-full max-w-md shadow-sm dark:shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div className="p-5 border-b border-white/5 flex items-center justify-between shrink-0">
-              <h3 className="text-xl font-bold tracking-widest text-white">新增排课</h3>
-              <button onClick={() => setIsAddModalOpen(false)} className="text-gray-400 hover:text-white transition-colors">✕</button>
+              <h3 className="text-xl font-bold tracking-widest text-slate-800 dark:text-white">新增排课</h3>
+              <button onClick={() => setIsAddModalOpen(false)} className="text-slate-500 dark:text-gray-400 hover:text-slate-800 dark:hover:text-white transition-colors">✕</button>
             </div>
             
             <div className="p-5 overflow-y-auto flex-1">
               <form id="add-schedule-form" onSubmit={handleSaveSchedule} className="space-y-5">
                 <div>
-                  <label className="block text-xs font-mono font-bold text-gray-400 mb-2 uppercase tracking-[0.2em]">上课日期</label>
+                  <label className="block text-xs font-mono font-bold text-slate-500 dark:text-gray-400 mb-2 uppercase tracking-[0.2em]">上课日期</label>
                   <input 
                     type="date" required value={newSchedDate} onChange={(e) => setNewSchedDate(e.target.value)}
-                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white font-mono focus:border-cyan-500/50"
+                    className="w-full bg-slate-50 dark:bg-black/50 border border-slate-100 dark:border-white/10 rounded-xl px-4 py-3 text-white font-mono focus:border-cyan-500/50"
                   />
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-mono font-bold text-gray-400 mb-2 uppercase tracking-[0.2em]">开始时间</label>
+                    <label className="block text-xs font-mono font-bold text-slate-500 dark:text-gray-400 mb-2 uppercase tracking-[0.2em]">开始时间</label>
                     <input 
                       type="time" required value={newSchedStart} onChange={handleStartChange}
-                      className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white font-mono focus:border-cyan-500/50"
+                      className="w-full bg-slate-50 dark:bg-black/50 border border-slate-100 dark:border-white/10 rounded-xl px-4 py-3 text-white font-mono focus:border-cyan-500/50"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-mono font-bold text-gray-400 mb-2 uppercase tracking-[0.2em]">结束时间</label>
+                    <label className="block text-xs font-mono font-bold text-slate-500 dark:text-gray-400 mb-2 uppercase tracking-[0.2em]">结束时间</label>
                     <input 
                       type="time" required value={newSchedEnd} onChange={(e) => setNewSchedEnd(e.target.value)}
-                      className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white font-mono focus:border-cyan-500/50"
+                      className="w-full bg-slate-50 dark:bg-black/50 border border-slate-100 dark:border-white/10 rounded-xl px-4 py-3 text-white font-mono focus:border-cyan-500/50"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono font-bold text-gray-400 mb-2 uppercase tracking-[0.2em]">排课科目</label>
+                  <label className="block text-xs font-mono font-bold text-slate-500 dark:text-gray-400 mb-2 uppercase tracking-[0.2em]">排课科目</label>
                   <select 
                     required value={newSchedSubject} onChange={(e) => setNewSchedSubject(e.target.value)}
-                    className="w-full appearance-none bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-cyan-500/50"
+                    className="w-full appearance-none bg-slate-50 dark:bg-black/50 border border-slate-100 dark:border-white/10 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:border-cyan-500/50 focus:bg-white dark:focus:bg-black/50"
                   >
                     <option value="" disabled>请选择科目</option>
                     {availableSubjects.map(sub => <option key={sub} value={sub}>{sub}</option>)}
@@ -364,10 +364,10 @@ const AdminSchedule: React.FC = () => {
                 </div>
 
                 {newSchedSubject && (
-                  <div className="bg-black/30 rounded-xl p-4 border border-white/5">
-                    <label className="block text-xs font-mono font-bold text-gray-400 mb-3 uppercase tracking-[0.2em]">参与学员 (已报该科目)</label>
+                  <div className="bg-slate-50 dark:bg-black/30 rounded-xl p-4 border border-slate-100 dark:border-white/5">
+                    <label className="block text-xs font-mono font-bold text-slate-500 dark:text-gray-400 mb-3 uppercase tracking-[0.2em]">参与学员 (已报该科目)</label>
                     {students.filter(s => s.subjects?.includes(newSchedSubject)).length === 0 ? (
-                      <div className="text-xs text-gray-500">暂无该科目学员</div>
+                      <div className="text-xs text-slate-400 dark:text-gray-500">暂无该科目学员</div>
                     ) : (
                       <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
                         {students.filter(s => s.subjects?.includes(newSchedSubject)).map(stu => {
@@ -383,8 +383,8 @@ const AdminSchedule: React.FC = () => {
                                 }}
                                 className="w-4 h-4 accent-cyan-500 rounded bg-black/50 border-white/10"
                               />
-                              <span className={`text-sm font-bold ${isChecked ? 'text-white' : 'text-gray-400'}`}>{stu.name}</span>
-                              <span className="text-xs text-gray-500 ml-auto font-mono">{stu.grade || ''}</span>
+                              <span className={`text-sm font-bold ${isChecked ? 'text-slate-800 dark:text-white' : 'text-slate-500 dark:text-gray-400'}`}>{stu.name}</span>
+                              <span className="text-xs text-slate-400 dark:text-gray-500 ml-auto font-mono">{stu.grade || ''}</span>
                             </label>
                           )
                         })}
@@ -395,7 +395,7 @@ const AdminSchedule: React.FC = () => {
               </form>
             </div>
             
-            <div className="p-5 border-t border-white/5 bg-black/20 shrink-0">
+            <div className="p-5 border-t border-white/5 bg-slate-50 dark:bg-black/20 shrink-0">
               <button 
                 form="add-schedule-form"
                 type="submit"

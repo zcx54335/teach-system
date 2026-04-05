@@ -78,7 +78,7 @@ const MainLayout: React.FC = () => {
   const navItems = getNavItems();
 
   return (
-    <div className="min-h-screen flex bg-slate-50 dark:bg-[#020617] text-slate-800 dark:text-white font-inter selection:bg-cyan-500/30 overflow-hidden">
+    <div className="min-h-screen flex bg-white dark:bg-[#020617] text-slate-800 dark:text-white font-inter selection:bg-cyan-500/30 overflow-hidden">
       {/* Background Glow */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-blue-900/10 blur-[120px]"></div>
@@ -237,7 +237,7 @@ const MainLayout: React.FC = () => {
       </AnimatePresence>
 
       {/* Main Content Area */}
-      <main className="relative z-10 flex-1 h-screen overflow-hidden flex flex-col bg-black/20 w-full">
+      <main className="relative z-10 flex-1 h-screen overflow-hidden flex flex-col bg-white dark:bg-black/20 w-full">
         {/* Top Navbar */}
         <header className="h-16 md:h-20 flex items-center justify-between px-4 md:px-8 bg-white/80 dark:bg-black/20 border-b border-slate-200 dark:border-white/5 backdrop-blur-md shrink-0 relative z-[100]">
           <div className="flex items-center">

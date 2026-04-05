@@ -416,7 +416,7 @@ const SystemManagement: React.FC = () => {
         {/* ==================== TEACHERS TAB ==================== */}
         {activeTab === 'teachers' && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="flex justify-between items-center bg-white dark:bg-black/20 p-5 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-none">
+            <div className="flex justify-between items-center bg-white dark:bg-black/20 p-5 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm dark:shadow-none">
       
               <button 
                 onClick={handleAddTeacherClick}
@@ -444,7 +444,7 @@ const SystemManagement: React.FC = () => {
                 {teachers.map(teacher => {
                   const assignedStudents = students.filter(s => s.teacher_id === teacher.id);
                   return (
-                    <div key={teacher.id} className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 rounded-3xl p-6 hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-all relative group shadow-sm dark:shadow-none">
+                    <div key={teacher.id} className="bg-white dark:bg-white/[0.02] border border-slate-100 dark:border-white/10 rounded-3xl p-6 hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-all relative group shadow-sm dark:shadow-none">
                       <div className="flex items-center gap-4 mb-5">
                         <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-100 dark:from-cyan-500/20 to-blue-200 dark:to-blue-600/20 border border-cyan-300 dark:border-cyan-500/30 flex items-center justify-center">
                           <span className="text-xl font-bold text-cyan-700 dark:text-cyan-300">{teacher.full_name?.charAt(0) || 'T'}</span>
@@ -485,19 +485,19 @@ const SystemManagement: React.FC = () => {
                             setSelectedTeacherId(teacher.id);
                             setIsAssignStudentOpen(true);
                           }}
-                          className="flex-1 bg-slate-50 dark:bg-white/5 hover:bg-cyan-50 dark:hover:bg-cyan-500/20 border border-slate-200 dark:border-white/5 hover:border-cyan-300 dark:hover:border-cyan-500/50 text-slate-600 dark:text-gray-300 hover:text-cyan-700 dark:hover:text-cyan-300 font-bold py-3 rounded-xl transition-colors flex items-center justify-center text-sm shadow-sm dark:shadow-none"
+                          className="flex-1 bg-slate-50 dark:bg-white/5 hover:bg-cyan-50 dark:hover:bg-cyan-500/20 border border-slate-100 dark:border-white/5 hover:border-cyan-300 dark:hover:border-cyan-500/50 text-slate-600 dark:text-gray-300 hover:text-cyan-700 dark:hover:text-cyan-300 font-bold py-3 rounded-xl transition-colors flex items-center justify-center text-sm shadow-sm dark:shadow-none"
                         >
                           <UserCheck className="w-4 h-4 mr-2" /> 分配
                         </button>
                         <button 
                           onClick={() => handleEditTeacherClick(teacher)}
-                          className="flex-1 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 border border-slate-200 dark:border-white/5 hover:border-slate-400 dark:hover:border-gray-500 text-slate-600 dark:text-gray-400 hover:text-slate-800 dark:hover:text-white font-bold py-3 rounded-xl transition-colors flex items-center justify-center text-sm shadow-sm dark:shadow-none"
+                          className="flex-1 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 border border-slate-100 dark:border-white/5 hover:border-slate-400 dark:hover:border-gray-500 text-slate-600 dark:text-gray-400 hover:text-slate-800 dark:hover:text-white font-bold py-3 rounded-xl transition-colors flex items-center justify-center text-sm shadow-sm dark:shadow-none"
                         >
                           <Edit className="w-4 h-4 mr-2" /> 编辑
                         </button>
                         <button 
                           onClick={() => handleDeleteTeacherClick(teacher)}
-                          className="flex-1 bg-slate-50 dark:bg-white/5 hover:bg-red-50 dark:hover:bg-red-500/10 border border-slate-200 dark:border-white/5 hover:border-red-300 dark:hover:border-red-500/50 text-red-500 dark:text-red-500/70 hover:text-red-600 dark:hover:text-red-400 font-bold py-3 rounded-xl transition-colors flex items-center justify-center text-sm shadow-sm dark:shadow-none"
+                          className="flex-1 bg-slate-50 dark:bg-white/5 hover:bg-red-50 dark:hover:bg-red-500/10 border border-slate-100 dark:border-white/5 hover:border-red-300 dark:hover:border-red-500/50 text-red-500 dark:text-red-500/70 hover:text-red-600 dark:hover:text-red-400 font-bold py-3 rounded-xl transition-colors flex items-center justify-center text-sm shadow-sm dark:shadow-none"
                         >
                           <Trash2 className="w-4 h-4 mr-2" /> 删除
                         </button>
@@ -541,7 +541,7 @@ const SystemManagement: React.FC = () => {
             </div>
 
             {/* Orders Header */}
-            <div className="flex justify-between items-center bg-white dark:bg-black/20 p-5 rounded-2xl border border-slate-200 dark:border-white/5 mt-8 shadow-sm dark:shadow-none">
+            <div className="flex justify-between items-center bg-white dark:bg-black/20 p-5 rounded-2xl border border-slate-100 dark:border-white/5 mt-8 shadow-sm dark:shadow-none">
               <div>
                 <h3 className="text-lg font-bold text-slate-800 dark:text-white tracking-widest">财务充值订单流水</h3>
                 <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">严格记录每一笔课时充值明细及单价</p>
@@ -555,11 +555,11 @@ const SystemManagement: React.FC = () => {
             </div>
 
             {/* Orders List */}
-            <div className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-3xl overflow-hidden shadow-sm dark:shadow-2xl">
+            <div className="bg-white dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 rounded-3xl overflow-hidden shadow-sm dark:shadow-2xl">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-slate-50 dark:bg-black/40 border-b border-slate-200 dark:border-white/10">
+                    <tr className="bg-slate-50 dark:bg-black/40 border-b border-slate-100 dark:border-white/10">
                       <th className="p-4 text-xs font-mono text-slate-500 dark:text-gray-400 uppercase tracking-widest">订单时间</th>
                       <th className="p-4 text-xs font-mono text-slate-500 dark:text-gray-400 uppercase tracking-widest">学员姓名</th>
                       <th className="p-4 text-xs font-mono text-slate-500 dark:text-gray-400 uppercase tracking-widest">充值科目</th>
@@ -621,28 +621,28 @@ const SystemManagement: React.FC = () => {
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl pb-10">
             
             {/* Block 1: Brand Settings */}
-            <div className="bg-white/[0.02] border border-white/10 rounded-3xl p-6 shadow-xl relative overflow-hidden">
-              <h3 className="text-lg font-bold text-white mb-6 tracking-widest flex items-center">
+            <div className="bg-white dark:bg-white/[0.02] border border-slate-100 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-xl relative overflow-hidden">
+              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6 tracking-widest flex items-center">
                 <ShieldCheck className="w-5 h-5 mr-2 text-purple-400" />
                 品牌设置 (Brand Settings)
               </h3>
               <div className="space-y-5">
                 <div>
-                  <label className="block text-xs font-mono text-gray-400 mb-2">机构名称 (Studio Name)</label>
+                  <label className="block text-xs font-mono text-slate-500 dark:text-gray-400 mb-2">机构名称 (Studio Name)</label>
                   <input 
                     type="text" 
                     value={settings.studio_name}
                     onChange={(e) => setSettings({...settings, studio_name: e.target.value})}
-                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-purple-500 transition-colors" 
+                    className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:border-purple-500 transition-colors" 
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-mono text-gray-400 mb-2">专属报告寄语 (Report Footer)</label>
+                  <label className="block text-xs font-mono text-slate-500 dark:text-gray-400 mb-2">专属报告寄语 (Report Footer)</label>
                   <input 
                     type="text" 
                     value={settings.report_footer}
                     onChange={(e) => setSettings({...settings, report_footer: e.target.value})}
-                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-purple-500 transition-colors" 
+                    className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:border-purple-500 transition-colors" 
                   />
                   <p className="text-xs text-gray-500 mt-2">此内容将展示在家长端扫码报告的底部，彰显品牌温度。</p>
                 </div>
@@ -650,14 +650,14 @@ const SystemManagement: React.FC = () => {
             </div>
 
             {/* Block 2: Course Dictionary */}
-            <div className="bg-white/[0.02] border border-white/10 rounded-3xl p-6 shadow-xl relative overflow-hidden">
-              <h3 className="text-lg font-bold text-white mb-6 tracking-widest flex items-center">
+            <div className="bg-white dark:bg-white/[0.02] border border-slate-100 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-xl relative overflow-hidden">
+              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6 tracking-widest flex items-center">
                 <BookOpen className="w-5 h-5 mr-2 text-cyan-400" />
                 教务字典库 (Course Dictionary)
               </h3>
               <div>
-                <label className="block text-xs font-mono text-gray-400 mb-2">授课科目库 (Subjects List)</label>
-                <div className="bg-black/50 border border-white/10 rounded-xl p-3 min-h-[60px] flex flex-wrap gap-2 items-center focus-within:border-cyan-500 transition-colors">
+                <label className="block text-xs font-mono text-slate-500 dark:text-gray-400 mb-2">授课科目库 (Subjects List)</label>
+                <div className="bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl p-3 min-h-[60px] flex flex-wrap gap-2 items-center focus-within:border-cyan-500 transition-colors">
                   {settings.subjects_list.map((sub) => (
                     <span key={sub} className="bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 px-3 py-1 rounded-lg text-sm flex items-center gap-2">
                       {sub}
@@ -672,7 +672,7 @@ const SystemManagement: React.FC = () => {
                     onChange={(e) => setNewSubjectInput(e.target.value)}
                     onKeyDown={handleAddSubject}
                     placeholder="输入科目并按回车添加..."
-                    className="bg-transparent border-none outline-none text-white text-sm flex-1 min-w-[150px] placeholder:text-gray-600"
+                    className="bg-transparent border-none outline-none text-slate-800 dark:text-white text-sm flex-1 min-w-[150px] placeholder:text-gray-600"
                   />
                 </div>
                 <p className="text-xs text-gray-500 mt-2">修改后，系统内所有『新增排课』、『新增学员』的科目下拉框将自动同步。</p>
@@ -680,19 +680,19 @@ const SystemManagement: React.FC = () => {
             </div>
 
             {/* Block 3: Scheduling Rules */}
-            <div className="bg-white/[0.02] border border-white/10 rounded-3xl p-6 shadow-xl relative overflow-hidden">
-              <h3 className="text-lg font-bold text-white mb-6 tracking-widest flex items-center">
+            <div className="bg-white dark:bg-white/[0.02] border border-slate-100 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-xl relative overflow-hidden">
+              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6 tracking-widest flex items-center">
                 <Settings className="w-5 h-5 mr-2 text-amber-400" />
                 排课规则 (Scheduling Rules)
               </h3>
               <div>
-                <label className="block text-xs font-mono text-gray-400 mb-2">默认单节课时长 (分钟)</label>
+                <label className="block text-xs font-mono text-slate-500 dark:text-gray-400 mb-2">默认单节课时长 (分钟)</label>
                 <input 
                   type="number" 
                   min="1"
                   value={settings.default_duration}
                   onChange={(e) => setSettings({...settings, default_duration: parseInt(e.target.value) || 120})}
-                  className="w-full md:w-1/2 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-amber-500 transition-colors" 
+                  className="w-full md:w-1/2 bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:border-amber-500 transition-colors" 
                 />
               </div>
             </div>
@@ -722,20 +722,20 @@ const SystemManagement: React.FC = () => {
       {/* Add Teacher Modal */}
       {isAddTeacherOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in">
-          <div className="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-md shadow-2xl p-6">
-            <h3 className="text-xl font-bold text-white tracking-widest mb-6">{isEditTeacherMode ? '修改教师信息' : '新增在职教师'}</h3>
+          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/10 rounded-3xl w-full max-w-md shadow-2xl p-6">
+            <h3 className="text-xl font-bold text-slate-800 dark:text-white tracking-widest mb-6">{isEditTeacherMode ? '修改教师信息' : '新增在职教师'}</h3>
             <form onSubmit={handleAddTeacher} className="space-y-4">
               <div>
-                <label className="block text-xs font-mono text-gray-400 mb-2">教师姓名</label>
-                <input required type="text" value={newTeacherName} onChange={e => setNewTeacherName(e.target.value)} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-cyan-500" placeholder="例如：杨老师" />
+                <label className="block text-xs font-mono text-slate-500 dark:text-gray-400 mb-2">教师姓名</label>
+                <input required type="text" value={newTeacherName} onChange={e => setNewTeacherName(e.target.value)} className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:border-cyan-500" placeholder="例如：杨老师" />
               </div>
               <div>
-                <label className="block text-xs font-mono text-gray-400 mb-2">手机号码 (作为登录账号)</label>
-                <input required type="text" value={newTeacherPhone} onChange={e => setNewTeacherPhone(e.target.value)} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-cyan-500" placeholder="输入11位手机号" />
+                <label className="block text-xs font-mono text-slate-500 dark:text-gray-400 mb-2">手机号码 (作为登录账号)</label>
+                <input required type="text" value={newTeacherPhone} onChange={e => setNewTeacherPhone(e.target.value)} className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:border-cyan-500" placeholder="输入11位手机号" />
               </div>
               <div>
-                <label className="block text-xs font-mono text-gray-400 mb-2">授课科目</label>
-                <select required value={newTeacherSubject} onChange={e => setNewTeacherSubject(e.target.value)} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-cyan-500">
+                <label className="block text-xs font-mono text-slate-500 dark:text-gray-400 mb-2">授课科目</label>
+                <select required value={newTeacherSubject} onChange={e => setNewTeacherSubject(e.target.value)} className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:border-cyan-500">
                   <option value="" disabled>请选择授课科目</option>
                   {settings.subjects_list.map(sub => <option key={sub} value={sub}>{sub}</option>)}
                 </select>
@@ -744,7 +744,7 @@ const SystemManagement: React.FC = () => {
                 初始登录密码将自动设置为手机号后 6 位。
               </div>
               <div className="flex gap-3 pt-4">
-                <button type="button" onClick={() => setIsAddTeacherOpen(false)} className="flex-1 bg-white/5 text-gray-400 py-3 rounded-xl font-bold hover:bg-white/10 transition-colors">取消</button>
+                <button type="button" onClick={() => setIsAddTeacherOpen(false)} className="flex-1 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-gray-400 py-3 rounded-xl font-bold hover:bg-white/10 transition-colors">取消</button>
                 <button type="submit" className="flex-1 bg-cyan-500 hover:bg-cyan-400 text-black py-3 rounded-xl font-bold tracking-widest transition-colors">{isEditTeacherMode ? '保存修改' : '确认创建'}</button>
               </div>
             </form>
@@ -755,10 +755,10 @@ const SystemManagement: React.FC = () => {
       {/* Assign Student Modal (Transfer list approach) */}
       {isAssignStudentOpen && selectedTeacherId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in">
-          <div className="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-3xl shadow-2xl flex flex-col h-[80vh]">
+          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/10 rounded-3xl w-full max-w-3xl shadow-2xl flex flex-col h-[80vh]">
             <div className="p-6 border-b border-white/5 flex justify-between items-center shrink-0">
               <div>
-                <h3 className="text-xl font-bold text-white tracking-widest">分配学员</h3>
+                <h3 className="text-xl font-bold text-slate-800 dark:text-white tracking-widest">分配学员</h3>
                 <p className="text-sm text-cyan-400 mt-1">正在为 {teachers.find(t => t.id === selectedTeacherId)?.full_name} 分配学员</p>
               </div>
               <button onClick={() => setIsAssignStudentOpen(false)} className="text-gray-400 hover:text-white">✕</button>
@@ -766,13 +766,13 @@ const SystemManagement: React.FC = () => {
             
             <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
               {/* Left: All Unassigned or other students */}
-              <div className="flex-1 border-r border-white/5 flex flex-col bg-black/20">
+              <div className="flex-1 border-r border-white/5 flex flex-col bg-slate-50 dark:bg-black/20">
                 <div className="p-4 border-b border-white/5 shrink-0">
                   <div className="relative">
                     <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                     <input 
                       type="text" placeholder="搜索全校学员..." value={assignSearch} onChange={e => setAssignSearch(e.target.value)}
-                      className="w-full bg-black/40 border border-white/10 rounded-lg pl-9 pr-4 py-2 text-sm text-white focus:border-cyan-500"
+                      className="w-full bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-800 dark:text-white focus:border-cyan-500"
                     />
                   </div>
                 </div>
@@ -790,9 +790,9 @@ const SystemManagement: React.FC = () => {
                       return isNotAssigned && matchesSearch && hasSubject;
                     })
                     .map(stu => (
-                      <div key={stu.id} className="flex items-center justify-between bg-white/5 border border-white/5 p-3 rounded-xl hover:border-cyan-500/30 transition-colors">
+                      <div key={stu.id} className="flex items-center justify-between bg-white dark:bg-white/5 border border-slate-200 dark:border-white/5 p-3 rounded-xl hover:border-cyan-500/30 transition-colors">
                         <div>
-                          <span className="font-bold text-white text-sm">{stu.name}</span>
+                          <span className="font-bold text-slate-800 dark:text-white text-sm">{stu.name}</span>
                           <span className="text-xs text-gray-500 ml-2">{stu.grade || '未知年级'}</span>
                         </div>
                         <button onClick={() => handleAssignStudent(stu.id)} className="bg-cyan-500/10 text-cyan-400 px-3 py-1 rounded-lg text-xs font-bold hover:bg-cyan-500/20">
@@ -813,8 +813,8 @@ const SystemManagement: React.FC = () => {
                     <div className="text-sm text-gray-500 text-center py-8">暂未分配</div>
                   ) : (
                     students.filter(s => s.teacher_id === selectedTeacherId).map(stu => (
-                      <div key={stu.id} className="flex items-center justify-between bg-cyan-900/20 border border-cyan-500/30 p-3 rounded-xl">
-                        <span className="font-bold text-white text-sm">{stu.name}</span>
+                      <div key={stu.id} className="flex items-center justify-between bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-500/30 p-3 rounded-xl">
+                        <span className="font-bold text-slate-800 dark:text-white text-sm">{stu.name}</span>
                         <button onClick={() => handleRemoveStudent(stu.id)} className="text-red-400 px-3 py-1 rounded-lg text-xs hover:bg-red-500/10 transition-colors">
                           移除 -
                         </button>
@@ -835,14 +835,14 @@ const SystemManagement: React.FC = () => {
       {/* New Order Modal */}
       {isNewOrderOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in">
-          <div className="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-md shadow-2xl p-6">
-            <h3 className="text-xl font-bold text-white tracking-widest mb-6 flex items-center">
+          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/10 rounded-3xl w-full max-w-md shadow-2xl p-6">
+            <h3 className="text-xl font-bold text-slate-800 dark:text-white tracking-widest mb-6 flex items-center">
               <Banknote className="w-6 h-6 mr-2 text-amber-400" /> 新建充值订单
             </h3>
             <form onSubmit={handleCreateOrder} className="space-y-4">
               <div>
-                <label className="block text-xs font-mono text-gray-400 mb-2">充值学员</label>
-                <select required value={orderStudentId} onChange={e => setOrderStudentId(e.target.value)} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-amber-500">
+                <label className="block text-xs font-mono text-slate-500 dark:text-gray-400 mb-2">充值学员</label>
+                <select required value={orderStudentId} onChange={e => setOrderStudentId(e.target.value)} className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:border-amber-500">
                   <option value="" disabled>选择学员...</option>
                   {students.map(s => <option key={s.id} value={s.id}>{s.name} ({s.parent_phone})</option>)}
                 </select>
@@ -850,20 +850,20 @@ const SystemManagement: React.FC = () => {
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-mono text-gray-400 mb-2">充值科目</label>
-                  <select required value={orderSubject} onChange={e => setOrderSubject(e.target.value)} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-amber-500">
+                  <label className="block text-xs font-mono text-slate-500 dark:text-gray-400 mb-2">充值科目</label>
+                  <select required value={orderSubject} onChange={e => setOrderSubject(e.target.value)} className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:border-amber-500">
                     <option value="" disabled>选择科目...</option>
                     {settings.subjects_list.map(sub => <option key={sub} value={sub}>{sub}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-mono text-gray-400 mb-2">购买课时数</label>
-                  <input required type="number" min="1" value={orderClasses} onChange={e => setOrderClasses(e.target.value)} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-amber-500 font-mono font-bold" placeholder="例如：20" />
+                  <label className="block text-xs font-mono text-slate-500 dark:text-gray-400 mb-2">购买课时数</label>
+                  <input required type="number" min="1" value={orderClasses} onChange={e => setOrderClasses(e.target.value)} className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:border-amber-500 font-mono font-bold" placeholder="例如：20" />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-mono text-gray-400 mb-2">总收费金额 (元)</label>
+                <label className="block text-xs font-mono text-slate-500 dark:text-gray-400 mb-2">总收费金额 (元)</label>
                 <input required type="number" step="0.01" min="0" value={orderTotalPrice} onChange={e => setOrderTotalPrice(e.target.value)} className="w-full bg-black/50 border border-amber-500/30 rounded-xl px-4 py-3 text-amber-400 font-mono font-bold text-lg focus:border-amber-500" placeholder="0.00" />
               </div>
 
@@ -873,7 +873,7 @@ const SystemManagement: React.FC = () => {
               </div>
 
               <div className="flex gap-3 pt-4">
-                <button type="button" onClick={() => setIsNewOrderOpen(false)} className="flex-1 bg-white/5 text-gray-400 py-3 rounded-xl font-bold hover:bg-white/10 transition-colors">取消</button>
+                <button type="button" onClick={() => setIsNewOrderOpen(false)} className="flex-1 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-gray-400 py-3 rounded-xl font-bold hover:bg-white/10 transition-colors">取消</button>
                 <button type="submit" className="flex-1 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black py-3 rounded-xl font-bold tracking-widest transition-all shadow-lg">确认入账</button>
               </div>
             </form>
@@ -897,7 +897,7 @@ const SystemManagement: React.FC = () => {
               <button 
                 type="button" 
                 onClick={() => setIsDeleteTeacherOpen(false)} 
-                className="flex-1 bg-white/5 text-gray-400 py-3 rounded-xl font-bold hover:bg-white/10 transition-colors"
+                className="flex-1 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-gray-400 py-3 rounded-xl font-bold hover:bg-white/10 transition-colors"
               >
                 取消
               </button>

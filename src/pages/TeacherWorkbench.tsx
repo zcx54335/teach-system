@@ -285,7 +285,7 @@ const TeacherWorkbench: React.FC = () => {
       </header>
 
       {/* Full Month Calendar & Date Info */}
-      <div className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 backdrop-blur-md rounded-3xl p-5 mb-6 shrink-0 shadow-sm dark:shadow-2xl flex flex-col md:flex-row gap-6">
+      <div className="bg-white dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 backdrop-blur-md rounded-3xl p-5 mb-6 shrink-0 shadow-sm dark:shadow-2xl flex flex-col md:flex-row gap-6">
         <div className="flex-1">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-slate-800 dark:text-white tracking-widest">教学日历</h3>
@@ -339,7 +339,7 @@ const TeacherWorkbench: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col bg-white dark:bg-white/[0.02] backdrop-blur-3xl border border-slate-200 dark:border-white/10 rounded-3xl p-5 shadow-sm dark:shadow-2xl overflow-y-auto">
+      <div className="flex-1 flex flex-col bg-white dark:bg-white/[0.02] backdrop-blur-3xl border border-slate-100 dark:border-white/10 rounded-3xl p-5 shadow-sm dark:shadow-2xl overflow-y-auto">
         
         {/* VIEW 1: Schedules for Selected Date */}
         {!activeSchedule && (
@@ -436,24 +436,24 @@ const TeacherWorkbench: React.FC = () => {
         {activeSchedule && (
           <div className="flex-1 flex flex-col animate-in slide-in-from-right-4 duration-300">
             
-            <div className="bg-black/30 border border-white/5 rounded-xl p-4 mb-6 flex items-center justify-between shrink-0">
+            <div className="bg-slate-50 dark:bg-black/30 border border-slate-100 dark:border-white/5 rounded-xl p-4 mb-6 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-4">
                 <button 
                   onClick={() => setActiveSchedule(null)}
-                  className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors"
+                  className="p-2 bg-slate-200 dark:bg-white/5 hover:bg-slate-300 dark:hover:bg-white/10 rounded-lg text-slate-500 dark:text-gray-400 hover:text-slate-800 dark:hover:text-white transition-colors"
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </button>
                 <div>
                   <div className="text-cyan-400 font-bold text-lg tracking-widest">{activeSchedule.subject}</div>
-                  <div className="text-gray-400 text-sm font-mono mt-1">{activeSchedule.date} | {activeSchedule.start_time} - {activeSchedule.end_time}</div>
+                  <div className="text-slate-500 dark:text-gray-400 text-sm font-mono mt-1">{activeSchedule.date} | {activeSchedule.start_time} - {activeSchedule.end_time}</div>
                 </div>
               </div>
             </div>
 
             {/* Students Checklist */}
             <div className="mb-6 shrink-0">
-              <label className="block text-xs font-mono font-bold text-gray-400 mb-3 uppercase tracking-[0.2em] flex items-center">
+              <label className="block text-xs font-mono font-bold text-slate-500 dark:text-gray-400 mb-3 uppercase tracking-[0.2em] flex items-center">
                 <Users className="w-4 h-4 mr-2" /> 出勤学员确认 (默认全员)
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
@@ -468,13 +468,13 @@ const TeacherWorkbench: React.FC = () => {
                       onClick={() => toggleDeductStudent(id)}
                       className={`flex flex-col p-3 rounded-xl cursor-pointer border transition-all duration-300 ${
                         isChecked 
-                          ? 'bg-cyan-900/20 border-cyan-500/50 shadow-[inset_0_0_20px_rgba(6,182,212,0.1)]' 
-                          : 'bg-black/20 border-red-500/20 opacity-60'
+                          ? 'bg-cyan-50 dark:bg-cyan-900/20 border-cyan-500/50 shadow-[inset_0_0_20px_rgba(6,182,212,0.1)]' 
+                          : 'bg-slate-50 dark:bg-black/20 border-red-500/20 opacity-60'
                       }`}
                     >
                       <div className="flex items-center gap-2 mb-1">
                         {isChecked ? <CheckSquare className="w-4 h-4 text-cyan-400 shrink-0" /> : <Square className="w-4 h-4 text-red-500/50 shrink-0" />}
-                        <div className={`font-bold truncate text-sm ${isChecked ? 'text-white' : 'text-gray-400 line-through'}`}>{stu.name}</div>
+                        <div className={`font-bold truncate text-sm ${isChecked ? 'text-slate-800 dark:text-white' : 'text-slate-400 dark:text-gray-400 line-through'}`}>{stu.name}</div>
                       </div>
                       <div className="text-xs text-gray-500 pl-6">
                         {isChecked ? (
@@ -493,9 +493,9 @@ const TeacherWorkbench: React.FC = () => {
             <div className="space-y-6 flex-1">
               
               {/* Topic Module */}
-              <div className="bg-black/20 p-5 rounded-2xl border border-white/5">
-                <div className="flex items-center justify-between mb-3 border-b border-white/5 pb-3">
-                  <label className="text-xs font-mono font-bold text-gray-400 uppercase tracking-[0.2em] flex items-center">
+              <div className="bg-slate-50 dark:bg-black/20 p-5 rounded-2xl border border-slate-100 dark:border-white/5">
+                <div className="flex items-center justify-between mb-3 border-b border-slate-200 dark:border-white/5 pb-3">
+                  <label className="text-xs font-mono font-bold text-slate-500 dark:text-gray-400 uppercase tracking-[0.2em] flex items-center">
                     <Sparkles className="w-4 h-4 mr-2" /> 本节课重点记录 (选填)
                   </label>
                   <button 
@@ -514,7 +514,7 @@ const TeacherWorkbench: React.FC = () => {
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
                   placeholder="请输入课程知识点、重点拆解..."
-                  className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white text-sm focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all resize-none h-24 mb-3"
+                  className="w-full bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl p-4 text-slate-800 dark:text-white text-sm focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all resize-none h-24 mb-3"
                 />
 
                 {topicFiles.length > 0 && (
@@ -532,9 +532,9 @@ const TeacherWorkbench: React.FC = () => {
               </div>
 
               {/* Homework Module */}
-              <div className="bg-black/20 p-5 rounded-2xl border border-white/5">
-                <div className="flex items-center justify-between mb-3 border-b border-white/5 pb-3">
-                  <label className="text-xs font-mono font-bold text-gray-400 uppercase tracking-[0.2em] flex items-center">
+              <div className="bg-slate-50 dark:bg-black/20 p-5 rounded-2xl border border-slate-100 dark:border-white/5">
+                <div className="flex items-center justify-between mb-3 border-b border-slate-200 dark:border-white/5 pb-3">
+                  <label className="text-xs font-mono font-bold text-slate-500 dark:text-gray-400 uppercase tracking-[0.2em] flex items-center">
                     <BookOpen className="w-4 h-4 mr-2" /> 课后作业布置 (选填)
                   </label>
                   <button 
@@ -553,7 +553,7 @@ const TeacherWorkbench: React.FC = () => {
                   value={homework}
                   onChange={(e) => setHomework(e.target.value)}
                   placeholder="请输入作业内容，或直接上传习题照片..."
-                  className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white text-sm focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all resize-none h-20 mb-3"
+                  className="w-full bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl p-4 text-slate-800 dark:text-white text-sm focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all resize-none h-20 mb-3"
                 />
 
                 {homeworkFiles.length > 0 && (
@@ -571,9 +571,9 @@ const TeacherWorkbench: React.FC = () => {
               </div>
 
               {/* Teacher Comments Module */}
-              <div className="bg-black/20 p-5 rounded-2xl border border-white/5">
-                <div className="flex items-center justify-between mb-3 border-b border-white/5 pb-3">
-                  <label className="text-xs font-mono font-bold text-gray-400 uppercase tracking-[0.2em] flex items-center">
+              <div className="bg-slate-50 dark:bg-black/20 p-5 rounded-2xl border border-slate-100 dark:border-white/5">
+                <div className="flex items-center justify-between mb-3 border-b border-slate-200 dark:border-white/5 pb-3">
+                  <label className="text-xs font-mono font-bold text-slate-500 dark:text-gray-400 uppercase tracking-[0.2em] flex items-center">
                     <MessageSquare className="w-4 h-4 mr-2 text-green-400" /> 🧑‍🏫 老师专属评语 (选填)
                   </label>
                 </div>
@@ -582,7 +582,7 @@ const TeacherWorkbench: React.FC = () => {
                   value={teacherComment}
                   onChange={(e) => setTeacherComment(e.target.value)}
                   placeholder="例如：子涵今天逻辑非常清晰，继续保持..."
-                  className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white text-sm focus:border-green-500/50 focus:ring-1 focus:ring-green-500/50 transition-all resize-none h-20"
+                  className="w-full bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl p-4 text-slate-800 dark:text-white text-sm focus:border-green-500/50 focus:ring-1 focus:ring-green-500/50 transition-all resize-none h-20"
                 />
               </div>
             </div>
@@ -595,7 +595,7 @@ const TeacherWorkbench: React.FC = () => {
                 className={`w-full text-white font-bold py-4 rounded-xl tracking-widest transition-all shadow-lg active:scale-[0.98] disabled:opacity-50 flex items-center justify-center text-lg ${
                   activeSchedule.status === 'completed'
                     ? 'bg-slate-700 hover:bg-slate-600 shadow-none'
-                    : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 shadow-[0_0_20px_rgba(59,130,246,0.4)] hover:shadow-[0_0_30px_rgba(59,130,246,0.6)]'
+                    : 'bg-slate-800 hover:bg-slate-700 dark:bg-gradient-to-r dark:from-blue-600 dark:to-purple-600 dark:hover:from-blue-500 dark:hover:to-purple-500 shadow-sm dark:shadow-[0_0_20px_rgba(59,130,246,0.4)] dark:hover:shadow-[0_0_30px_rgba(59,130,246,0.6)]'
                 }`}
               >
                 {uploadingFiles ? (

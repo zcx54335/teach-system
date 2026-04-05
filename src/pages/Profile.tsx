@@ -319,13 +319,13 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
     switch(status) {
       case 'enrolled': return { text: '在读', color: 'text-stem-green bg-stem-green/10 border-stem-green/30' };
       case 'intent': return { text: '意向', color: 'text-stem-orange bg-stem-orange/10 border-stem-orange/30' };
-      case 'completed': return { text: '结课', color: 'text-gray-400 bg-gray-500/10 border-gray-500/30' };
-      default: return { text: status, color: 'text-gray-400 bg-gray-500/10 border-gray-500/30' };
+      case 'completed': return { text: '结课', color: 'text-slate-500 dark:text-gray-400 bg-gray-500/10 border-gray-500/30' };
+      default: return { text: status, color: 'text-slate-500 dark:text-gray-400 bg-gray-500/10 border-gray-500/30' };
     }
   };
 
   return (
-    <div className="min-h-full bg-stem-dark relative font-sans selection:bg-stem-orange/30 text-white overflow-hidden flex flex-col items-center pt-16 px-4 pb-32">
+    <div className="min-h-full bg-white dark:bg-stem-dark relative font-sans selection:bg-stem-orange/30 text-slate-800 dark:text-slate-800 dark:text-white overflow-hidden flex flex-col items-center pt-16 px-4 pb-32">
       
       {/* 动态粒子背景 */}
       <ParticleBackground />
@@ -334,7 +334,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
       <div className="absolute inset-0 bg-blueprint bg-blueprint pointer-events-none opacity-20 z-0"></div>
 
       {isLoading && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-50 dark:bg-black/50 backdrop-blur-sm">
           <div className="flex flex-col items-center space-y-4">
             <div className="w-10 h-10 border-4 border-stem-orange/30 border-t-stem-orange rounded-full animate-spin"></div>
             <span className="text-stem-orange font-mono text-sm tracking-widest animate-pulse">LOADING CRM...</span>
@@ -345,7 +345,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
       {/* Header */}
       <div className="relative z-10 w-full max-w-4xl mb-8 flex justify-between items-end">
         <div>
-          <h1 className="text-3xl font-light tracking-widest flex items-center space-x-3 text-white">
+          <h1 className="text-3xl font-light tracking-widest flex items-center space-x-3 text-slate-800 dark:text-white">
             <Shield className="w-8 h-8 text-stem-orange opacity-80" />
             <span>{isParent ? '家长中心' : '学生资产管理'}</span>
           </h1>
@@ -358,7 +358,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
             <>
               <button 
                 onClick={() => setIsAddModalOpen(true)}
-                className="text-xs font-mono text-white border border-stem-orange/50 px-3 py-1.5 rounded bg-stem-orange hover:bg-stem-orange/80 transition-colors shadow-[0_0_15px_rgba(255,107,0,0.4)]"
+                className="text-xs font-mono text-slate-800 dark:text-white border border-stem-orange/50 px-3 py-1.5 rounded bg-stem-orange hover:bg-stem-orange/80 transition-colors shadow-[0_0_15px_rgba(255,107,0,0.4)]"
               >
                 + 新增学员
               </button>
@@ -381,22 +381,22 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
       </div>
 
       {/* Profile Overview Card */}
-      <div className="relative z-10 w-full max-w-4xl bg-white/[0.02] backdrop-blur-2xl border border-white/10 rounded-3xl p-8 shadow-2xl mb-8 flex flex-col md:flex-row items-center md:items-start gap-8">
+      <div className="relative z-10 w-full max-w-4xl bg-white dark:bg-white/[0.02] backdrop-blur-2xl border border-slate-200 dark:border-white/10 rounded-3xl p-8 shadow-2xl mb-8 flex flex-col md:flex-row items-center md:items-start gap-8">
         <div className="w-24 h-24 rounded-full bg-gradient-to-br from-stem-orange/20 to-amber-500/20 border border-stem-orange/50 flex items-center justify-center shadow-[0_0_20px_rgba(255,107,0,0.2)] shrink-0">
           <User className="w-10 h-10 text-stem-orange" />
         </div>
         <div className="flex-1 text-center md:text-left">
-          <h2 className="text-2xl font-bold text-white tracking-widest mb-1">{currentUser?.full_name || '用户'}</h2>
-          <p className="text-sm font-mono text-gray-400 mb-4">{currentUser?.phone || '手机号未绑定'}</p>
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-white tracking-widest mb-1">{currentUser?.full_name || '用户'}</h2>
+          <p className="text-sm font-mono text-slate-500 dark:text-gray-400 mb-4">{currentUser?.phone || '手机号未绑定'}</p>
           <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-            <span className="bg-white/5 border border-white/10 px-3 py-1 rounded-full text-xs font-mono text-gray-300">角色: {currentUser?.role === 'parent' ? '家长' : currentUser?.role === 'teacher' ? '教师' : '管理员'}</span>
+            <span className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 px-3 py-1 rounded-full text-xs font-mono text-slate-600 dark:text-gray-300">角色: {currentUser?.role === 'parent' ? '家长' : currentUser?.role === 'teacher' ? '教师' : '管理员'}</span>
           </div>
         </div>
 
         {/* Change Password Form */}
-        <div className="w-full md:w-80 bg-black/30 p-5 rounded-2xl border border-white/5">
-          <h3 className="text-sm font-bold text-white mb-4 flex items-center tracking-widest">
-            <Lock className="w-4 h-4 mr-2 text-gray-400" />
+        <div className="w-full md:w-80 bg-slate-50 dark:bg-black/30 p-5 rounded-2xl border border-slate-100 dark:border-white/5">
+          <h3 className="text-sm font-bold text-slate-800 dark:text-white mb-4 flex items-center tracking-widest">
+            <Lock className="w-4 h-4 mr-2 text-slate-500 dark:text-gray-400" />
             安全设置
           </h3>
           <form onSubmit={handlePasswordReset} className="space-y-3">
@@ -406,7 +406,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
               required
               value={oldPassword}
               onChange={e => setOldPassword(e.target.value)}
-              className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-stem-orange outline-none"
+              className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-white focus:border-stem-orange outline-none"
             />
             <input 
               type="password" 
@@ -414,7 +414,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
               required
               value={newPassword}
               onChange={e => setNewPassword(e.target.value)}
-              className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-stem-orange outline-none"
+              className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-white focus:border-stem-orange outline-none"
             />
             <input 
               type="password" 
@@ -422,12 +422,12 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
               required
               value={confirmNewPassword}
               onChange={e => setConfirmNewPassword(e.target.value)}
-              className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-stem-orange outline-none"
+              className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-white focus:border-stem-orange outline-none"
             />
             <button 
               type="submit"
               disabled={isResettingPassword}
-              className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-2 rounded-lg text-xs tracking-widest transition-colors mt-2 disabled:opacity-50"
+              className="w-full bg-white/10 hover:bg-white/20 text-slate-800 dark:text-white font-bold py-2 rounded-lg text-xs tracking-widest transition-colors mt-2 disabled:opacity-50"
             >
               {isResettingPassword ? '更新中...' : '修改密码'}
             </button>
@@ -438,24 +438,24 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
       {isParent ? (
         // ================= PARENT VIEW =================
         <div className="relative z-10 w-full max-w-4xl">
-          <h3 className="text-xl font-light tracking-widest text-white mb-6 border-b border-white/10 pb-4">
+          <h3 className="text-xl font-light tracking-widest text-slate-800 dark:text-white mb-6 border-b border-slate-200 dark:border-white/10 pb-4">
             <Users className="w-5 h-5 inline-block mr-2 text-stem-orange" />
             我的孩子
           </h3>
           {myChildren.length === 0 ? (
-            <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-8 text-center text-gray-500 font-mono">
+            <div className="bg-white dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 rounded-2xl p-8 text-center text-slate-400 dark:text-gray-500 font-mono">
               暂未关联任何学员档案
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {myChildren.map(child => (
-                <div key={child.id} className="bg-white/[0.02] border border-white/10 rounded-3xl p-6 hover:bg-white/[0.04] transition-all relative overflow-hidden group">
+                <div key={child.id} className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 rounded-3xl p-6 hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-all relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl group-hover:bg-cyan-500/20 transition-colors"></div>
                   
                   <div className="flex justify-between items-start mb-6">
                     <div>
-                      <h4 className="text-2xl font-bold text-white tracking-widest mb-1">{child.name}</h4>
-                      <span className="text-xs text-gray-400 font-mono">{child.grade || '未设置年级'}</span>
+                      <h4 className="text-2xl font-bold text-slate-800 dark:text-white tracking-widest mb-1">{child.name}</h4>
+                      <span className="text-xs text-slate-500 dark:text-gray-400 font-mono">{child.grade || '未设置年级'}</span>
                     </div>
                     <button 
                       onClick={() => navigate(`/parent?id=${child.id}`)}
@@ -466,19 +466,19 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
                     </button>
                   </div>
                   
-                  <div className="space-y-3 border-t border-white/5 pt-4">
+                  <div className="space-y-3 border-t border-slate-100 dark:border-white/5 pt-4">
                     {child.subjects && child.subjects.length > 0 ? (
                       child.subjects.map((sub: string) => {
                         const balance = (child.course_balances || {})[sub] || 0;
                         return (
-                          <div key={sub} className="flex justify-between items-center bg-black/20 p-3 rounded-xl border border-white/5">
-                            <span className="text-sm font-bold text-gray-300">{sub}</span>
+                          <div key={sub} className="flex justify-between items-center bg-black/20 p-3 rounded-xl border border-slate-100 dark:border-white/5">
+                            <span className="text-sm font-bold text-slate-600 dark:text-gray-300">{sub}</span>
                             <span className="text-sm font-mono text-cyan-400">剩余: <strong className="text-lg">{balance}</strong></span>
                           </div>
                         )
                       })
                     ) : (
-                      <div className="text-sm text-gray-500 italic">暂无报读科目</div>
+                      <div className="text-sm text-slate-400 dark:text-gray-500 italic">暂无报读科目</div>
                     )}
                   </div>
                 </div>
@@ -491,47 +491,47 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
         <>
           {/* 顶部数据概览 */}
           <div className="relative z-10 w-full max-w-4xl grid grid-cols-3 gap-4 mb-8">
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5 relative overflow-hidden group">
+            <div className="bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-5 relative overflow-hidden group">
               <div className="absolute -right-4 -top-4 w-16 h-16 bg-stem-green/20 rounded-full blur-xl group-hover:bg-stem-green/30 transition-colors"></div>
               <div className="flex items-center space-x-3 mb-2">
                 <Users className="w-4 h-4 text-stem-green" />
-                <span className="text-[10px] font-mono text-gray-400 tracking-widest uppercase">在读总数</span>
+                <span className="text-[10px] font-mono text-slate-500 dark:text-gray-400 tracking-widest uppercase">在读总数</span>
               </div>
-              <div className="text-3xl font-light text-white tracking-tighter">{enrolledStudents}</div>
+              <div className="text-3xl font-light text-slate-800 dark:text-white tracking-tighter">{enrolledStudents}</div>
             </div>
             
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5 relative overflow-hidden group">
+            <div className="bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-5 relative overflow-hidden group">
               <div className="absolute -right-4 -top-4 w-16 h-16 bg-cyan-500/20 rounded-full blur-xl group-hover:bg-cyan-500/30 transition-colors"></div>
               <div className="flex items-center space-x-3 mb-2">
                 <Clock className="w-4 h-4 text-cyan-400" />
-                <span className="text-[10px] font-mono text-gray-400 tracking-widest uppercase">总待消课时</span>
+                <span className="text-[10px] font-mono text-slate-500 dark:text-gray-400 tracking-widest uppercase">总待消课时</span>
               </div>
-              <div className="text-3xl font-light text-white tracking-tighter">{totalRemainingClasses}</div>
+              <div className="text-3xl font-light text-slate-800 dark:text-white tracking-tighter">{totalRemainingClasses}</div>
             </div>
 
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5 relative overflow-hidden group">
+            <div className="bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-5 relative overflow-hidden group">
               <div className="absolute -right-4 -top-4 w-16 h-16 bg-stem-orange/20 rounded-full blur-xl group-hover:bg-stem-orange/30 transition-colors"></div>
               <div className="flex items-center space-x-3 mb-2">
                 <DollarSign className="w-4 h-4 text-stem-orange" />
-                <span className="text-[10px] font-mono text-gray-400 tracking-widest uppercase">预计待收</span>
+                <span className="text-[10px] font-mono text-slate-500 dark:text-gray-400 tracking-widest uppercase">预计待收</span>
               </div>
-              <div className="text-3xl font-light text-white tracking-tighter flex items-baseline">
-                <span className="text-sm text-gray-500 mr-1">¥</span>{expectedRevenue.toLocaleString()}
+              <div className="text-3xl font-light text-slate-800 dark:text-white tracking-tighter flex items-baseline">
+                <span className="text-sm text-slate-400 dark:text-gray-500 mr-1">¥</span>{expectedRevenue.toLocaleString()}
               </div>
             </div>
           </div>
 
           {/* 高级学生列表表格 */}
-          <div className="relative z-10 w-full max-w-4xl bg-white/[0.02] backdrop-blur-2xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
+          <div className="relative z-10 w-full max-w-4xl bg-white dark:bg-white/[0.02] backdrop-blur-2xl border border-slate-200 dark:border-white/10 rounded-3xl overflow-hidden shadow-2xl">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-white/10 bg-white/5">
-                    <th className="px-6 py-4 text-xs font-mono text-gray-400 tracking-widest uppercase">学生姓名</th>
-                    <th className="px-6 py-4 text-xs font-mono text-gray-400 tracking-widest uppercase">年级</th>
-                    <th className="px-6 py-4 text-xs font-mono text-gray-400 tracking-widest uppercase">状态</th>
-                    <th className="px-6 py-4 text-xs font-mono text-gray-400 tracking-widest uppercase">课时进度</th>
-                    <th className="px-6 py-4 text-xs font-mono text-gray-400 tracking-widest uppercase text-right">操作</th>
+                  <tr className="border-b border-slate-200 dark:border-white/10 bg-white dark:bg-white/5">
+                    <th className="px-6 py-4 text-xs font-mono text-slate-500 dark:text-gray-400 tracking-widest uppercase">学生姓名</th>
+                    <th className="px-6 py-4 text-xs font-mono text-slate-500 dark:text-gray-400 tracking-widest uppercase">年级</th>
+                    <th className="px-6 py-4 text-xs font-mono text-slate-500 dark:text-gray-400 tracking-widest uppercase">状态</th>
+                    <th className="px-6 py-4 text-xs font-mono text-slate-500 dark:text-gray-400 tracking-widest uppercase">课时进度</th>
+                    <th className="px-6 py-4 text-xs font-mono text-slate-500 dark:text-gray-400 tracking-widest uppercase text-right">操作</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
@@ -542,17 +542,17 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
                     return (
                       <tr 
                         key={student.id} 
-                        className={`transition-colors hover:bg-white/5 ${isWarning ? 'bg-red-500/5' : ''}`}
+                        className={`transition-colors hover:bg-white dark:bg-white/5 ${isWarning ? 'bg-red-500/5' : ''}`}
                       >
                         <td className="px-6 py-4">
                           <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center font-bold text-sm border border-white/20">
+                            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center font-bold text-sm border border-slate-300 dark:border-white/20">
                               {student.name.charAt(0)}
                             </div>
-                            <span className="font-bold text-white tracking-wider">{student.name}</span>
+                            <span className="font-bold text-slate-800 dark:text-white tracking-wider">{student.name}</span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-300 font-light">{student.grade}</td>
+                        <td className="px-6 py-4 text-sm text-slate-600 dark:text-gray-300 font-light">{student.grade}</td>
                         <td className="px-6 py-4">
                           <span className={`text-[10px] font-mono px-2 py-1 rounded border ${statusStyle.color}`}>
                             {statusStyle.text}
@@ -563,7 +563,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
                             <div className={`text-sm font-bold ${isWarning ? 'text-red-400' : 'text-cyan-400'}`}>
                               {student.remaining_classes}
                             </div>
-                            <span className="text-xs text-gray-500">/ {student.total_classes}</span>
+                            <span className="text-xs text-slate-400 dark:text-gray-500">/ {student.total_classes}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4 text-right">
@@ -576,7 +576,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
                             </button>
                             <button 
                               onClick={() => setSelectedStudent(student)}
-                              className="text-[10px] font-mono text-gray-300 border border-white/20 px-3 py-1.5 rounded hover:bg-white/10 hover:text-white transition-colors tracking-widest"
+                              className="text-[10px] font-mono text-slate-600 dark:text-gray-300 border border-slate-300 dark:border-white/20 px-3 py-1.5 rounded hover:bg-white/10 hover:text-slate-800 dark:text-white transition-colors tracking-widest"
                             >
                               档案
                             </button>
@@ -587,7 +587,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
                   })}
                   {students.length === 0 && !isLoading && (
                     <tr>
-                      <td colSpan={5} className="px-6 py-12 text-center text-gray-500 font-mono text-sm tracking-widest">
+                      <td colSpan={5} className="px-6 py-12 text-center text-slate-400 dark:text-gray-500 font-mono text-sm tracking-widest">
                         NO DATA FOUND
                       </td>
                     </tr>
@@ -609,22 +609,22 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
           ></div>
           
           {/* 抽屉主体 */}
-          <div className="relative w-full max-w-md h-full bg-slate-950 border-l border-white/10 shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+          <div className="relative w-full max-w-md h-full bg-slate-950 border-l border-slate-200 dark:border-white/10 shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
             
             {/* 抽屉头部 */}
-            <div className="p-6 border-b border-white/10 flex items-center justify-between bg-white/[0.02]">
+            <div className="p-6 border-b border-slate-200 dark:border-white/10 flex items-center justify-between bg-white dark:bg-white/[0.02]">
               <div className="flex items-center space-x-4">
                 <div className="w-12 h-12 rounded-full bg-stem-orange/20 border border-stem-orange/50 flex items-center justify-center">
                   <span className="text-xl font-bold text-stem-orange">{selectedStudent.name.charAt(0)}</span>
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-white tracking-widest">{selectedStudent.name}</h2>
-                  <p className="text-[10px] font-mono text-gray-400 tracking-widest">{selectedStudent.grade}</p>
+                  <h2 className="text-xl font-bold text-slate-800 dark:text-white tracking-widest">{selectedStudent.name}</h2>
+                  <p className="text-[10px] font-mono text-slate-500 dark:text-gray-400 tracking-widest">{selectedStudent.grade}</p>
                 </div>
               </div>
               <button 
                 onClick={() => setSelectedStudent(null)}
-                className="p-2 text-gray-400 hover:text-white bg-white/5 rounded-full transition-colors"
+                className="p-2 text-slate-500 dark:text-gray-400 hover:text-slate-800 dark:text-white bg-white dark:bg-white/5 rounded-full transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -639,20 +639,20 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
                   <User className="w-4 h-4 mr-2" /> Basic Info
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white/5 border border-white/5 rounded-xl p-4">
-                    <p className="text-[10px] text-gray-500 font-mono mb-1">报名日期</p>
+                  <div className="bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-xl p-4">
+                    <p className="text-[10px] text-slate-400 dark:text-gray-500 font-mono mb-1">报名日期</p>
                     <p className="text-sm text-gray-200 font-mono">{selectedStudent.enrollment_date || '-'}</p>
                   </div>
-                  <div className="bg-white/5 border border-white/5 rounded-xl p-4">
-                    <p className="text-[10px] text-gray-500 font-mono mb-1">联系电话</p>
+                  <div className="bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-xl p-4">
+                    <p className="text-[10px] text-slate-400 dark:text-gray-500 font-mono mb-1">联系电话</p>
                     <p className="text-sm text-gray-200 font-mono">{selectedStudent.phone || '-'}</p>
                   </div>
-                  <div className="bg-white/5 border border-white/5 rounded-xl p-4">
-                    <p className="text-[10px] text-gray-500 font-mono mb-1">课时单价</p>
+                  <div className="bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-xl p-4">
+                    <p className="text-[10px] text-slate-400 dark:text-gray-500 font-mono mb-1">课时单价</p>
                     <p className="text-sm text-stem-orange font-mono font-bold">¥ {selectedStudent.price_per_lesson}</p>
                   </div>
-                  <div className="bg-white/5 border border-white/5 rounded-xl p-4">
-                    <p className="text-[10px] text-gray-500 font-mono mb-1">预计总额</p>
+                  <div className="bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-xl p-4">
+                    <p className="text-[10px] text-slate-400 dark:text-gray-500 font-mono mb-1">预计总额</p>
                     <p className="text-sm text-gray-200 font-mono">¥ {selectedStudent.total_amount}</p>
                   </div>
                 </div>
@@ -674,22 +674,22 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
                         {/* 节点 */}
                         <div className="absolute left-[11px] top-1.5 w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]"></div>
                         
-                        <div className="bg-white/5 border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-colors">
+                        <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-4 hover:bg-white/10 transition-colors">
                           <div className="flex justify-between items-start mb-2">
-                            <h4 className="text-sm font-bold text-white">{record.topic}</h4>
-                            <span className="text-[10px] font-mono text-gray-500">{record.date}</span>
+                            <h4 className="text-sm font-bold text-slate-800 dark:text-white">{record.topic}</h4>
+                            <span className="text-[10px] font-mono text-slate-400 dark:text-gray-500">{record.date}</span>
                           </div>
                           
                           {/* 评语 */}
-                          <div className="bg-black/30 rounded p-3 mb-3 border border-white/5">
-                            <p className="text-xs text-gray-300 font-light italic flex items-start">
+                          <div className="bg-slate-50 dark:bg-black/30 rounded p-3 mb-3 border border-slate-100 dark:border-white/5">
+                            <p className="text-xs text-slate-600 dark:text-gray-300 font-light italic flex items-start">
                               <Quote className="w-3 h-3 text-cyan-500/50 mr-2 shrink-0 mt-0.5" />
                               {record.comment || '无评语'}
                             </p>
                           </div>
 
                           {/* 作业状态与缩略图 */}
-                          <div className="flex items-center justify-between border-t border-white/5 pt-3">
+                          <div className="flex items-center justify-between border-t border-slate-100 dark:border-white/5 pt-3">
                             <span className={`text-[9px] font-mono px-2 py-0.5 rounded border ${record.status === 'pending' ? 'text-stem-orange border-stem-orange/30 bg-stem-orange/10' : 'text-stem-green border-stem-green/30 bg-stem-green/10'}`}>
                               {record.status === 'pending' ? '作业待交' : '已交作业'}
                             </span>
@@ -709,7 +709,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
                                   ))
                                 ) : (
                                   <div className="w-6 h-6 rounded bg-gray-800 border border-gray-600 flex items-center justify-center overflow-hidden opacity-50">
-                                    <ImageIcon className="w-3 h-3 text-gray-400" />
+                                    <ImageIcon className="w-3 h-3 text-slate-500 dark:text-gray-400" />
                                   </div>
                                 )}
                               </div>
@@ -719,7 +719,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
                       </div>
                     ))
                   ) : (
-                    <div className="pl-10 text-xs text-gray-500 font-mono tracking-widest">
+                    <div className="pl-10 text-xs text-slate-400 dark:text-gray-500 font-mono tracking-widest">
                       暂无上课记录
                     </div>
                   )}
@@ -735,51 +735,51 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
       {isAddModalOpen && !createdStudent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setIsAddModalOpen(false)}></div>
-          <div className="relative bg-slate-950 border border-white/20 w-full max-w-sm rounded-2xl p-6 shadow-[0_0_50px_rgba(255,107,0,0.2)] animate-in zoom-in duration-300">
-            <button onClick={() => setIsAddModalOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white">
+          <div className="relative bg-slate-950 border border-slate-300 dark:border-white/20 w-full max-w-sm rounded-2xl p-6 shadow-[0_0_50px_rgba(255,107,0,0.2)] animate-in zoom-in duration-300">
+            <button onClick={() => setIsAddModalOpen(false)} className="absolute top-4 right-4 text-slate-500 dark:text-gray-400 hover:text-slate-800 dark:text-white">
               <X className="w-5 h-5" />
             </button>
-            <h2 className="text-xl font-bold text-white mb-6 flex items-center tracking-widest">
+            <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-6 flex items-center tracking-widest">
               <User className="w-5 h-5 mr-2 text-stem-orange" />
               录入新学员
             </h2>
             <form onSubmit={handleAddStudent} className="space-y-4">
               <div>
-                <label className="block text-xs font-mono text-gray-400 mb-1">姓名</label>
+                <label className="block text-xs font-mono text-slate-500 dark:text-gray-400 mb-1">姓名</label>
                 <input 
                   type="text" 
                   required
                   value={newStudent.name}
                   onChange={(e) => setNewStudent({...newStudent, name: e.target.value})}
-                  className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-white focus:border-stem-orange focus:outline-none"
+                  className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-800 dark:text-white focus:border-stem-orange focus:outline-none"
                   placeholder="例如: 张三"
                 />
               </div>
               <div>
-                <label className="block text-xs font-mono text-gray-400 mb-1">手机号 (登录账号)</label>
+                <label className="block text-xs font-mono text-slate-500 dark:text-gray-400 mb-1">手机号 (登录账号)</label>
                 <input 
                   type="tel" 
                   required
                   maxLength={11}
                   value={newStudent.phone}
                   onChange={(e) => setNewStudent({...newStudent, phone: e.target.value})}
-                  className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-white focus:border-stem-orange focus:outline-none"
+                  className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-800 dark:text-white focus:border-stem-orange focus:outline-none"
                   placeholder="11位手机号"
                 />
               </div>
               <div>
-                <label className="block text-xs font-mono text-gray-400 mb-1">年级</label>
+                <label className="block text-xs font-mono text-slate-500 dark:text-gray-400 mb-1">年级</label>
                 <input 
                   type="text" 
                   required
                   value={newStudent.grade}
                   onChange={(e) => setNewStudent({...newStudent, grade: e.target.value})}
-                  className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-white focus:border-stem-orange focus:outline-none"
+                  className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-800 dark:text-white focus:border-stem-orange focus:outline-none"
                   placeholder="例如: 三年级"
                 />
               </div>
               <div className="pt-2">
-                <p className="text-[10px] text-gray-500 font-mono mb-4 leading-relaxed bg-white/5 p-2 rounded border border-white/5">
+                <p className="text-[10px] text-slate-400 dark:text-gray-500 font-mono mb-4 leading-relaxed bg-white dark:bg-white/5 p-2 rounded border border-slate-100 dark:border-white/5">
                   <strong className="text-stem-orange">注意：</strong>
                   保存后，系统将自动为该家长创建专属账号。<br/>
                   初始密码为手机号后 6 位：{newStudent.phone.length >= 6 ? newStudent.phone.slice(-6) : '******'}
@@ -787,7 +787,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
                 <button 
                   type="submit" 
                   disabled={isAdding}
-                  className="w-full bg-stem-orange hover:bg-orange-600 text-white font-bold py-3 rounded-lg tracking-widest disabled:opacity-50 transition-colors"
+                  className="w-full bg-stem-orange hover:bg-orange-600 text-slate-800 dark:text-white font-bold py-3 rounded-lg tracking-widest disabled:opacity-50 transition-colors"
                 >
                   {isAdding ? '创建中...' : '一键开户并保存'}
                 </button>
@@ -808,29 +808,29 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
             </h2>
             
             <div className="space-y-4">
-              <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                <p className="text-xs text-gray-400 font-mono mb-1">学员姓名</p>
-                <p className="text-lg text-white font-bold tracking-widest mb-3">{createdStudent.name}</p>
+              <div className="bg-white dark:bg-white/5 p-4 rounded-xl border border-slate-200 dark:border-white/10">
+                <p className="text-xs text-slate-500 dark:text-gray-400 font-mono mb-1">学员姓名</p>
+                <p className="text-lg text-slate-800 dark:text-white font-bold tracking-widest mb-3">{createdStudent.name}</p>
                 
-                <p className="text-xs text-gray-400 font-mono mb-1">家长登录账号</p>
+                <p className="text-xs text-slate-500 dark:text-gray-400 font-mono mb-1">家长登录账号</p>
                 <p className="text-sm text-cyan-400 font-mono mb-3">{createdStudent.phone}</p>
                 
-                <p className="text-xs text-gray-400 font-mono mb-1">初始密码</p>
-                <p className="text-sm text-white font-mono">{createdStudent.phone.slice(-6)}</p>
+                <p className="text-xs text-slate-500 dark:text-gray-400 font-mono mb-1">初始密码</p>
+                <p className="text-sm text-slate-800 dark:text-white font-mono">{createdStudent.phone.slice(-6)}</p>
               </div>
 
               <div>
-                <p className="text-[10px] text-gray-500 font-mono mb-2 uppercase tracking-widest">专属免登录链接</p>
+                <p className="text-[10px] text-slate-400 dark:text-gray-500 font-mono mb-2 uppercase tracking-widest">专属免登录链接</p>
                 <div className="flex items-center space-x-2">
                   <input 
                     type="text" 
                     readOnly 
                     value={`https://xiongxiong.top/#/parent?id=${createdStudent.id}`}
-                    className="flex-1 bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-[10px] text-gray-400 font-mono focus:outline-none"
+                    className="flex-1 bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-[10px] text-slate-500 dark:text-gray-400 font-mono focus:outline-none"
                   />
                   <button 
                     onClick={() => handleCopyLink(createdStudent.id)}
-                    className="bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-2 rounded-lg text-xs font-mono transition-colors tracking-widest"
+                    className="bg-cyan-600 hover:bg-cyan-500 text-slate-800 dark:text-white px-3 py-2 rounded-lg text-xs font-mono transition-colors tracking-widest"
                   >
                     复制链接
                   </button>
@@ -842,7 +842,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
                   setCreatedStudent(null);
                   setIsAddModalOpen(false);
                 }}
-                className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-lg tracking-widest transition-colors mt-2 border border-white/10"
+                className="w-full bg-white/10 hover:bg-white/20 text-slate-800 dark:text-white font-bold py-3 rounded-lg tracking-widest transition-colors mt-2 border border-slate-200 dark:border-white/10"
               >
                 完成并关闭
               </button>
@@ -858,7 +858,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
           onClick={() => setLightboxImage(null)}
         >
           <button 
-            className="absolute top-6 right-6 p-2 text-white/50 hover:text-white bg-white/10 rounded-full transition-colors"
+            className="absolute top-6 right-6 p-2 text-slate-800 dark:text-white/50 hover:text-slate-800 dark:text-white bg-white/10 rounded-full transition-colors"
             onClick={(e) => { e.stopPropagation(); setLightboxImage(null); }}
           >
             <X className="w-6 h-6" />
