@@ -1,28 +1,91 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
-import { Lock, LogIn, AlertCircle, Users, CheckCircle2 } from 'lucide-react';
+import { Alert, Button, Card, Checkbox, Divider, Form, Input, Space, Switch, theme, Typography, message } from 'antd';
+import { MoonOutlined, RightOutlined, SunOutlined } from '@ant-design/icons';
+import { useTheme } from '../components/Theme/ThemeProvider';
+
+const encoder = new TextEncoder();
+
+const toBase64 = (buf: ArrayBuffer) => {
+  const bytes = new Uint8Array(buf);
+  let str = '';
+  for (let i = 0; i < bytes.length; i += 1) str += String.fromCharCode(bytes[i]);
+  return btoa(str);
+};
+
+const fromBase64 = (b64: string) => {
+  const str = atob(b64);
+  const bytes = new Uint8Array(str.length);
+  for (let i = 0; i < str.length; i += 1) bytes[i] = str.charCodeAt(i);
+  return bytes.buffer;
+};
+
+const deriveKey = async (identifier: string) => {
+  const salt = 'xiaoyu-remember-v1';
+  const raw = encoder.encode(`${salt}:${identifier}`);
+  const hash = await crypto.subtle.digest('SHA-256', raw);
+  return crypto.subtle.importKey('raw', hash, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+};
+
+const encryptCredentials = async (identifier: string, payload: { identifier: string; password: string }) => {
+  const key = await deriveKey(identifier);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const data = encoder.encode(JSON.stringify(payload));
+  const cipher = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, data);
+  return `${toBase64(iv.buffer)}.${toBase64(cipher)}`;
+};
+
+const decryptCredentials = async (identifier: string, token: string) => {
+  const [ivB64, cipherB64] = token.split('.');
+  if (!ivB64 || !cipherB64) throw new Error('bad token');
+  const key = await deriveKey(identifier);
+  const iv = new Uint8Array(fromBase64(ivB64));
+  const cipher = fromBase64(cipherB64);
+  const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, cipher);
+  const text = new TextDecoder().decode(new Uint8Array(plain));
+  return JSON.parse(text) as { identifier: string; password: string };
+};
 
 const Login: React.FC = () => {
   const [searchParams] = useSearchParams();
   const initialType = searchParams.get('type') === 'parent' ? 'parent' : 'admin';
   const redirectUrl = searchParams.get('redirect') || '';
 
-  const [loginType, setLoginType] = useState<'admin' | 'parent'>(initialType);
-  const [identifier, setIdentifier] = useState(''); // 邮箱 或 手机号
-  const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
+  const [form] = Form.useForm();
+  const { token } = theme.useToken();
+  const { theme: appTheme, setTheme } = useTheme();
+  const [captchaVerified, setCaptchaVerified] = useState(false);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const fillRef = useRef<HTMLDivElement>(null);
+  const thumbRef = useRef<HTMLDivElement>(null);
+  const progressRef = useRef(0);
+  const draggingRef = useRef(false);
+  const rafRef = useRef<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   // 初始化记住账号
   useEffect(() => {
-    const savedIdentifier = localStorage.getItem('rememberedIdentifier');
-    if (savedIdentifier) {
-      setIdentifier(savedIdentifier);
-      setRememberMe(true);
-    }
+    const bootstrap = async () => {
+      const legacyIdentifier = localStorage.getItem('rememberedIdentifier') || '';
+      const token = localStorage.getItem('rememberedCredentials') || '';
+      if (token) {
+        try {
+          const seed = legacyIdentifier || '';
+          if (seed) {
+            const creds = await decryptCredentials(seed, token);
+            form.setFieldsValue({ identifier: creds.identifier, password: creds.password, remember: true });
+            return;
+          }
+        } catch {}
+      }
+      if (legacyIdentifier) {
+        form.setFieldsValue({ identifier: legacyIdentifier, remember: true });
+      }
+    };
+    bootstrap();
   }, []);
 
   // 检查是否已经登录
@@ -36,7 +99,7 @@ const Login: React.FC = () => {
           if (role === 'parent') {
             navigate('/dashboard/report');
           } else if (role === 'sysadmin' || role === 'teacher') {
-            navigate('/dashboard/workbench');
+            navigate('/dashboard/dashboard');
           }
         } catch (e) {
           // Ignore parse error
@@ -46,8 +109,69 @@ const Login: React.FC = () => {
     checkSession();
   }, [navigate, redirectUrl]);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const pageTitle = useMemo(() => (initialType === 'parent' ? '家长登录' : '欢迎回来 👋'), [initialType]);
+  const pageSubTitle = useMemo(() => (initialType === 'parent' ? '家长中心' : '小鱼思维校办系统'), [initialType]);
+
+  const isDark = appTheme === 'dark' || (appTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+  const withAlpha = (color: string, alpha: number) => {
+    const c = color.trim();
+    if (c.startsWith('#')) {
+      const hex = c.slice(1);
+      const full = hex.length === 3 ? hex.split('').map((x) => x + x).join('') : hex;
+      const r = parseInt(full.slice(0, 2), 16);
+      const g = parseInt(full.slice(2, 4), 16);
+      const b = parseInt(full.slice(4, 6), 16);
+      return `rgba(${r},${g},${b},${alpha})`;
+    }
+    if (c.startsWith('rgb(')) return c.replace('rgb(', 'rgba(').replace(')', `,${alpha})`);
+    if (c.startsWith('rgba(')) return c.replace(/,([0-9.]+)\)\s*$/, `,${alpha})`);
+    return c;
+  };
+
+  const applyProgress = (nextProgress: number) => {
+    const rect = trackRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const clamped = Math.max(0, Math.min(100, nextProgress));
+    progressRef.current = clamped;
+
+    const fill = fillRef.current;
+    const thumb = thumbRef.current;
+    if (!fill || !thumb) return;
+
+    const thumbSize = 32;
+    const maxX = Math.max(0, rect.width - thumbSize);
+    const x = (maxX * clamped) / 100;
+
+    fill.style.transform = `scaleX(${clamped / 100})`;
+    thumb.style.transform = `translate3d(${x}px, -50%, 0)`;
+  };
+
+  const scheduleApply = (nextProgress: number) => {
+    progressRef.current = nextProgress;
+    if (rafRef.current !== null) return;
+    rafRef.current = window.requestAnimationFrame(() => {
+      rafRef.current = null;
+      applyProgress(progressRef.current);
+    });
+  };
+
+  useEffect(() => {
+    applyProgress(0);
+    return () => {
+      if (rafRef.current !== null) {
+        window.cancelAnimationFrame(rafRef.current);
+      }
+    };
+  }, []);
+
+  const handleLogin = async (values: { identifier: string; password: string; remember?: boolean }) => {
+    if (!captchaVerified) {
+      message.warning('请先完成滑动验证');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -55,17 +179,24 @@ const Login: React.FC = () => {
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('phone', identifier)
+        .eq('phone', values.identifier)
         .single();
 
       if (error || !profile) {
         setError('该手机号未注册，请联系杨老师开通');
-      } else if (profile.password === password) {
+      } else if (profile.password === values.password) {
         // 处理记住账号
-        if (rememberMe) {
-          localStorage.setItem('rememberedIdentifier', identifier);
+        if (values.remember) {
+          localStorage.setItem('rememberedIdentifier', values.identifier);
+          try {
+            const token = await encryptCredentials(values.identifier, { identifier: values.identifier, password: values.password });
+            localStorage.setItem('rememberedCredentials', token);
+          } catch {
+            localStorage.removeItem('rememberedCredentials');
+          }
         } else {
           localStorage.removeItem('rememberedIdentifier');
+          localStorage.removeItem('rememberedCredentials');
         }
 
         // 密码比对正确后，生成一个本地 Session
@@ -81,7 +212,7 @@ const Login: React.FC = () => {
         if (role === 'parent') {
           navigate('/dashboard/report');
         } else {
-          navigate('/dashboard/workbench');
+          navigate('/dashboard/dashboard');
         }
       } else {
         setError('密码不正确');
@@ -94,118 +225,168 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white flex items-center justify-center p-6 relative overflow-hidden font-inter selection:bg-cyan-500/30">
-      {/* 动态深邃背景 */}
-      <div className="absolute inset-0 pointer-events-none z-0">
-        <div className="absolute top-[10%] left-[20%] w-[40%] h-[40%] rounded-full bg-cyan-900/20 blur-[120px] mix-blend-screen animate-blob"></div>
-        <div className="absolute bottom-[10%] right-[20%] w-[50%] h-[50%] rounded-full bg-blue-900/20 blur-[150px] mix-blend-screen animate-blob" style={{ animationDelay: '2s' }}></div>
+    <div className="min-h-screen w-screen flex items-center justify-center p-6" style={{ background: token.colorBgLayout }}>
+      <div className="fixed top-5 right-6 z-50">
+        <Switch
+          checked={isDark}
+          checkedChildren={<MoonOutlined />}
+          unCheckedChildren={<SunOutlined />}
+          onChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+        />
       </div>
-
-      <div className="w-full max-w-md relative z-10">
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(255,255,255,0.05)] mb-6 transition-transform hover:scale-105 duration-300">
-            <Lock className="w-10 h-10 text-white/80" />
-          </div>
-          <h1 className="text-4xl font-light tracking-[0.3em] mb-2 drop-shadow-[0_0_15px_rgba(255,255,255,0.8)] text-white">
-            小鱼思维
-          </h1>
-          <p className="text-[10px] font-mono tracking-[0.4em] text-gray-500 uppercase">
-            系统入口
-          </p>
+      <div className="w-full max-w-md">
+        <div className="mb-6">
+          <Typography.Title level={2} style={{ marginBottom: 4 }}>
+            {pageTitle}
+          </Typography.Title>
+          <Typography.Text type="secondary">{pageSubTitle}</Typography.Text>
         </div>
 
+        <Card
+          style={{
+            background: token.colorBgContainer,
+            borderColor: isDark ? 'rgba(255, 255, 255, 0.10)' : token.colorBorderSecondary,
+          }}
+        >
+          {error && <Alert type="error" showIcon message={error} style={{ marginBottom: 16 }} />}
 
-
-        <form onSubmit={handleLogin} className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[2rem] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative overflow-hidden animate-breathe">
-          {/* 装饰光效 */}
-          <div className="absolute -top-20 -right-20 w-40 h-40 bg-white/5 rounded-full blur-[50px] pointer-events-none"></div>
-
-          {error && (
-            <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-start space-x-3">
-              <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
-              <p className="text-sm text-red-200">{error}</p>
-            </div>
-          )}
-
-          <div className="space-y-6 relative z-10">
-            <div>
-              <label className="block text-xs font-bold text-gray-300 tracking-widest mb-2 uppercase drop-shadow-sm">
-                账号/手机号
-              </label>
-              <input
-                type="tel"
-                value={identifier}
-                onChange={(e) => setIdentifier(e.target.value)}
-                className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 focus:bg-black/80 transition-all font-mono"
-                placeholder="请输入手机号"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-gray-300 tracking-widest mb-2 uppercase drop-shadow-sm">
-                密码
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 focus:bg-black/80 transition-all font-mono"
-                placeholder="••••••••"
-                required
-              />
-            </div>
-
-            {/* 记住我 */}
-            <div className="flex items-center justify-between">
-              <label className="flex items-center space-x-2 cursor-pointer group">
-                <div className="relative w-4 h-4">
-                  <input 
-                    type="checkbox" 
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="peer absolute opacity-0 w-0 h-0"
-                  />
-                  <div className="w-4 h-4 border border-white/20 rounded bg-white/5 flex items-center justify-center peer-checked:bg-cyan-500 peer-checked:border-cyan-500 transition-colors group-hover:border-white/40">
-                    {rememberMe && <CheckCircle2 className="w-3 h-3 text-white" />}
-                  </div>
-                </div>
-                <span className="text-[10px] font-mono text-gray-400 group-hover:text-gray-300 transition-colors tracking-widest">
-                  记住账号
-                </span>
-              </label>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full text-white font-bold py-4 rounded-xl tracking-[0.2em] transition-all duration-300 ease-out active:scale-95 hover:scale-[1.02] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed mt-6 relative overflow-hidden group bg-gradient-to-br from-[#00d2ff] to-[#3a7bd5] shadow-[0_0_20px_rgba(0,210,255,0.4)] hover:shadow-[0_0_40px_rgba(0,210,255,0.7)] hover:brightness-110 border border-white/20"
-            >
-              {/* 光效扫过动画 */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
-              
-              <div className="relative z-10 flex items-center">
-                {loading ? (
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                ) : (
-                  <>
-                    <LogIn className="w-5 h-5 mr-2" />
-                    登录
-                  </>
-                )}
-              </div>
-            </button>
-          </div>
-        </form>
-
-        <div className="text-center mt-8">
-          <button 
-            onClick={() => navigate('/')}
-            className="w-full text-white font-bold py-4 rounded-xl tracking-[0.2em] transition-all duration-300 ease-out active:scale-95 hover:scale-[1.02] flex items-center justify-center relative overflow-hidden group bg-white/5 hover:bg-white/10 border border-white/10 shadow-[0_0_20px_rgba(255,255,255,0.05)] hover:shadow-[0_0_30px_rgba(255,255,255,0.1)]"
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={handleLogin}
+            requiredMark={false}
           >
-            ← 返回首页
-          </button>
-        </div>
+            <Form.Item
+              label="用户名 / 手机号"
+              name="identifier"
+              rules={[{ required: true, message: '请输入手机号' }]}
+            >
+              <Input size="large" placeholder="请输入手机号" />
+            </Form.Item>
+
+            <Form.Item
+              label="密码"
+              name="password"
+              rules={[{ required: true, message: '请输入密码' }]}
+            >
+              <Input.Password size="large" placeholder="请输入密码" />
+            </Form.Item>
+
+            <Form.Item label="滑动验证">
+              <div
+                ref={trackRef}
+                className="relative w-full overflow-hidden select-none"
+                style={{
+                  height: 40,
+                  borderRadius: 6,
+                  border: `1px solid ${token.colorBorder}`,
+                  background: token.colorFillAlter,
+                  touchAction: 'none',
+                }}
+                onPointerDown={(e) => {
+                  if (captchaVerified) return;
+                  (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
+                  draggingRef.current = true;
+                  if (thumbRef.current) {
+                    thumbRef.current.style.borderColor = token.colorInfo;
+                  }
+                }}
+                onPointerUp={() => {
+                  if (!draggingRef.current) return;
+                  draggingRef.current = false;
+                  if (progressRef.current >= 96) {
+                    applyProgress(100);
+                    setCaptchaVerified(true);
+                    if (thumbRef.current) {
+                      thumbRef.current.style.borderColor = '#52c41a';
+                    }
+                    return;
+                  }
+                  scheduleApply(0);
+                  if (thumbRef.current) {
+                    thumbRef.current.style.borderColor = token.colorBorder;
+                  }
+                }}
+                onPointerMove={(e) => {
+                  if (!draggingRef.current || captchaVerified) return;
+                  const rect = trackRef.current?.getBoundingClientRect();
+                  if (!rect) return;
+                  const thumbSize = 32;
+                  const usable = Math.max(1, rect.width - thumbSize);
+                  const relative = e.clientX - rect.left - thumbSize / 2;
+                  const next = (relative / usable) * 100;
+                  scheduleApply(next);
+                }}
+              >
+                <div
+                  ref={fillRef}
+                  className="absolute inset-y-0 left-0 transition-[width] duration-150"
+                  style={{
+                    width: '100%',
+                    transformOrigin: 'left',
+                    transform: 'scaleX(0)',
+                    willChange: 'transform',
+                    background: 'linear-gradient(90deg, #13c2c2 0%, #52c41a 100%)',
+                    boxShadow: 'inset 0 0 8px rgba(82, 196, 26, 0.4)',
+                    opacity: isDark ? 0.9 : 0.75,
+                  }}
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Typography.Text type="secondary">{captchaVerified ? '验证通过' : '请按住滑块拖动'}</Typography.Text>
+                </div>
+                <div
+                  ref={thumbRef}
+                  className="absolute top-1/2 -translate-y-1/2 flex items-center justify-center transition-[left] duration-75"
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 6,
+                    background: token.colorBgContainer,
+                    border: `1px solid ${captchaVerified ? '#52c41a' : token.colorBorder}`,
+                    boxShadow: token.boxShadowSecondary,
+                    left: 0,
+                    transform: 'translate3d(0, -50%, 0)',
+                    willChange: 'transform',
+                  }}
+                >
+                  <RightOutlined style={{ color: captchaVerified ? '#52c41a' : token.colorInfo }} />
+                </div>
+              </div>
+            </Form.Item>
+
+            <Form.Item name="remember" valuePropName="checked" style={{ marginBottom: 8 }}>
+              <div className="flex items-center justify-between">
+                <Checkbox style={{ color: token.colorText }}>记住账号</Checkbox>
+                <Button type="link" onClick={() => message.info('请联系管理员重置密码')}>
+                  忘记密码？
+                </Button>
+              </div>
+            </Form.Item>
+
+            <Form.Item style={{ marginBottom: 8 }}>
+              <Button type="primary" htmlType="submit" size="large" block loading={loading}>
+                登录
+              </Button>
+            </Form.Item>
+
+            <Divider style={{ margin: '16px 0' }}>其他方式</Divider>
+
+            <Space style={{ width: '100%', justifyContent: 'center' }}>
+              <Button type="link" onClick={() => message.info('手机号登录已启用')}>
+                手机号登录
+              </Button>
+              <Button type="link" onClick={() => message.info('扫码登录开发中')}>
+                扫码登录
+              </Button>
+            </Space>
+
+            <Divider style={{ margin: '16px 0' }} />
+
+            <Button onClick={() => navigate('/')} size="large" block>
+              返回首页
+            </Button>
+          </Form>
+        </Card>
       </div>
     </div>
   );

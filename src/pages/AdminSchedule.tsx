@@ -4,8 +4,7 @@ import {
   Calendar as CalendarIcon, ChevronLeft, ChevronRight, Users, BookOpen, 
   Sparkles, CheckSquare, Square, Plus, Clock, ArrowLeft, CheckCircle
 } from 'lucide-react';
-import { Skeleton } from '../components/UI/Skeleton';
-import { EmptyState } from '../components/UI/EmptyState';
+import { Button, Empty, Skeleton } from 'antd';
 import toast from 'react-hot-toast';
 
 // Helper to format date consistently to YYYY-MM-DD
@@ -161,7 +160,7 @@ const AdminSchedule: React.FC = () => {
   };
 
   return (
-    <div className="w-full h-full flex flex-col relative max-w-7xl mx-auto p-4 md:p-6 overflow-hidden">
+    <div className="w-full flex flex-col gap-6">
       <header className="mb-6 shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl md:text-3xl font-bold tracking-widest text-slate-800 dark:text-white flex items-center">
@@ -181,9 +180,9 @@ const AdminSchedule: React.FC = () => {
         </button>
       </header>
 
-      <div className="flex-1 flex flex-col lg:flex-row gap-6 min-h-0">
+      <div className="flex flex-col lg:flex-row gap-6 min-h-0">
         {/* Left: Calendar Board */}
-        <div className="w-full lg:w-1/3 flex flex-col bg-white dark:bg-white/[0.02] backdrop-blur-3xl border border-slate-100 dark:border-white/10 rounded-3xl p-5 shadow-sm dark:shadow-2xl shrink-0 overflow-y-auto">
+        <div className="w-full lg:w-1/3 flex flex-col bg-white dark:bg-white/[0.02] backdrop-blur-3xl border border-slate-100 dark:border-white/10 rounded-3xl p-5 shadow-sm dark:shadow-2xl shrink-0">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-bold text-slate-800 dark:text-white tracking-widest">教学日历</h3>
             <div className="flex items-center gap-4 bg-slate-100 dark:bg-black/30 rounded-full px-3 py-1 border border-slate-100 dark:border-white/5">
@@ -204,7 +203,9 @@ const AdminSchedule: React.FC = () => {
           <div className="grid grid-cols-7 gap-2">
             {isLoading ? (
               Array.from({ length: 35 }).map((_, i) => (
-                <Skeleton key={`sk-${i}`} className="aspect-square rounded-xl" />
+                <div key={`sk-${i}`} className="aspect-square">
+                  <Skeleton.Button active block style={{ height: '100%', borderRadius: 12 }} />
+                </div>
               ))
             ) : (
               days.map((d, i) => {
@@ -237,7 +238,7 @@ const AdminSchedule: React.FC = () => {
         </div>
 
         {/* Right: Daily Schedule View */}
-        <div className="w-full lg:w-2/3 flex flex-col bg-white dark:bg-white/[0.02] backdrop-blur-3xl border border-slate-100 dark:border-white/10 rounded-3xl p-5 shadow-sm dark:shadow-2xl overflow-y-auto">
+        <div className="w-full lg:w-2/3 flex flex-col bg-white dark:bg-white/[0.02] backdrop-blur-3xl border border-slate-100 dark:border-white/10 rounded-3xl p-5 shadow-sm dark:shadow-2xl">
           
           <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100 dark:border-white/5">
             <div>
@@ -250,25 +251,20 @@ const AdminSchedule: React.FC = () => {
 
           <div className="flex-1 space-y-4">
             {isLoading ? (
-              <div className="space-y-4">
-                <Skeleton className="w-full h-32" />
-                <Skeleton className="w-full h-32" />
-              </div>
+              <Skeleton active />
             ) : todaysSchedules.length === 0 ? (
               <div className="h-full flex items-center justify-center min-h-[300px]">
-                <EmptyState 
-                  icon={CalendarIcon}
-                  title="该日期暂无排课安排"
-                  description="杨老师可以好好休息一下，或者点击右上方『新增排课』按钮开始规划。"
-                  action={
-                    <button 
-                      onClick={() => { setNewSchedDate(selectedDateStr); setIsAddModalOpen(true); }}
-                      className="mt-4 text-cyan-600 dark:text-cyan-400 text-sm font-bold tracking-widest hover:underline"
-                    >
-                      + 立即排课
-                    </button>
-                  }
-                />
+                <Empty description="该日期暂无排课安排">
+                  <Button
+                    type="primary"
+                    onClick={() => {
+                      setNewSchedDate(selectedDateStr);
+                      setIsAddModalOpen(true);
+                    }}
+                  >
+                    立即排课
+                  </Button>
+                </Empty>
               </div>
             ) : (
               todaysSchedules.map(sched => (

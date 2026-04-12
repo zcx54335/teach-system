@@ -325,7 +325,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
   };
 
   return (
-    <div className="min-h-full bg-white dark:bg-stem-dark relative font-sans selection:bg-stem-orange/30 text-slate-800 dark:text-slate-800 dark:text-white overflow-hidden flex flex-col items-center pt-16 px-4 pb-32">
+    <div className="w-full bg-white dark:bg-stem-dark relative font-sans selection:bg-stem-orange/30 text-slate-800 dark:text-white flex flex-col items-center px-4">
       
       {/* 动态粒子背景 */}
       <ParticleBackground />

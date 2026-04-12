@@ -1,373 +1,339 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { 
-  Hexagon, Users, BookOpen, Settings, LogOut, 
-  Menu, ChevronLeft, ChevronRight, Activity, Laptop, X, Database, UserCircle, Sun, Moon, Monitor
-} from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Activity, Banknote, BookOpen, Database, Hexagon, Laptop, Users, UserCheck, History } from 'lucide-react';
+import { Avatar, Breadcrumb, Dropdown, Layout, Menu, message, Switch, theme, Typography } from 'antd';
+import type { MenuProps } from 'antd';
+import { DownOutlined, LogoutOutlined, MoonOutlined, SettingOutlined, SunOutlined, UserOutlined } from '@ant-design/icons';
 import { useTheme } from '../Theme/ThemeProvider';
+import { AnimatePresence, motion } from 'framer-motion';
+
+type UserRole = 'sysadmin' | 'teacher' | 'parent' | null;
+
+const { Header, Sider, Content } = Layout;
 
 const MainLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
-  const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const themeDropdownRef = useRef<HTMLDivElement>(null);
-  const [userRole, setUserRole] = useState<'sysadmin' | 'teacher' | 'parent' | null>(null);
-  const { theme, setTheme } = useTheme();
+  const { token } = theme.useToken();
+  const { theme: appTheme, setTheme } = useTheme();
+
+  const [userRole, setUserRole] = useState<UserRole>(null);
   const [userName, setUserName] = useState('');
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     const sessionStr = localStorage.getItem('xiaoyu_user');
-    if (sessionStr) {
-      try {
-        const session = JSON.parse(sessionStr);
-        // Map old 'admin' to 'sysadmin' for compatibility
-        const role = session.role === 'admin' ? 'sysadmin' : session.role;
-        setUserRole(role);
-        setUserName(session.full_name || '用户');
-      } catch (e) {
-        navigate('/login');
-      }
-    } else {
+    if (!sessionStr) {
+      navigate('/login');
+      return;
+    }
+    try {
+      const session = JSON.parse(sessionStr);
+      const role = session.role === 'admin' ? 'sysadmin' : session.role;
+      setUserRole(role);
+      setUserName(session.full_name || '用户');
+    } catch {
       navigate('/login');
     }
   }, [navigate]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsProfileDropdownOpen(false);
-      }
-      if (themeDropdownRef.current && !themeDropdownRef.current.contains(event.target as Node)) {
-        setIsThemeDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('xiaoyu_user');
     navigate('/');
   };
 
-  // Define navigation items based on role
-  const getNavItems = () => {
+  const roleLabel = userRole === 'sysadmin' ? '超级管理员' : userRole === 'teacher' ? '教师' : userRole === 'parent' ? '家长' : '';
+
+  const selectedMenuKey = useMemo(() => {
+    const pathname = location.pathname.replace(/\/+$/, '');
+    if (pathname.startsWith('/dashboard/education/')) {
+      return pathname;
+    }
+    if (pathname === '/dashboard/schedule') return pathname;
+    if (pathname === '/dashboard/dashboard') return pathname;
+    if (pathname === '/dashboard/deduction') return pathname;
+    if (pathname === '/dashboard/teachers') return pathname;
+    if (pathname === '/dashboard/students') return pathname;
+    if (pathname === '/dashboard/history') return pathname;
+    if (pathname === '/dashboard/finance') return pathname;
+    if (pathname.startsWith('/dashboard/settings')) return pathname;
+    if (pathname === '/dashboard/personal-settings') return pathname;
+    return '';
+  }, [location.pathname, location.search]);
+
+  const breadcrumbs = useMemo(() => {
+    const pathname = location.pathname.replace(/\/+$/, '');
+    if (!pathname.startsWith('/dashboard')) {
+      return [{ title: '主页', path: '/' }];
+    }
+
+    const labelMap: Record<string, string> = {
+      dashboard: '工作台',
+      deduction: '日历消课',
+      teachers: '师资管理',
+      education: '教务中心',
+      products: '课程产品管理',
+      library: '题库与资料库',
+      dictionary: '教务字典库',
+      schedule: '排课管理',
+      history: '消课与推送流水',
+      students: '学员档案',
+      finance: '财务统计',
+      settings: '系统管理',
+      'personal-settings': '个人设置',
+      report: '学情反馈',
+      profile: '账号信息',
+      materials: '学习资料',
+    };
+
+    const parts = pathname.split('/').filter(Boolean);
+    const trail: Array<{ title: string; path: string }> = [{ title: '控制台', path: '/dashboard/dashboard' }];
+    if (parts.length >= 2) {
+      const section = parts[1];
+      if (section === 'education') {
+        trail.push({ title: labelMap.education, path: '/dashboard/education/products' });
+        if (parts.length >= 3) {
+          const sub = parts[2];
+          trail.push({ title: labelMap[sub] || sub, path: pathname });
+        }
+      } else if (section === 'settings') {
+        trail.push({ title: labelMap.settings, path: '/dashboard/settings/basic' });
+        if (parts.length >= 3) {
+          const sub = parts[2];
+          const subMap: Record<string, string> = { basic: '基础设置', roles: '角色与权限', audit: '操作日志' };
+          trail.push({ title: subMap[sub] || sub, path: pathname });
+        }
+      } else {
+        trail.push({ title: labelMap[section] || section, path: pathname });
+      }
+    }
+    return trail;
+  }, [location.pathname, location.search]);
+
+  const dropdownItems: MenuProps['items'] = [
+    {
+      key: 'overview',
+      disabled: true,
+      label: (
+        <div className="py-1">
+          <div className="font-semibold">{userName || '用户'}</div>
+          <div className="text-xs text-slate-500">{roleLabel || '—'}</div>
+        </div>
+      ),
+      icon: <UserOutlined />,
+    },
+    { type: 'divider' },
+    { key: 'settings', label: '个人设置', icon: <SettingOutlined /> },
+    { key: 'logout', label: '退出登录', icon: <LogoutOutlined />, danger: true },
+  ];
+
+  const menuItems = useMemo(() => {
     if (userRole === 'sysadmin' || userRole === 'teacher') {
       return [
-        { path: '/dashboard/workbench', icon: Laptop, label: '消课工作台' },
-        { path: '/dashboard/students', icon: Users, label: '学员管理' },
-        { path: '/dashboard/schedule', icon: BookOpen, label: '课程排期' },
-        ...(userRole === 'sysadmin' ? [
-          { path: '/dashboard/system', icon: Database, label: '系统管理' }
-        ] : []),
+        {
+          key: '/dashboard/dashboard',
+          label: '工作台',
+          icon: <Laptop className="w-4 h-4" />,
+        },
+        {
+          key: '/dashboard/deduction',
+          label: '日历消课',
+          icon: <BookOpen className="w-4 h-4" />,
+        },
+        {
+          key: '/dashboard/schedule',
+          label: '排课管理',
+          icon: <BookOpen className="w-4 h-4" />,
+        },
+        {
+          key: '/dashboard/students',
+          label: '学员档案',
+          icon: <Users className="w-4 h-4" />,
+        },
+        {
+          key: '/dashboard/teachers',
+          label: '师资管理',
+          icon: <UserCheck className="w-4 h-4" />,
+        },
+        {
+          key: 'education',
+          label: '教务中心',
+          icon: <BookOpen className="w-4 h-4" />,
+          children: [
+            { key: '/dashboard/education/products', label: '课程产品管理' },
+            { key: '/dashboard/education/library', label: '题库与资料库' },
+            { key: '/dashboard/education/dictionary', label: '教务字典库' },
+          ],
+        },
+        {
+          key: '/dashboard/finance',
+          label: '财务统计',
+          icon: <Banknote className="w-4 h-4" />,
+        },
+        {
+          key: '/dashboard/history',
+          label: '消课与推送流水',
+          icon: <History className="w-4 h-4" />,
+        },
+        ...(userRole === 'sysadmin'
+          ? [
+              {
+                key: 'settings',
+                label: '系统管理',
+                icon: <Database className="w-4 h-4" />,
+                children: [
+                  { key: '/dashboard/settings/basic', label: '基础设置' },
+                  { key: '/dashboard/settings/roles', label: '角色与权限' },
+                  { key: '/dashboard/settings/audit', label: '操作日志' },
+                ],
+              },
+            ]
+          : []),
       ];
-    } else if (userRole === 'parent') {
+    }
+    if (userRole === 'parent') {
       return [
-        { path: '/dashboard/report', icon: Activity, label: '学情雷达' },
-        { path: '/dashboard/materials', icon: BookOpen, label: '学习资料' },
+        { key: '/dashboard/report', label: '学情反馈', icon: <Activity className="w-4 h-4" /> },
+        { key: '/dashboard/materials', label: '学习资料', icon: <BookOpen className="w-4 h-4" /> },
       ];
     }
     return [];
-  };
+  }, [userRole]);
 
-  const navItems = getNavItems();
+  const isDark = appTheme === 'dark' || (appTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
   return (
-    <div className="min-h-screen flex bg-white dark:bg-[#020617] text-slate-800 dark:text-white font-inter selection:bg-cyan-500/30 overflow-hidden">
-      {/* Background Glow */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-blue-900/10 blur-[120px]"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-purple-900/10 blur-[100px]"></div>
-      </div>
-
-      {/* Desktop Sidebar */}
-      <motion.aside 
-        initial={false}
-        animate={{ width: isCollapsed ? 80 : 240 }}
-        className="hidden md:flex relative z-10 bg-white dark:bg-black/40 border-r border-slate-200 dark:border-white/5 backdrop-blur-2xl flex-col shrink-0 overflow-hidden"
+    <Layout className="h-screen overflow-hidden">
+      <Sider
+        width={288}
+        collapsible
+        collapsed={collapsed}
+        collapsedWidth={80}
+        onCollapse={setCollapsed}
+        className="app-sider"
+        style={{
+          background: token.colorBgContainer,
+          borderRight: `1px solid ${token.colorBorderSecondary}`,
+          ['--sider-bg' as any]: token.colorBgContainer,
+          ['--sider-border' as any]: token.colorBorderSecondary,
+          ['--sider-hover' as any]: token.colorFillAlter,
+          ['--sider-text' as any]: token.colorTextSecondary,
+        }}
       >
-        <div className="h-20 flex items-center justify-between px-4 border-b border-white/5">
-          <div className="flex items-center space-x-3 overflow-hidden">
-            <div className="w-10 h-10 shrink-0 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(34,211,238,0.4)] cursor-pointer" onClick={() => setIsCollapsed(!isCollapsed)}>
-              <Hexagon className="w-6 h-6 text-white" />
-            </div>
-            <AnimatePresence>
-              {!isCollapsed && (
-                <motion.div 
-                  initial={{ opacity: 0, x: -10 }} 
-                  animate={{ opacity: 1, x: 0 }} 
-                  exit={{ opacity: 0, x: -10 }}
-                  className="whitespace-nowrap"
-                >
-                  <h1 className="text-lg font-black tracking-widest text-slate-800 dark:text-white">小鱼思维</h1>
-                  <p className="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 uppercase tracking-widest">{userRole}</p>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
-
-        <nav className="flex-1 px-3 space-y-2 mt-6 overflow-y-auto overflow-x-hidden no-scrollbar">
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
-            return (
-              <button
-                key={item.path}
-                onClick={() => navigate(item.path)}
-                title={isCollapsed ? item.label : undefined}
-                className={`w-full flex items-center px-3 py-3.5 rounded-xl transition-all duration-300 relative group ${
-                  isActive 
-                    ? 'bg-cyan-500/10 text-cyan-400 shadow-[inset_3px_0_0_rgba(34,211,238,1)]' 
-                    : 'text-gray-400 hover:bg-white/5 hover:text-white'
-                } ${isCollapsed ? 'justify-center' : 'space-x-4'}`}
-              >
-                <item.icon className={`shrink-0 ${isCollapsed ? 'w-6 h-6' : 'w-5 h-5'}`} />
-                <AnimatePresence>
-                  {!isCollapsed && (
-                    <motion.span 
-                      initial={{ opacity: 0 }} 
-                      animate={{ opacity: 1 }} 
-                      exit={{ opacity: 0 }}
-                      className="text-sm font-bold tracking-widest whitespace-nowrap"
-                    >
-                      {item.label}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </button>
-            );
-          })}
-        </nav>
-
-        <div className="p-4 mt-auto border-t border-white/5">
-          <button 
-            onClick={handleLogout}
-            title={isCollapsed ? "退出系统" : undefined}
-            className={`w-full flex items-center px-3 py-3.5 rounded-xl bg-white/5 text-gray-400 hover:bg-red-500/10 hover:text-red-400 border border-white/5 hover:border-red-500/20 transition-all ${isCollapsed ? 'justify-center' : 'space-x-4'}`}
+        <div className="h-16 px-4 flex items-center justify-center gap-3">
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center"
+            style={{ background: token.colorFillAlter }}
           >
-            <LogOut className={`shrink-0 ${isCollapsed ? 'w-5 h-5' : 'w-4 h-4'}`} />
-            <AnimatePresence>
-              {!isCollapsed && (
-                <motion.span 
-                  initial={{ opacity: 0 }} 
-                  animate={{ opacity: 1 }} 
-                  exit={{ opacity: 0 }}
-                  className="text-xs font-bold tracking-widest whitespace-nowrap"
-                >
-                  退出系统
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </button>
+            <Hexagon className="w-5 h-5" style={{ color: token.colorText }} />
+          </div>
+          {!collapsed && (
+            <div className="min-w-0 text-center">
+              <div className="text-[15px] font-black tracking-wide leading-5" style={{ color: token.colorText }}>
+                小鱼思维校办系统
+              </div>
+              <div className="text-[11px] leading-4" style={{ color: token.colorTextSecondary }}>
+                {roleLabel}
+              </div>
+            </div>
+          )}
         </div>
-      </motion.aside>
 
-      {/* Mobile Drawer Overlay & Sidebar */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <>
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
+        <Menu
+          mode="inline"
+          selectedKeys={selectedMenuKey ? [selectedMenuKey] : []}
+          onClick={({ key }) => {
+            const next = String(key);
+            if (!next.startsWith('/')) return;
+            navigate(next);
+          }}
+          style={{ borderInlineEnd: 'none' }}
+          items={menuItems as any}
+        />
+      </Sider>
+
+      <Layout className="flex flex-col overflow-hidden min-h-0 min-w-0">
+        <Header
+          style={{
+            padding: '0 24px',
+            background: token.colorBgContainer,
+            borderBottom: `1px solid ${token.colorBorderSecondary}`,
+          }}
+          className="h-16 flex items-center justify-between"
+        >
+          <Breadcrumb
+            items={breadcrumbs.map((b) => ({
+              title: (
+                <Typography.Link onClick={() => navigate(b.path)} style={{ fontSize: 12 }}>
+                  {b.title}
+                </Typography.Link>
+              ),
+            }))}
+          />
+
+          <div className="flex items-center gap-4">
+            <Switch
+              checked={isDark}
+              checkedChildren={<MoonOutlined />}
+              unCheckedChildren={<SunOutlined />}
+              onChange={(checked) => setTheme(checked ? 'dark' : 'light')}
             />
-            <motion.aside
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 left-0 w-64 bg-slate-950 border-r border-white/10 z-50 flex flex-col md:hidden shadow-2xl"
+            <Dropdown
+              menu={{
+                items: dropdownItems,
+                onClick: ({ key }) => {
+                  if (key === 'logout') {
+                    handleLogout();
+                    return;
+                  }
+                  if (key === 'settings') {
+                    navigate('/dashboard/personal-settings');
+                  }
+                },
+              }}
+              trigger={['hover']}
+              placement="bottomRight"
             >
-              <div className="h-20 flex items-center justify-between px-6 border-b border-white/5">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(34,211,238,0.4)]">
-                    <Hexagon className="w-5 h-5 text-white" />
+              <div className="flex items-center gap-3 px-3 py-2 rounded-xl cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5">
+                <Avatar
+                  size={32}
+                  style={{ background: token.colorPrimary, verticalAlign: 'middle' }}
+                  icon={!userName ? <UserOutlined /> : undefined}
+                >
+                  {userName ? userName.charAt(0) : null}
+                </Avatar>
+                <div className="hidden sm:flex flex-col leading-4">
+                  <div className="text-sm font-semibold" style={{ color: token.colorText }}>
+                    {userName}
                   </div>
-                  <div>
-                    <h1 className="text-base font-black tracking-widest text-white">小鱼思维</h1>
+                  <div className="text-xs" style={{ color: token.colorTextSecondary }}>
+                    {roleLabel}
                   </div>
                 </div>
-                <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-gray-400 hover:text-white rounded-full bg-white/5">
-                  <X className="w-5 h-5" />
-                </button>
+                <DownOutlined style={{ fontSize: 12, color: token.colorTextSecondary }} />
               </div>
-
-              <nav className="flex-1 px-4 space-y-2 mt-6 overflow-y-auto">
-                {navItems.map((item) => {
-                  const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
-                  return (
-                    <button
-                      key={item.path}
-                      onClick={() => {
-                        navigate(item.path);
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className={`w-full flex items-center px-4 py-4 rounded-xl transition-all duration-300 space-x-4 ${
-                        isActive 
-                          ? 'bg-cyan-100/50 dark:bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 shadow-[inset_3px_0_0_rgba(34,211,238,1)]' 
-                          : 'text-slate-600 dark:text-gray-400 hover:bg-slate-200/50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white'
-                      }`}
-                    >
-                      <item.icon className="w-5 h-5 shrink-0" />
-                      <span className="text-sm font-bold tracking-widest">{item.label}</span>
-                    </button>
-                  );
-                })}
-              </nav>
-
-              <div className="p-6 border-t border-white/5">
-                <button 
-                  onClick={handleLogout}
-                  className="w-full flex items-center px-4 py-4 rounded-xl bg-white/5 text-gray-400 hover:bg-red-500/10 hover:text-red-400 border border-white/5 transition-all space-x-4"
-                >
-                  <LogOut className="w-5 h-5 shrink-0" />
-                  <span className="text-sm font-bold tracking-widest">退出系统</span>
-                </button>
-              </div>
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Main Content Area */}
-      <main className="relative z-10 flex-1 h-screen overflow-hidden flex flex-col bg-white dark:bg-black/20 w-full">
-        {/* Top Navbar */}
-        <header className="h-16 md:h-20 flex items-center justify-between px-4 md:px-8 bg-white/80 dark:bg-black/20 border-b border-slate-200 dark:border-white/5 backdrop-blur-md shrink-0 relative z-[100]">
-          <div className="flex items-center">
-            {/* Mobile Hamburger */}
-            <button 
-              onClick={() => setIsMobileMenuOpen(true)}
-              className="p-2 mr-3 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors md:hidden"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-            
-            {/* Desktop Collapse Toggle */}
-            <button 
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              className="hidden md:block p-2 mr-4 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-            
-            <h2 className="text-base md:text-lg font-bold tracking-widest text-slate-800 dark:text-white/90">
-              {navItems.find(item => location.pathname.startsWith(item.path))?.label || '概览'}
-            </h2>
+            </Dropdown>
           </div>
-          <div className="flex items-center space-x-4 relative">
-            {/* Theme Toggle */}
-            <div className="relative" ref={themeDropdownRef}>
-              <button 
-                onClick={() => setIsThemeDropdownOpen(!isThemeDropdownOpen)}
-                className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors"
-              >
-                {theme === 'light' ? <Sun className="w-5 h-5" /> : theme === 'dark' ? <Moon className="w-5 h-5" /> : <Monitor className="w-5 h-5" />}
-              </button>
-              
-              <AnimatePresence>
-                {isThemeDropdownOpen && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute top-14 right-0 w-36 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden z-[9999]"
-                  >
-                    <div className="p-1">
-                      <button onClick={() => { setTheme('light'); setIsThemeDropdownOpen(false); }} className={`w-full flex items-center px-3 py-2 text-sm rounded-xl transition-colors ${theme === 'light' ? 'bg-cyan-50 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
-                        <Sun className="w-4 h-4 mr-2" /> 明亮模式
-                      </button>
-                      <button onClick={() => { setTheme('dark'); setIsThemeDropdownOpen(false); }} className={`w-full flex items-center px-3 py-2 text-sm rounded-xl transition-colors ${theme === 'dark' ? 'bg-cyan-50 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
-                        <Moon className="w-4 h-4 mr-2" /> 暗黑模式
-                      </button>
-                      <button onClick={() => { setTheme('system'); setIsThemeDropdownOpen(false); }} className={`w-full flex items-center px-3 py-2 text-sm rounded-xl transition-colors ${theme === 'system' ? 'bg-cyan-50 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
-                        <Monitor className="w-4 h-4 mr-2" /> 跟随系统
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+        </Header>
 
-            <div className="text-right hidden sm:block cursor-pointer" onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}>
-              <p className="text-sm font-bold text-slate-800 dark:text-white tracking-widest hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors">{userName}</p>
-              <p className="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 uppercase tracking-widest">Active Session</p>
-            </div>
-            <div 
-              onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-              className="w-10 h-10 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 p-[2px] cursor-pointer shadow-sm hover:shadow-[0_0_15px_rgba(34,211,238,0.5)] transition-all"
-            >
-              <div className="w-full h-full bg-white dark:bg-[#020617] rounded-full flex items-center justify-center">
-                <span className="text-sm font-bold text-slate-800 dark:text-white">{userName.charAt(0)}</span>
-              </div>
-            </div>
-
-            {/* Profile Dropdown */}
-            <AnimatePresence>
-              {isProfileDropdownOpen && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute top-14 right-0 w-56 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl overflow-hidden z-[9999]"
-                >
-                  <div className="p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
-                    <p className="text-sm font-bold text-slate-800 dark:text-white tracking-widest truncate">{userName}</p>
-                    <p className="text-xs text-cyan-600 dark:text-cyan-400 font-mono mt-1">{userRole === 'parent' ? '家长' : userRole === 'teacher' ? '教师' : '管理员'}</p>
-                  </div>
-                  <div className="p-2 bg-white dark:bg-slate-900">
-                    <button 
-                      onClick={() => {
-                        setIsProfileDropdownOpen(false);
-                        navigate('/dashboard/profile');
-                      }}
-                      className="w-full flex items-center px-3 py-3 text-sm text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl transition-colors tracking-widest"
-                    >
-                      <UserCircle className="w-5 h-5 mr-3 text-cyan-600 dark:text-cyan-400" />
-                      账号详细信息
-                    </button>
-                    
-                    <div className="my-1 border-t border-slate-100 dark:border-slate-700"></div>
-                    
-                    <button 
-                      onClick={handleLogout}
-                      className="w-full flex items-center px-3 py-3 text-sm text-red-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-colors tracking-widest"
-                    >
-                      <LogOut className="w-5 h-5 mr-3" />
-                      退出登录
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </header>
-
-        {/* Scrollable Page Content with Fade-in */}
-        <div className="flex-1 overflow-y-auto relative">
-          <AnimatePresence mode="wait">
+        <Content
+          className="flex-1 overflow-y-auto p-6 min-h-0"
+          style={{ background: token.colorBgLayout }}
+        >
+          <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={location.pathname}
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3 }}
-              className="min-h-full p-6 md:p-10"
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
             >
               <Outlet />
             </motion.div>
           </AnimatePresence>
-        </div>
-      </main>
-    </div>
+        </Content>
+      </Layout>
+    </Layout>
   );
 };
 

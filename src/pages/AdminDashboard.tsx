@@ -6,6 +6,8 @@ import {
   Settings, BookOpen, Edit, MinusCircle, ExternalLink, X, CheckCircle, Trash2, AlertTriangle
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { Button, Card, Col, Empty, Row, Skeleton, Space, Statistic, Table, Tag, Typography } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 
 interface StudentRecord {
   id: string;
@@ -315,242 +317,129 @@ const AdminDashboard: React.FC = () => {
   const totalStudents = students.length;
   const totalRemainingClasses = students.reduce((acc, curr) => acc + (curr.remaining_classes || 0), 0);
 
-  return (
-    <div className="w-full p-4 md:p-10 h-full flex flex-col">
-      <header className="mb-6 md:mb-12 flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl md:text-3xl font-bold tracking-widest text-slate-800 dark:text-white mb-2 drop-shadow-md">学员资产概览</h2>
-          <p className="text-xs md:text-sm text-slate-400 dark:text-gray-400 font-mono tracking-widest">REAL-TIME DATA DASHBOARD</p>
-        </div>
-      </header>
-
-      {/* 顶部三个数据卡片 - 移动端横向滚动，桌面端 Grid */}
-      <div className="flex overflow-x-auto md:grid md:grid-cols-3 gap-4 md:gap-8 mb-8 md:mb-12 pb-4 md:pb-0 snap-x">
-        <div className="min-w-[240px] md:min-w-0 bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-100 dark:border-white/10 rounded-3xl p-6 md:p-8 relative overflow-hidden group shadow-sm dark:shadow-[0_0_20px_rgba(0,0,0,0.3)] snap-center shrink-0">
-          <div className="absolute -right-6 -top-6 w-24 h-24 md:w-32 md:h-32 bg-cyan-50 dark:bg-cyan-500/20 rounded-full blur-2xl group-hover:bg-cyan-100 dark:group-hover:bg-cyan-500/30 transition-all"></div>
-          <div className="flex items-center space-x-3 md:space-x-4 mb-4 md:mb-6">
-            <div className="p-2 md:p-3.5 rounded-2xl bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-100 dark:border-cyan-500/20 shadow-sm dark:shadow-[0_0_15px_rgba(34,211,238,0.2)]">
-              <Users className="w-5 h-5 md:w-6 md:h-6 text-cyan-600 dark:text-cyan-400" />
-            </div>
-            <h3 className="text-xs md:text-sm font-bold text-slate-500 dark:text-gray-300 tracking-widest uppercase">总学员数</h3>
-          </div>
-          <div className="text-4xl md:text-5xl font-bold font-inter text-slate-800 dark:text-white tracking-tighter drop-shadow-sm">{totalStudents} <span className="text-sm md:text-base text-slate-400 dark:text-gray-500 ml-1 md:ml-2 font-mono font-normal">人</span></div>
-        </div>
-
-        <div className="min-w-[240px] md:min-w-0 bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-100 dark:border-white/10 rounded-3xl p-6 md:p-8 relative overflow-hidden group shadow-sm dark:shadow-[0_0_20px_rgba(0,0,0,0.3)] snap-center shrink-0">
-          <div className="absolute -right-6 -top-6 w-24 h-24 md:w-32 md:h-32 bg-purple-50 dark:bg-purple-500/20 rounded-full blur-2xl group-hover:bg-purple-100 dark:group-hover:bg-purple-500/30 transition-all"></div>
-          <div className="flex items-center space-x-3 md:space-x-4 mb-4 md:mb-6">
-            <div className="p-2 md:p-3.5 rounded-2xl bg-purple-50 dark:bg-purple-500/10 border border-purple-100 dark:border-purple-500/20 shadow-sm dark:shadow-[0_0_15px_rgba(168,85,247,0.2)]">
-              <Clock className="w-5 h-5 md:w-6 md:h-6 text-purple-600 dark:text-purple-400" />
-            </div>
-            <h3 className="text-xs md:text-sm font-bold text-slate-500 dark:text-gray-300 tracking-widest uppercase">待消课时</h3>
-          </div>
-          <div className="text-4xl md:text-5xl font-bold font-inter text-slate-800 dark:text-white tracking-tighter drop-shadow-sm">{totalRemainingClasses} <span className="text-sm md:text-base text-slate-400 dark:text-gray-500 ml-1 md:ml-2 font-mono font-normal">课时</span></div>
-        </div>
-
-        <div className="min-w-[240px] md:min-w-0 bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-100 dark:border-white/10 rounded-3xl p-6 md:p-8 relative overflow-hidden group shadow-sm dark:shadow-[0_0_20px_rgba(0,0,0,0.3)] snap-center shrink-0">
-          <div className="absolute -right-6 -top-6 w-24 h-24 md:w-32 md:h-32 bg-blue-50 dark:bg-blue-500/20 rounded-full blur-2xl group-hover:bg-blue-100 dark:group-hover:bg-blue-500/30 transition-all"></div>
-          <div className="flex items-center space-x-3 md:space-x-4 mb-4 md:mb-6">
-            <div className="p-2 md:p-3.5 rounded-2xl bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 shadow-sm dark:shadow-[0_0_15px_rgba(59,130,246,0.2)]">
-              <Activity className="w-5 h-5 md:w-6 md:h-6 text-blue-600 dark:text-blue-400" />
-            </div>
-            <h3 className="text-xs md:text-sm font-bold text-slate-500 dark:text-gray-300 tracking-widest uppercase">系统运行</h3>
-          </div>
-          <div className="text-4xl md:text-5xl font-bold font-inter text-slate-800 dark:text-white tracking-tighter drop-shadow-sm">{uptime} <span className="text-sm md:text-base text-slate-400 dark:text-gray-500 ml-1 md:ml-2 font-mono font-normal">天</span></div>
-        </div>
-      </div>
-
-      {/* 核心列表：学员管理 */}
-      <div className="bg-white dark:bg-white/[0.02] backdrop-blur-3xl border border-slate-100 dark:border-white/10 rounded-[2rem] overflow-hidden shadow-sm dark:shadow-2xl flex-1 flex flex-col">
-        <div className="p-6 md:p-8 border-b border-slate-100 dark:border-white/5 flex flex-col md:flex-row md:items-center justify-between bg-slate-50 dark:bg-black/20 gap-4">
-          <h3 className="text-lg md:text-xl font-bold tracking-widest text-slate-800 dark:text-white flex items-center">
-            <Users className="w-5 h-5 mr-3 text-cyan-600 dark:text-cyan-500" />
-            学员列表
-          </h3>
-          <button 
-            onClick={handleAddStudentClick}
-            className="w-full md:w-auto px-6 py-3 bg-slate-800 hover:bg-slate-700 dark:bg-gradient-to-r dark:from-cyan-600 dark:to-blue-600 dark:hover:from-cyan-500 dark:hover:to-blue-500 text-white rounded-xl text-sm font-bold tracking-widest shadow-sm dark:shadow-[0_0_20px_rgba(34,211,238,0.4)] dark:hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] transition-all active:scale-95"
+  const columns: ColumnsType<StudentRecord> = [
+    {
+      title: '学员姓名',
+      dataIndex: 'name',
+      key: 'name',
+      render: (v: string) => <span className="font-semibold">{v}</span>,
+    },
+    { title: '手机号', dataIndex: 'phone', key: 'phone', width: 160 },
+    { title: '年级', dataIndex: 'grade', key: 'grade', width: 120, render: (v: string) => v || '未分配' },
+    {
+      title: '剩余课时',
+      dataIndex: 'remaining_classes',
+      key: 'remaining_classes',
+      width: 140,
+      render: (v: number) => <Tag color={v <= 3 ? 'red' : 'blue'}>{v}</Tag>,
+    },
+    {
+      title: '操作',
+      key: 'actions',
+      width: 360,
+      render: (_: unknown, record: StudentRecord) => (
+        <Space size={4} wrap>
+          <Button type="link" onClick={() => handleEditStudentClick(record)}>
+            编辑
+          </Button>
+          <Button
+            type="link"
+            onClick={() => {
+              setSelectedTopupStudent(record);
+              setIsTopupModalOpen(true);
+            }}
           >
-            + 新增学员
-          </button>
-        </div>
-        
-        {/* Desktop Table View */}
-        <div className="hidden md:block overflow-x-auto flex-1">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50 dark:bg-black/40 border-b border-slate-100 dark:border-transparent">
-                <th className="px-8 py-5 text-xs font-mono font-bold text-slate-500 dark:text-gray-400 tracking-[0.2em] uppercase">学员姓名</th>
-                <th className="px-8 py-5 text-xs font-mono font-bold text-slate-500 dark:text-gray-400 tracking-[0.2em] uppercase">手机号</th>
-                <th className="px-8 py-5 text-xs font-mono font-bold text-slate-500 dark:text-gray-400 tracking-[0.2em] uppercase">年级</th>
-                <th className="px-8 py-5 text-xs font-mono font-bold text-slate-500 dark:text-gray-400 tracking-[0.2em] uppercase">剩余课时</th>
-                <th className="px-8 py-5 text-xs font-mono font-bold text-slate-500 dark:text-gray-400 tracking-[0.2em] uppercase text-right">操作</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-white/5">
-              {isLoading ? (
-                <tr>
-                  <td colSpan={5} className="px-8 py-20 text-center text-cyan-600/50 dark:text-cyan-400/50 font-mono tracking-widest">
-                    <div className="w-8 h-8 border-4 border-cyan-500/30 border-t-cyan-600 dark:border-t-cyan-400 rounded-full animate-spin mx-auto mb-4"></div>
-                    LOADING DATA...
-                  </td>
-                </tr>
-              ) : students.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-8 py-20 text-center text-slate-400 dark:text-gray-500 font-mono text-sm tracking-widest">
-                    NO DATA FOUND
-                  </td>
-                </tr>
-              ) : (
-                students.map(student => (
-                  <tr key={student.id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors duration-200">
-                    <td className="px-8 py-5">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-10 h-10 rounded-full bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-100 dark:border-cyan-500/30 flex items-center justify-center text-cyan-700 dark:text-cyan-400 font-bold text-sm shadow-sm dark:shadow-[0_0_10px_rgba(34,211,238,0.1)]">
-                          {student.name.charAt(0)}
-                        </div>
-                        <span className="font-bold text-slate-800 dark:text-white tracking-widest text-base">{student.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-8 py-5 text-sm text-slate-500 dark:text-gray-300 font-mono tracking-wider">{student.phone}</td>
-                    <td className="px-8 py-5 text-sm text-slate-500 dark:text-gray-400 tracking-wider">{student.grade || '未分配'}</td>
-                    <td className="px-8 py-5">
-                      <span className={`text-xl font-bold font-inter ${student.remaining_classes <= 3 ? 'text-red-500 dark:text-red-400 dark:drop-shadow-[0_0_8px_rgba(248,113,113,0.6)]' : 'text-cyan-600 dark:text-cyan-400 dark:drop-shadow-[0_0_8px_rgba(34,211,238,0.4)]'}`}>
-                        {student.remaining_classes}
-                      </span>
-                    </td>
-                    <td className="px-8 py-5 text-right">
-                      <div className="flex items-center justify-end space-x-3">
-                        <button 
-                          onClick={() => handleEditStudentClick(student)}
-                          className="flex items-center px-4 py-2 bg-slate-50 dark:bg-transparent text-slate-600 dark:text-gray-400 hover:bg-slate-100 hover:text-slate-800 dark:hover:text-white border border-slate-200 dark:border-transparent dark:hover:border-gray-500 rounded-xl text-xs font-bold tracking-widest transition-colors shadow-sm dark:shadow-none"
-                        >
-                          <Edit className="w-3.5 h-3.5 mr-1.5" /> 编辑
-                        </button>
-                        <button 
-                          onClick={() => handleDeleteStudentClick(student)}
-                          className="flex items-center px-4 py-2 bg-red-50 dark:bg-transparent text-red-600 dark:text-red-500/70 hover:bg-red-100 hover:text-red-700 dark:hover:text-red-400 border border-red-100 dark:border-transparent dark:hover:border-red-500/50 rounded-xl text-xs font-bold tracking-widest transition-colors shadow-sm dark:shadow-none"
-                        >
-                          <Trash2 className="w-3.5 h-3.5 mr-1.5" /> 删除
-                        </button>
-                        <button 
-                          onClick={() => { setSelectedTopupStudent(student); setIsTopupModalOpen(true); }}
-                          className="flex items-center px-4 py-2 bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-500/20 border border-green-200 dark:border-green-500/30 rounded-xl text-xs font-bold tracking-widest transition-colors shadow-sm dark:shadow-[0_0_10px_rgba(34,197,94,0.1)]"
-                        >
-                          <Activity className="w-3.5 h-3.5 mr-1.5" /> 充值
-                        </button>
-                        <button 
-                          onClick={() => handleDeductClass(student.id, student.remaining_classes, student.name)}
-                          className="flex items-center px-4 py-2 bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-500/20 border border-orange-200 dark:border-orange-500/30 rounded-xl text-xs font-bold tracking-widest transition-colors shadow-sm dark:shadow-[0_0_10px_rgba(249,115,22,0.1)]"
-                        >
-                          <MinusCircle className="w-3.5 h-3.5 mr-1.5" /> 消课
-                        </button>
-                        <button 
-                          onClick={() => { setEditingStudent(student); setIsEditModalOpen(true); }}
-                          className="flex items-center px-4 py-2 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/20 border border-blue-200 dark:border-blue-500/30 rounded-xl text-xs font-bold tracking-widest transition-colors shadow-sm dark:shadow-[0_0_10px_rgba(59,130,246,0.1)]"
-                        >
-                          <Edit className="w-3.5 h-3.5 mr-1.5" /> 评分
-                        </button>
-                        <button 
-                          onClick={() => window.open(`/#/parent?id=${student.id}`, '_blank')}
-                          className="flex items-center px-4 py-2 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/10 rounded-xl text-xs font-bold tracking-widest transition-colors shadow-sm dark:shadow-none"
-                        >
-                          <ExternalLink className="w-3.5 h-3.5 mr-1.5" /> 报告
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+            充值
+          </Button>
+          <Button type="link" onClick={() => handleDeductClass(record.id, record.remaining_classes, record.name)}>
+            一键消课
+          </Button>
+          <Button type="link" onClick={() => window.open(`/#/parent?id=${record.id}`, '_blank', 'noopener,noreferrer')}>
+            查看报告
+          </Button>
+          <Button type="link" danger onClick={() => handleDeleteStudentClick(record)}>
+            删除
+          </Button>
+        </Space>
+      ),
+    },
+  ];
 
-        {/* Mobile Card View */}
-        <div className="md:hidden flex-1 overflow-y-auto p-4 space-y-4">
-          {isLoading ? (
-            <div className="py-20 text-center text-cyan-600/50 dark:text-cyan-400/50 font-mono tracking-widest">
-              <div className="w-8 h-8 border-4 border-cyan-500/30 border-t-cyan-600 dark:border-t-cyan-400 rounded-full animate-spin mx-auto mb-4"></div>
-              LOADING DATA...
-            </div>
-          ) : students.length === 0 ? (
-            <div className="py-20 text-center text-slate-400 dark:text-gray-500 font-mono text-sm tracking-widest">
-              NO DATA FOUND
-            </div>
-          ) : (
-            students.map(student => (
-              <div key={student.id} className="bg-white dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-2xl p-5 flex flex-col space-y-4 shadow-sm dark:shadow-none">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-full bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-100 dark:border-cyan-500/30 flex items-center justify-center text-cyan-700 dark:text-cyan-400 font-bold text-sm shadow-sm dark:shadow-[0_0_10px_rgba(34,211,238,0.1)]">
-                      {student.name.charAt(0)}
-                    </div>
-                    <div>
-                      <span className="font-bold text-slate-800 dark:text-white tracking-widest text-base block">{student.name}</span>
-                      <span className="text-xs text-slate-500 dark:text-gray-400">{student.grade || '未分配年级'}</span>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[10px] text-slate-400 dark:text-gray-500 font-mono block mb-1">剩余课时</span>
-                    <span className={`text-2xl font-bold font-inter ${student.remaining_classes <= 3 ? 'text-red-500 dark:text-red-400 dark:drop-shadow-[0_0_8px_rgba(248,113,113,0.6)]' : 'text-cyan-600 dark:text-cyan-400 dark:drop-shadow-[0_0_8px_rgba(34,211,238,0.4)]'}`}>
-                      {student.remaining_classes}
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-3 gap-2 pt-4 border-t border-slate-100 dark:border-white/5">
-                  <button 
-                    onClick={() => handleEditStudentClick(student)}
-                    className="flex flex-col items-center justify-center py-2 bg-slate-50 dark:bg-transparent text-slate-600 dark:text-gray-400 hover:text-slate-800 dark:hover:text-white border border-slate-200 dark:border-transparent rounded-xl text-xs font-bold tracking-widest transition-colors shadow-sm dark:shadow-none"
-                  >
-                    <Edit className="w-4 h-4 mb-1" /> 编辑
-                  </button>
-                  <button 
-                    onClick={() => handleDeleteStudentClick(student)}
-                    className="flex flex-col items-center justify-center py-2 bg-red-50 dark:bg-transparent text-red-600 dark:text-red-500/70 hover:text-red-700 dark:hover:text-red-400 border border-red-100 dark:border-transparent rounded-xl text-xs font-bold tracking-widest transition-colors shadow-sm dark:shadow-none"
-                  >
-                    <Trash2 className="w-4 h-4 mb-1" /> 删除
-                  </button>
-                  <button 
-                    onClick={() => { setSelectedTopupStudent(student); setIsTopupModalOpen(true); }}
-                    className="flex flex-col items-center justify-center py-2 bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-500/20 border border-green-200 dark:border-transparent rounded-xl text-xs font-bold tracking-widest transition-colors shadow-sm dark:shadow-none"
-                  >
-                    <Activity className="w-4 h-4 mb-1" /> 充值
-                  </button>
-                  <button 
-                    onClick={() => handleDeductClass(student.id, student.remaining_classes, student.name)}
-                    className="flex flex-col items-center justify-center py-2 bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-500/20 border border-orange-200 dark:border-transparent rounded-xl text-xs font-bold tracking-widest transition-colors shadow-sm dark:shadow-none"
-                  >
-                    <MinusCircle className="w-4 h-4 mb-1" /> 消课
-                  </button>
-                  <button 
-                    onClick={() => { setEditingStudent(student); setIsEditModalOpen(true); }}
-                    className="flex flex-col items-center justify-center py-2 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/20 border border-blue-200 dark:border-transparent rounded-xl text-xs font-bold tracking-widest transition-colors shadow-sm dark:shadow-none"
-                  >
-                    <Edit className="w-4 h-4 mb-1" /> 评分
-                  </button>
-                  <button 
-                    onClick={() => window.open(`/#/parent?id=${student.id}`, '_blank')}
-                    className="flex flex-col items-center justify-center py-2 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-800 dark:hover:text-white border border-slate-200 dark:border-transparent rounded-xl text-xs font-bold tracking-widest transition-colors shadow-sm dark:shadow-none"
-                  >
-                    <ExternalLink className="w-4 h-4 mb-1" /> 报告
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
+  return (
+    <div className="w-full flex flex-col gap-6 relative">
+      <div className="flex items-end justify-between">
+        <div>
+          <Typography.Title level={3} style={{ marginBottom: 0 }}>
+            学员资产概览
+          </Typography.Title>
+          <Typography.Text type="secondary">实时掌握学员资产与课时结构</Typography.Text>
         </div>
+        <Button type="primary" onClick={handleAddStudentClick}>
+          新增学员
+        </Button>
       </div>
+
+      <Row gutter={[16, 16]}>
+        <Col xs={24} md={8}>
+          <Card>
+            <Statistic title="总学员数" value={totalStudents} suffix="人" />
+          </Card>
+        </Col>
+        <Col xs={24} md={8}>
+          <Card>
+            <Statistic title="待消课时" value={totalRemainingClasses} suffix="课时" />
+          </Card>
+        </Col>
+        <Col xs={24} md={8}>
+          <Card>
+            <Statistic title="系统运行" value={uptime} suffix="天" />
+          </Card>
+        </Col>
+      </Row>
+
+      <Card title="学员列表">
+        {isLoading ? (
+          <Skeleton active />
+        ) : students.length === 0 ? (
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description="暂无学员数据，点击新增第一位学员"
+          >
+            <Button type="primary" onClick={handleAddStudentClick}>
+              新增学员
+            </Button>
+          </Empty>
+        ) : (
+          <Table
+            rowKey="id"
+            columns={columns}
+            dataSource={students}
+            pagination={{ pageSize: 10 }}
+            locale={{
+              emptyText: (
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description="暂无学员数据，点击新增第一位学员"
+                >
+                  <Button type="primary" onClick={handleAddStudentClick}>
+                    新增学员
+                  </Button>
+                </Empty>
+              ),
+            }}
+          />
+        )}
+      </Card>
 
       {/* 新增学员弹窗 */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => !isAdding && setIsAddModalOpen(false)}></div>
-          <div className="relative bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/10 w-full max-w-lg rounded-3xl p-8 shadow-[0_0_50px_rgba(0,0,0,0.8)] animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+          <div className="relative bg-slate-900 border border-white/10 w-full max-w-lg rounded-3xl p-8 shadow-[0_0_50px_rgba(0,0,0,0.8)] animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
             <button onClick={() => !isAdding && setIsAddModalOpen(false)} className="absolute top-6 right-6 text-gray-400 hover:text-white transition-colors">
               <X className="w-5 h-5" />
             </button>
-            <h3 className="text-xl font-bold text-slate-800 dark:text-white tracking-widest mb-6 border-b border-slate-100 dark:border-white/5 pb-4">
+            <h3 className="text-xl font-bold text-white tracking-widest mb-6 border-b border-white/5 pb-4">
               {isEditStudentMode ? '编辑学员信息' : '录入新学员'}
             </h3>
             
@@ -560,7 +449,7 @@ const AdminDashboard: React.FC = () => {
                   <label className="block text-xs font-mono font-bold text-gray-400 mb-2 uppercase tracking-[0.2em]">学员姓名 *</label>
                   <input 
                     type="text" required value={newStudent.name} onChange={(e) => setNewStudent({...newStudent, name: e.target.value})}
-                    className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-800 dark:text-white font-bold focus:outline-none focus:border-cyan-500/50 focus:bg-black/80 transition-all shadow-inner"
+                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white font-bold focus:outline-none focus:border-cyan-500/50 focus:bg-black/80 transition-all shadow-inner"
                   />
                 </div>
                 <div>
@@ -568,21 +457,21 @@ const AdminDashboard: React.FC = () => {
                   <input 
                     type="tel" required value={newStudent.parent_phone} onChange={(e) => setNewStudent({...newStudent, parent_phone: e.target.value})}
                     placeholder="11位手机号"
-                    className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-800 dark:text-white font-mono font-bold focus:outline-none focus:border-cyan-500/50 focus:bg-black/80 transition-all shadow-inner"
+                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white font-mono font-bold focus:outline-none focus:border-cyan-500/50 focus:bg-black/80 transition-all shadow-inner"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-mono font-bold text-gray-400 mb-2 uppercase tracking-[0.2em]">就读学校</label>
                   <input 
                     type="text" value={newStudent.school} onChange={(e) => setNewStudent({...newStudent, school: e.target.value})}
-                    className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:border-cyan-500/50 focus:bg-black/80 transition-all shadow-inner"
+                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 focus:bg-black/80 transition-all shadow-inner"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-mono font-bold text-gray-400 mb-2 uppercase tracking-[0.2em]">年级 *</label>
                   <select 
                     value={newStudent.grade} onChange={(e) => setNewStudent({...newStudent, grade: e.target.value})}
-                    className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:border-cyan-500/50 focus:bg-black/80 transition-all shadow-inner appearance-none"
+                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 focus:bg-black/80 transition-all shadow-inner appearance-none"
                   >
                     {GRADE_OPTIONS.map(g => <option key={g} value={g} className="bg-slate-900">{g}</option>)}
                   </select>
@@ -629,11 +518,11 @@ const AdminDashboard: React.FC = () => {
       {isTopupModalOpen && selectedTopupStudent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsTopupModalOpen(false)}></div>
-          <div className="relative bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/10 w-full max-w-md rounded-3xl p-8 shadow-[0_0_50px_rgba(0,0,0,0.8)] animate-in zoom-in-95 duration-200">
+          <div className="relative bg-slate-900 border border-white/10 w-full max-w-md rounded-3xl p-8 shadow-[0_0_50px_rgba(0,0,0,0.8)] animate-in zoom-in-95 duration-200">
             <button onClick={() => setIsTopupModalOpen(false)} className="absolute top-6 right-6 text-gray-400 hover:text-white transition-colors">
               <X className="w-5 h-5" />
             </button>
-            <h3 className="text-xl font-bold text-slate-800 dark:text-white tracking-widest mb-6 border-b border-slate-100 dark:border-white/5 pb-4">
+            <h3 className="text-xl font-bold text-white tracking-widest mb-6 border-b border-white/5 pb-4">
               为 {selectedTopupStudent.name} 充值课时
             </h3>
             
@@ -642,7 +531,7 @@ const AdminDashboard: React.FC = () => {
                 <label className="block text-xs font-mono font-bold text-gray-400 mb-2 uppercase tracking-[0.2em]">选择充值科目</label>
                 <select 
                   required value={topupSubject} onChange={(e) => setTopupSubject(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:border-green-500/50 focus:bg-black/80 transition-all shadow-inner appearance-none"
+                  className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500/50 focus:bg-black/80 transition-all shadow-inner appearance-none"
                 >
                   <option value="" disabled>请选择科目</option>
                   {(selectedTopupStudent.subjects || []).map(sub => (
@@ -656,7 +545,7 @@ const AdminDashboard: React.FC = () => {
                 <input 
                   type="number" required min="1" step="1"
                   value={topupAmount || ''} onChange={(e) => setTopupAmount(parseInt(e.target.value) || 0)}
-                  className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-800 dark:text-white font-bold focus:outline-none focus:border-green-500/50 focus:bg-black/80 transition-all shadow-inner text-2xl"
+                  className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white font-bold focus:outline-none focus:border-green-500/50 focus:bg-black/80 transition-all shadow-inner text-2xl"
                 />
               </div>
 
@@ -674,11 +563,11 @@ const AdminDashboard: React.FC = () => {
       {isEditModalOpen && editingStudent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsEditModalOpen(false)}></div>
-          <div className="relative bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/10 w-full max-w-md rounded-3xl p-8 shadow-[0_0_50px_rgba(0,0,0,0.8)] animate-in zoom-in-95 duration-200">
+          <div className="relative bg-slate-900 border border-white/10 w-full max-w-md rounded-3xl p-8 shadow-[0_0_50px_rgba(0,0,0,0.8)] animate-in zoom-in-95 duration-200">
             <button onClick={() => setIsEditModalOpen(false)} className="absolute top-6 right-6 text-gray-400 hover:text-white transition-colors">
               <X className="w-5 h-5" />
             </button>
-            <h3 className="text-xl font-bold text-slate-800 dark:text-white tracking-widest mb-6 border-b border-slate-100 dark:border-white/5 pb-4">
+            <h3 className="text-xl font-bold text-white tracking-widest mb-6 border-b border-white/5 pb-4">
               编辑能力雷达图 - {editingStudent.name}
             </h3>
             
@@ -696,7 +585,7 @@ const AdminDashboard: React.FC = () => {
                       step="0.1"
                       value={(editingStudent as any)[field] || 0}
                       onChange={(e) => setEditingStudent({...editingStudent, [field]: parseFloat(e.target.value)})}
-                      className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-800 dark:text-white font-mono font-bold focus:outline-none focus:border-cyan-500/50 focus:bg-black/80 transition-all shadow-inner"
+                      className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white font-mono font-bold focus:outline-none focus:border-cyan-500/50 focus:bg-black/80 transition-all shadow-inner"
                     />
                   </div>
                 ))}
@@ -714,19 +603,19 @@ const AdminDashboard: React.FC = () => {
       {deleteStudentModalOpen && studentToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setDeleteStudentModalOpen(false)}></div>
-          <div className="relative bg-white dark:bg-slate-900 border border-red-100 dark:border-red-500/30 w-full max-w-sm rounded-3xl p-6 shadow-[0_0_50px_rgba(239,68,68,0.2)] animate-in zoom-in-95 duration-200">
+          <div className="relative bg-slate-900 border border-red-500/30 w-full max-w-sm rounded-3xl p-6 shadow-[0_0_50px_rgba(239,68,68,0.2)] animate-in zoom-in-95 duration-200">
             <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4 mx-auto">
               <AlertTriangle className="w-6 h-6 text-red-500" />
             </div>
-            <h3 className="text-xl font-bold text-slate-800 dark:text-white text-center mb-2">确认删除学员？</h3>
-            <p className="text-sm text-slate-500 dark:text-gray-400 text-center mb-6">
-              您正在删除学员 <span className="text-slate-800 dark:text-white font-bold">{studentToDelete.name}</span>。<br/>
+            <h3 className="text-xl font-bold text-white text-center mb-2">确认删除学员？</h3>
+            <p className="text-sm text-gray-400 text-center mb-6">
+              您正在删除学员 <span className="text-white font-bold">{studentToDelete.name}</span>。<br/>
               此操作不可逆，学员的所有课时和记录将被永久删除。
             </p>
             <div className="flex gap-3">
               <button 
                 onClick={() => setDeleteStudentModalOpen(false)}
-                className="flex-1 py-3 rounded-xl font-bold bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-gray-400 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
+                className="flex-1 py-3 rounded-xl font-bold bg-white/5 text-gray-400 hover:bg-white/10 transition-colors"
               >
                 取消
               </button>

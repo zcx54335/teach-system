@@ -4,9 +4,63 @@
 
 @layer base {
   body {
-    @apply bg-background text-gray-900;
+    @apply bg-[#f0f2f5] text-[#333];
     -webkit-tap-highlight-color: transparent;
   }
+  .dark body {
+    @apply bg-[#0b1220] text-slate-100;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-enter {
+  animation: fadeInUp 360ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter {
+    animation: none;
+  }
+}
+
+.ant-card {
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+.ant-modal-content {
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12);
+}
+
+.dark .ant-card {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark .ant-modal-content {
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+
+.app-sider .ant-layout-sider-trigger {
+  background: var(--sider-bg) !important;
+  color: var(--sider-text) !important;
+  border-top: 1px solid var(--sider-border) !important;
+  transition: all 0.3s;
+}
+
+.app-sider .ant-layout-sider-trigger:hover {
+  background: var(--sider-hover) !important;
+  color: var(--sider-text) !important;
 }
 
 @layer utilities {

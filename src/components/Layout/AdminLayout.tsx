@@ -18,22 +18,19 @@ const AdminLayout: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen flex bg-[#020617] text-white font-inter selection:bg-cyan-500/30 overflow-hidden">
+    <div className="min-h-screen flex bg-[#141414] text-white font-inter overflow-hidden">
       {/* 背景光效 */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-blue-900/10 blur-[120px]"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-purple-900/10 blur-[100px]"></div>
-      </div>
+      <div className="fixed inset-0 z-0 pointer-events-none"></div>
 
       {/* 左侧边栏 - 固定宽度 */}
-      <aside className="relative z-10 w-[240px] bg-black/40 border-r border-white/5 backdrop-blur-2xl flex flex-col shrink-0">
+      <aside className="relative z-10 w-[240px] bg-[#141414] border-r border-white/10 flex flex-col shrink-0">
         <div className="p-8 flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(34,211,238,0.4)]">
+          <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
             <Hexagon className="w-6 h-6 text-white" />
           </div>
           <div>
             <h1 className="text-lg font-black tracking-widest text-white">小鱼思维</h1>
-            <p className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">Admin</p>
+            <p className="text-[10px] font-mono text-white/60 uppercase tracking-widest">Admin</p>
           </div>
         </div>
 
@@ -46,8 +43,8 @@ const AdminLayout: React.FC = () => {
                 onClick={() => navigate(item.path)}
                 className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 ${
                   isActive 
-                    ? 'bg-cyan-500/10 text-cyan-400 border-l-2 border-cyan-400 shadow-[inset_4px_0_0_rgba(34,211,238,1)]' 
-                    : 'text-gray-400 hover:bg-white/5 hover:text-white border-l-2 border-transparent'
+                    ? 'bg-white/10 text-white border-l-2 border-white shadow-[inset_4px_0_0_rgba(255,255,255,1)]' 
+                    : 'text-white/70 hover:bg-white/5 hover:text-white border-l-2 border-transparent'
                 }`}
               >
                 <item.icon className="w-5 h-5" />
