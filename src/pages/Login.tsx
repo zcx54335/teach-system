@@ -182,11 +182,11 @@ const Login: React.FC = () => {
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('phone', values.identifier)
-        .single();
+        .or(`phone.eq.${values.identifier},account.eq.${values.identifier}`)
+        .maybeSingle();
 
       if (error || !profile) {
-        setError('该手机号未注册，请联系杨老师开通');
+        setError('该账号或手机号未注册，请联系管理员开通');
       } else if (profile.password === values.password) {
         // 处理记住账号
         if (values.remember) {
@@ -210,13 +210,15 @@ const Login: React.FC = () => {
 
         const sessionData = {
           id: profile.id as string,
-          phone: profile.phone as string,
+          phone: (profile.phone as string) || '',
+          account: (profile.account as string) || '',
           role,
           full_name:
             (profile.full_name as string | null) ||
-            (role === ROLES.SUPER_ADMIN ? '杨老师' : role === ROLES.TEACHER ? '教师' : '家长'),
+            (role === ROLES.SUPER_ADMIN ? '熊熊' : role === ROLES.TEACHER ? '教师' : '家长'),
         };
         setUser(sessionData);
+        message.success('登录成功，欢迎回来');
 
         if (role === 'parent') {
           navigate('/dashboard/report');
@@ -268,11 +270,11 @@ const Login: React.FC = () => {
             requiredMark={false}
           >
             <Form.Item
-              label="用户名 / 手机号"
+              label="账号 / 手机号"
               name="identifier"
-              rules={[{ required: true, message: '请输入手机号' }]}
+              rules={[{ required: true, message: '请输入账号或手机号' }]}
             >
-              <Input size="large" placeholder="请输入手机号" />
+              <Input size="large" placeholder="请输入账号或手机号" />
             </Form.Item>
 
             <Form.Item
