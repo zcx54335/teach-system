@@ -4,6 +4,7 @@ import { normalizeRole, type Role } from '../../constants/rbac';
 export type CurrentUser = {
   id: string;
   phone?: string;
+  account?: string;
   full_name?: string;
   role: Role;
 };
@@ -28,6 +29,7 @@ const readUserFromStorage = (): CurrentUser | null => {
       id,
       role,
       phone: typeof raw.phone === 'string' ? raw.phone : undefined,
+      account: typeof raw.account === 'string' ? raw.account : undefined,
       full_name: typeof raw.full_name === 'string' ? raw.full_name : undefined,
     };
   } catch {
@@ -49,6 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       JSON.stringify({
         id: next.id,
         phone: next.phone,
+        account: next.account,
         role: next.role,
         full_name: next.full_name,
       }),

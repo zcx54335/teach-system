@@ -182,13 +182,13 @@ const Login: React.FC = () => {
       const { data: profile, error } = await supabase
         .from('system_users')
         .select('*')
-        .or(`phone.eq.${values.identifier},account.eq.${values.identifier}`)
-        .maybeSingle();
+        .eq('account', values.identifier)
+        .single();
 
       console.error("Supabase 查询结果:", { data: profile, error });
 
       if (error || !profile) {
-        setError('该账号或手机号未注册，请联系管理员开通');
+        setError('该账号未注册，请联系管理员开通');
       } else if (profile.password === values.password) {
         // 处理记住账号
         if (values.remember) {
@@ -212,7 +212,6 @@ const Login: React.FC = () => {
 
         const sessionData = {
           id: profile.id as string,
-          phone: (profile.phone as string) || '',
           account: (profile.account as string) || '',
           role,
           full_name:
@@ -272,11 +271,11 @@ const Login: React.FC = () => {
             requiredMark={false}
           >
             <Form.Item
-              label="账号 / 手机号"
+              label="账号"
               name="identifier"
-              rules={[{ required: true, message: '请输入账号或手机号' }]}
+              rules={[{ required: true, message: '请输入账号' }]}
             >
-              <Input size="large" placeholder="请输入账号或手机号" />
+              <Input size="large" placeholder="请输入账号" />
             </Form.Item>
 
             <Form.Item
