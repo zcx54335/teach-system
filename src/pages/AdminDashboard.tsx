@@ -8,6 +8,8 @@ import {
 import toast from 'react-hot-toast';
 import { Button, Card, Col, Empty, Row, Skeleton, Space, Statistic, Table, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import { useAuth } from '../components/Auth/AuthProvider';
+import { ROLES } from '../constants/rbac';
 
 interface StudentRecord {
   id: string;
@@ -31,6 +33,7 @@ interface StudentRecord {
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [students, setStudents] = useState<StudentRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [uptime, setUptime] = useState(0);
@@ -65,7 +68,13 @@ const AdminDashboard: React.FC = () => {
   const fetchStudents = async () => {
     setIsLoading(true);
     const [stuRes, settingsRes] = await Promise.all([
-      supabase.from('students').select('*').order('created_at', { ascending: false }),
+      (() => {
+        let q = supabase.from('students').select('*').order('created_at', { ascending: false });
+        if (user?.role === ROLES.TEACHER) {
+          q = q.eq('teacher_id', user.id);
+        }
+        return q;
+      })(),
       supabase.from('system_settings').select('subjects_list').eq('id', 1).single()
     ]);
       
@@ -316,6 +325,7 @@ const AdminDashboard: React.FC = () => {
 
   const totalStudents = students.length;
   const totalRemainingClasses = students.reduce((acc, curr) => acc + (curr.remaining_classes || 0), 0);
+  const canManageStudents = user?.role === ROLES.SUPER_ADMIN;
 
   const columns: ColumnsType<StudentRecord> = [
     {
@@ -357,9 +367,11 @@ const AdminDashboard: React.FC = () => {
           <Button type="link" onClick={() => window.open(`/#/parent?id=${record.id}`, '_blank', 'noopener,noreferrer')}>
             查看报告
           </Button>
-          <Button type="link" danger onClick={() => handleDeleteStudentClick(record)}>
-            删除
-          </Button>
+          {canManageStudents && (
+            <Button type="link" danger onClick={() => handleDeleteStudentClick(record)}>
+              删除
+            </Button>
+          )}
         </Space>
       ),
     },
@@ -374,9 +386,11 @@ const AdminDashboard: React.FC = () => {
           </Typography.Title>
           <Typography.Text type="secondary">实时掌握学员资产与课时结构</Typography.Text>
         </div>
-        <Button type="primary" onClick={handleAddStudentClick}>
-          新增学员
-        </Button>
+        {canManageStudents && (
+          <Button type="primary" onClick={handleAddStudentClick}>
+            新增学员
+          </Button>
+        )}
       </div>
 
       <Row gutter={[16, 16]}>
@@ -403,11 +417,13 @@ const AdminDashboard: React.FC = () => {
         ) : students.length === 0 ? (
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description="暂无学员数据，点击新增第一位学员"
+            description={canManageStudents ? '暂无学员数据，点击新增第一位学员' : '暂无学员数据'}
           >
-            <Button type="primary" onClick={handleAddStudentClick}>
-              新增学员
-            </Button>
+            {canManageStudents && (
+              <Button type="primary" onClick={handleAddStudentClick}>
+                新增学员
+              </Button>
+            )}
           </Empty>
         ) : (
           <Table
@@ -419,11 +435,13 @@ const AdminDashboard: React.FC = () => {
               emptyText: (
                 <Empty
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description="暂无学员数据，点击新增第一位学员"
+                  description={canManageStudents ? '暂无学员数据，点击新增第一位学员' : '暂无学员数据'}
                 >
-                  <Button type="primary" onClick={handleAddStudentClick}>
-                    新增学员
-                  </Button>
+                  {canManageStudents && (
+                    <Button type="primary" onClick={handleAddStudentClick}>
+                      新增学员
+                    </Button>
+                  )}
                 </Empty>
               ),
             }}

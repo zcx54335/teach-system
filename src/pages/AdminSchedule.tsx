@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import { Button, Empty, Skeleton } from 'antd';
 import toast from 'react-hot-toast';
+import { useAuth } from '../components/Auth/AuthProvider';
+import { ROLES } from '../constants/rbac';
 
 // Helper to format date consistently to YYYY-MM-DD
 const toDateString = (d: Date) => {
@@ -36,6 +38,7 @@ const getCalendarDays = (date: Date) => {
 };
 
 const AdminSchedule: React.FC = () => {
+  const { user } = useAuth();
   const [students, setStudents] = useState<any[]>([]);
   const [schedules, setSchedules] = useState<any[]>([]);
   const [systemSettings, setSystemSettings] = useState<any>(null);
@@ -56,21 +59,13 @@ const AdminSchedule: React.FC = () => {
 
   const fetchData = async () => {
     setIsLoading(true);
-    const sessionStr = localStorage.getItem('xiaoyu_user');
-    let currentUser = null;
-    if (sessionStr) {
-      try { currentUser = JSON.parse(sessionStr); } catch (e) {}
-    }
-
     let studentQuery = supabase.from('students').select('*').order('created_at', { ascending: false });
     let scheduleQuery = supabase.from('schedules').select('*').order('start_time', { ascending: true });
     let settingsQuery = supabase.from('system_settings').select('*').eq('id', 1).single();
 
-    if (currentUser) {
-      const role = currentUser.role === 'admin' ? 'sysadmin' : currentUser.role;
-      if (role === 'teacher') {
-        studentQuery = studentQuery.eq('teacher_id', currentUser.id);
-      }
+    if (user?.role === ROLES.TEACHER) {
+      studentQuery = studentQuery.eq('teacher_id', user.id);
+      scheduleQuery = scheduleQuery.eq('teacher_id', user.id);
     }
 
     const [studentRes, scheduleRes, settingsRes] = await Promise.all([studentQuery, scheduleQuery, settingsQuery]);
@@ -126,13 +121,26 @@ const AdminSchedule: React.FC = () => {
     }
     setIsSavingSchedule(true);
     try {
+      let teacherId: string | null = null;
+      if (user?.role === ROLES.TEACHER) {
+        teacherId = user.id;
+      } else {
+        const teacherIds = new Set<string>();
+        for (const sid of newSchedStudents) {
+          const t = students.find((s) => s.id === sid)?.teacher_id;
+          if (typeof t === 'string' && t) teacherIds.add(t);
+        }
+        if (teacherIds.size === 1) teacherId = Array.from(teacherIds)[0];
+      }
+
       const { error } = await supabase.from('schedules').insert({
         date: newSchedDate,
         start_time: newSchedStart,
         end_time: newSchedEnd,
         subject: newSchedSubject,
         student_ids: newSchedStudents,
-        status: 'pending'
+        status: 'pending',
+        ...(teacherId ? { teacher_id: teacherId } : {}),
       });
       if (error) throw error;
       
@@ -169,15 +177,17 @@ const AdminSchedule: React.FC = () => {
           </h2>
           <p className="text-xs md:text-sm text-slate-500 dark:text-gray-400 font-mono tracking-widest mt-2">FUTURE SCHEDULE MANAGEMENT</p>
         </div>
-        <button 
-          onClick={() => {
-            setNewSchedDate(selectedDateStr);
-            setIsAddModalOpen(true);
-          }}
-          className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-2.5 px-5 rounded-xl flex items-center transition-all shadow-[0_0_15px_rgba(6,182,212,0.4)]"
-        >
-          <Plus className="w-5 h-5 mr-1" /> 新增排课
-        </button>
+        {user?.role === ROLES.SUPER_ADMIN && (
+          <button 
+            onClick={() => {
+              setNewSchedDate(selectedDateStr);
+              setIsAddModalOpen(true);
+            }}
+            className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-2.5 px-5 rounded-xl flex items-center transition-all shadow-[0_0_15px_rgba(6,182,212,0.4)]"
+          >
+            <Plus className="w-5 h-5 mr-1" /> 新增排课
+          </button>
+        )}
       </header>
 
       <div className="flex flex-col lg:flex-row gap-6 min-h-0">

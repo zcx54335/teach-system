@@ -8,6 +8,8 @@ import { QRCodeSVG } from 'qrcode.react';
 import toast from 'react-hot-toast';
 import { Button, Calendar, Card, Empty, Input, Modal, Skeleton, Space, Table, Tag, Typography } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
+import { useAuth } from '../components/Auth/AuthProvider';
+import { ROLES } from '../constants/rbac';
 
 const toDateString = (d: Date) => {
   const year = d.getFullYear();
@@ -29,6 +31,7 @@ type Schedule = {
 
 const TeacherWorkbench: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [students, setStudents] = useState<any[]>([]);
   const [schedules, setSchedules] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -58,12 +61,6 @@ const TeacherWorkbench: React.FC = () => {
 
   const fetchData = async () => {
     setIsLoading(true);
-    const sessionStr = localStorage.getItem('xiaoyu_user');
-    let currentUser = null;
-    if (sessionStr) {
-      try { currentUser = JSON.parse(sessionStr); } catch (e) {}
-    }
-
     const dateStr = toDateString(selectedDate);
 
     let studentQuery = supabase.from('students').select('*');
@@ -73,11 +70,9 @@ const TeacherWorkbench: React.FC = () => {
       .eq('date', dateStr)
       .order('start_time', { ascending: true });
 
-    if (currentUser) {
-      const role = currentUser.role === 'admin' ? 'sysadmin' : currentUser.role;
-      if (role === 'teacher') {
-        studentQuery = studentQuery.eq('teacher_id', currentUser.id);
-      }
+    if (user?.role === ROLES.TEACHER) {
+      studentQuery = studentQuery.eq('teacher_id', user.id);
+      scheduleQuery = scheduleQuery.eq('teacher_id', user.id);
     }
 
     const [studentRes, scheduleRes] = await Promise.all([studentQuery, scheduleQuery]);

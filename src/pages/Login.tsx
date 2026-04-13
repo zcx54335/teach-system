@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabaseClient';
 import { Alert, Button, Card, Checkbox, Divider, Form, Input, Space, Switch, theme, Typography, message } from 'antd';
 import { MoonOutlined, RightOutlined, SunOutlined } from '@ant-design/icons';
 import { useTheme } from '../components/Theme/ThemeProvider';
+import { useAuth } from '../components/Auth/AuthProvider';
+import { normalizeRole, ROLES } from '../constants/rbac';
 
 const encoder = new TextEncoder();
 
@@ -65,6 +67,7 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { setUser } = useAuth();
 
   // 初始化记住账号
   useEffect(() => {
@@ -199,18 +202,26 @@ const Login: React.FC = () => {
           localStorage.removeItem('rememberedCredentials');
         }
 
-        // 密码比对正确后，生成一个本地 Session
-        const sessionData = {
-          id: profile.id,
-          phone: profile.phone,
-          role: profile.role === 'admin' ? 'sysadmin' : profile.role,
-          full_name: profile.full_name || (profile.role === 'admin' || profile.role === 'sysadmin' ? '杨老师' : '家长')
-        };
-        localStorage.setItem('xiaoyu_user', JSON.stringify(sessionData));
+        const role = normalizeRole(profile.role);
+        if (!role) {
+          setError('账号角色异常，请联系管理员');
+          return;
+        }
 
-        const role = sessionData.role;
+        const sessionData = {
+          id: profile.id as string,
+          phone: profile.phone as string,
+          role,
+          full_name:
+            (profile.full_name as string | null) ||
+            (role === ROLES.SUPER_ADMIN ? '杨老师' : role === ROLES.TEACHER ? '教师' : '家长'),
+        };
+        setUser(sessionData);
+
         if (role === 'parent') {
           navigate('/dashboard/report');
+        } else if (role === ROLES.TEACHER) {
+          navigate('/dashboard/deduction');
         } else {
           navigate('/dashboard/dashboard');
         }

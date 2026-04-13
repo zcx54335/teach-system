@@ -1,13 +1,14 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Activity, Banknote, BookOpen, Database, Hexagon, Laptop, Users, UserCheck, History } from 'lucide-react';
-import { Avatar, Breadcrumb, Dropdown, Layout, Menu, message, Switch, theme, Typography } from 'antd';
+import { Avatar, Badge, Breadcrumb, Button, Dropdown, Layout, List, Menu, Popover, Skeleton, Switch, theme, Typography, message } from 'antd';
 import type { MenuProps } from 'antd';
-import { DownOutlined, LogoutOutlined, MoonOutlined, SettingOutlined, SunOutlined, UserOutlined } from '@ant-design/icons';
+import { BellOutlined, CheckOutlined, LogoutOutlined, MailOutlined, MoonOutlined, SettingOutlined, SunOutlined, UserOutlined } from '@ant-design/icons';
 import { useTheme } from '../Theme/ThemeProvider';
 import { AnimatePresence, motion } from 'framer-motion';
-
-type UserRole = 'sysadmin' | 'teacher' | 'parent' | null;
+import useNotifications, { type NotificationView } from '../../hooks/useNotifications';
+import { useAuth } from '../Auth/AuthProvider';
+import { ROLES } from '../../constants/rbac';
 
 const { Header, Sider, Content } = Layout;
 
@@ -16,33 +17,20 @@ const MainLayout: React.FC = () => {
   const location = useLocation();
   const { token } = theme.useToken();
   const { theme: appTheme, setTheme } = useTheme();
+  const { user, logout } = useAuth();
 
-  const [userRole, setUserRole] = useState<UserRole>(null);
-  const [userName, setUserName] = useState('');
   const [collapsed, setCollapsed] = useState(false);
-
-  useEffect(() => {
-    const sessionStr = localStorage.getItem('xiaoyu_user');
-    if (!sessionStr) {
-      navigate('/login');
-      return;
-    }
-    try {
-      const session = JSON.parse(sessionStr);
-      const role = session.role === 'admin' ? 'sysadmin' : session.role;
-      setUserRole(role);
-      setUserName(session.full_name || '用户');
-    } catch {
-      navigate('/login');
-    }
-  }, [navigate]);
+  const userId = user?.id ?? null;
+  const userName = user?.full_name || '用户';
+  const userRole = user?.role || null;
+  const { notifications, unreadCount, isLoading: isNotificationsLoading, markAsRead, clearAll } = useNotifications(userId);
 
   const handleLogout = () => {
-    localStorage.removeItem('xiaoyu_user');
+    logout();
     navigate('/');
   };
 
-  const roleLabel = userRole === 'sysadmin' ? '超级管理员' : userRole === 'teacher' ? '教师' : userRole === 'parent' ? '家长' : '';
+  const roleLabel = userRole === ROLES.SUPER_ADMIN ? '超级管理员' : userRole === ROLES.TEACHER ? '教师' : userRole === 'parent' ? '家长' : '';
 
   const selectedMenuKey = useMemo(() => {
     const pathname = location.pathname.replace(/\/+$/, '');
@@ -87,7 +75,9 @@ const MainLayout: React.FC = () => {
     };
 
     const parts = pathname.split('/').filter(Boolean);
-    const trail: Array<{ title: string; path: string }> = [{ title: '控制台', path: '/dashboard/dashboard' }];
+    const trail: Array<{ title: string; path: string }> = [
+      { title: '控制台', path: userRole === ROLES.TEACHER ? '/dashboard/deduction' : '/dashboard/dashboard' },
+    ];
     if (parts.length >= 2) {
       const section = parts[1];
       if (section === 'education') {
@@ -128,7 +118,7 @@ const MainLayout: React.FC = () => {
   ];
 
   const menuItems = useMemo(() => {
-    if (userRole === 'sysadmin' || userRole === 'teacher') {
+    if (userRole === ROLES.SUPER_ADMIN) {
       return [
         {
           key: '/dashboard/dashboard',
@@ -175,20 +165,35 @@ const MainLayout: React.FC = () => {
           label: '消课与推送流水',
           icon: <History className="w-4 h-4" />,
         },
-        ...(userRole === 'sysadmin'
-          ? [
-              {
-                key: 'settings',
-                label: '系统管理',
-                icon: <Database className="w-4 h-4" />,
-                children: [
-                  { key: '/dashboard/settings/basic', label: '基础设置' },
-                  { key: '/dashboard/settings/roles', label: '角色与权限' },
-                  { key: '/dashboard/settings/audit', label: '操作日志' },
-                ],
-              },
-            ]
-          : []),
+        {
+          key: 'settings',
+          label: '系统管理',
+          icon: <Database className="w-4 h-4" />,
+          children: [
+            { key: '/dashboard/settings/basic', label: '基础设置' },
+            { key: '/dashboard/settings/roles', label: '角色与权限' },
+            { key: '/dashboard/settings/audit', label: '操作日志' },
+          ],
+        },
+      ];
+    }
+    if (userRole === ROLES.TEACHER) {
+      return [
+        {
+          key: '/dashboard/deduction',
+          label: '日历消课',
+          icon: <BookOpen className="w-4 h-4" />,
+        },
+        {
+          key: '/dashboard/schedule',
+          label: '排课与家校',
+          icon: <BookOpen className="w-4 h-4" />,
+        },
+        {
+          key: '/dashboard/students',
+          label: '学员档案',
+          icon: <Users className="w-4 h-4" />,
+        },
       ];
     }
     if (userRole === 'parent') {
@@ -201,6 +206,111 @@ const MainLayout: React.FC = () => {
   }, [userRole]);
 
   const isDark = appTheme === 'dark' || (appTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+  const notificationHeaderIconBg = useMemo(() => {
+    return `linear-gradient(135deg, ${token.colorInfo} 0%, ${token.colorSuccess} 100%)`;
+  }, [token.colorInfo, token.colorSuccess]);
+
+  const notificationPanel = (
+    <div style={{ width: 340 }}>
+      <div
+        className="flex items-center justify-between"
+        style={{ padding: '10px 12px', borderBottom: `1px solid ${token.colorSplit}` }}
+      >
+        <Typography.Text strong style={{ color: token.colorText }}>
+          通知
+        </Typography.Text>
+        <div className="flex items-center gap-2">
+          <div
+            className="flex items-center justify-center"
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: 8,
+              background: notificationHeaderIconBg,
+            }}
+          >
+            <MailOutlined style={{ color: '#fff' }} />
+          </div>
+        </div>
+      </div>
+
+      <div style={{ maxHeight: 360, overflow: 'auto' }}>
+        {isNotificationsLoading ? (
+          <div style={{ padding: 12 }}>
+            <Skeleton active />
+          </div>
+        ) : (
+          <List<NotificationView>
+            dataSource={notifications}
+            locale={{ emptyText: '暂无通知' }}
+            renderItem={(item) => (
+              <List.Item
+                style={{ padding: '10px 12px' }}
+                actions={[
+                  <Button
+                    key="read"
+                    type="text"
+                    size="small"
+                    icon={<CheckOutlined />}
+                    onClick={() => markAsRead(item.id)}
+                  />,
+                ]}
+              >
+                <List.Item.Meta
+                  avatar={
+                    <Avatar
+                      style={{
+                        background: `linear-gradient(135deg, ${token.colorInfo} 0%, ${token.colorSuccess} 100%)`,
+                        color: '#fff',
+                        boxShadow: token.boxShadowTertiary,
+                      }}
+                    >
+                      {item.title.charAt(0)}
+                    </Avatar>
+                  }
+                  title={
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Typography.Text strong style={{ color: token.colorText }} ellipsis>
+                        {item.title}
+                      </Typography.Text>
+                      {!item.is_read ? <Badge status="processing" /> : null}
+                    </div>
+                  }
+                  description={
+                    <div className="min-w-0">
+                      <div
+                        className="truncate"
+                        style={{ color: token.colorTextSecondary, maxWidth: 220 }}
+                        title={item.content}
+                      >
+                        {item.content}
+                      </div>
+                      <div className="text-xs" style={{ color: token.colorTextTertiary, marginTop: 4 }}>
+                        {item.timeLabel}
+                      </div>
+                    </div>
+                  }
+                />
+              </List.Item>
+            )}
+          />
+        )}
+      </div>
+
+      <div
+        className="flex items-center justify-between"
+        style={{ padding: '10px 12px', borderTop: `1px solid ${token.colorSplit}` }}
+      >
+        <Button type="text" size="small" onClick={clearAll}>
+          清空
+        </Button>
+        <Button type="primary" size="small" onClick={() => message.info('查看所有消息开发中')}>
+          查看所有消息
+        </Button>
+      </div>
+    </div>
+  );
 
   return (
     <Layout className="h-screen overflow-hidden">
@@ -272,6 +382,36 @@ const MainLayout: React.FC = () => {
           />
 
           <div className="flex items-center gap-4">
+            <Popover
+              trigger={['click']}
+              placement="bottomRight"
+              content={notificationPanel}
+              overlayInnerStyle={{
+                background: token.colorBgElevated,
+                borderRadius: token.borderRadiusLG,
+                padding: 0,
+                boxShadow: token.boxShadowSecondary,
+              }}
+            >
+              <div
+                className="flex items-center justify-center cursor-pointer"
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: token.borderRadiusLG,
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLDivElement).style.background = token.colorFillAlter;
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLDivElement).style.background = 'transparent';
+                }}
+              >
+                <Badge count={unreadCount} size="small" overflowCount={99}>
+                  <BellOutlined style={{ fontSize: 18, color: token.colorText }} />
+                </Badge>
+              </div>
+            </Popover>
             <Switch
               checked={isDark}
               checkedChildren={<MoonOutlined />}
@@ -294,24 +434,14 @@ const MainLayout: React.FC = () => {
               trigger={['hover']}
               placement="bottomRight"
             >
-              <div className="flex items-center gap-3 px-3 py-2 rounded-xl cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5">
-                <Avatar
-                  size={32}
-                  style={{ background: token.colorPrimary, verticalAlign: 'middle' }}
-                  icon={!userName ? <UserOutlined /> : undefined}
-                >
-                  {userName ? userName.charAt(0) : null}
-                </Avatar>
-                <div className="hidden sm:flex flex-col leading-4">
-                  <div className="text-sm font-semibold" style={{ color: token.colorText }}>
-                    {userName}
-                  </div>
-                  <div className="text-xs" style={{ color: token.colorTextSecondary }}>
-                    {roleLabel}
-                  </div>
-                </div>
-                <DownOutlined style={{ fontSize: 12, color: token.colorTextSecondary }} />
-              </div>
+              <Avatar
+                size={32}
+                className="cursor-pointer"
+                style={{ background: token.colorPrimary, verticalAlign: 'middle' }}
+                icon={!userName ? <UserOutlined /> : undefined}
+              >
+                {userName ? userName.charAt(0) : null}
+              </Avatar>
             </Dropdown>
           </div>
         </Header>
