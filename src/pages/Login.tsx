@@ -180,10 +180,12 @@ const Login: React.FC = () => {
 
     try {
       const { data: profile, error } = await supabase
-        .from('profiles')
+        .from('system_users')
         .select('*')
         .or(`phone.eq.${values.identifier},account.eq.${values.identifier}`)
         .maybeSingle();
+
+      console.error("Supabase 查询结果:", { data: profile, error });
 
       if (error || !profile) {
         setError('该账号或手机号未注册，请联系管理员开通');
