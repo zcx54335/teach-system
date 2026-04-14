@@ -207,18 +207,20 @@ const Login: React.FC = () => {
           return;
         }
 
-        const rawId = (profile as any).id ?? (profile as any).user_id;
-        if (typeof rawId !== 'string' || !rawId) {
+        const rawId = (profile as any).id;
+        if (rawId === null || rawId === undefined || String(rawId).trim() === '') {
+          console.error('system_users row missing id field', { row: profile });
           setError('账号数据缺少 id 字段，请检查 system_users.id');
           return;
         }
+        const id = String(rawId);
 
         const sessionData = {
-          id: rawId,
+          id,
           account: (profile.account as string) || '',
           role,
           full_name:
-            (profile.full_name as string | null) ||
+            ((profile.full_name as string | null) || (profile.name as string | null)) ||
             (role === ROLES.SUPER_ADMIN ? '熊熊' : role === ROLES.TEACHER ? '教师' : '家长'),
         };
         setUser(sessionData);
