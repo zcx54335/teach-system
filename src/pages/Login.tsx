@@ -67,7 +67,7 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { setUser } = useAuth();
+  const { user, setUser } = useAuth();
 
   // 初始化记住账号
   useEffect(() => {
@@ -91,26 +91,23 @@ const Login: React.FC = () => {
     bootstrap();
   }, []);
 
-  // 检查是否已经登录
+  // 检查是否已经登录（与全局守卫保持一致：只认本地持久化的自定义凭证）
   useEffect(() => {
-    const checkSession = async () => {
-      const sessionStr = localStorage.getItem('xiaoyu_user');
-      if (sessionStr) {
-        try {
-          const session = JSON.parse(sessionStr);
-          const role = session.role === 'admin' ? 'sysadmin' : session.role;
-          if (role === 'parent') {
-            navigate('/dashboard/report');
-          } else if (role === 'sysadmin' || role === 'teacher') {
-            navigate('/dashboard/dashboard');
-          }
-        } catch (e) {
-          // Ignore parse error
-        }
-      }
-    };
-    checkSession();
-  }, [navigate, redirectUrl]);
+    if (!user) return;
+    if (redirectUrl && redirectUrl.startsWith('/')) {
+      navigate(redirectUrl, { replace: true });
+      return;
+    }
+    if (user.role === 'parent') {
+      navigate('/dashboard/report', { replace: true });
+      return;
+    }
+    if (user.role === ROLES.TEACHER) {
+      navigate('/dashboard/deduction', { replace: true });
+      return;
+    }
+    navigate('/dashboard/dashboard', { replace: true });
+  }, [navigate, redirectUrl, user]);
 
   const pageTitle = useMemo(() => (initialType === 'parent' ? '家长登录' : '欢迎回来 👋'), [initialType]);
   const pageSubTitle = useMemo(() => (initialType === 'parent' ? '家长中心' : '小鱼思维校办系统'), [initialType]);
@@ -210,8 +207,14 @@ const Login: React.FC = () => {
           return;
         }
 
+        const rawId = (profile as any).id ?? (profile as any).user_id;
+        if (typeof rawId !== 'string' || !rawId) {
+          setError('账号数据缺少 id 字段，请检查 system_users.id');
+          return;
+        }
+
         const sessionData = {
-          id: profile.id as string,
+          id: rawId,
           account: (profile.account as string) || '',
           role,
           full_name:
