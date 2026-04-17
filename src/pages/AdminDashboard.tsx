@@ -6,7 +6,7 @@ import {
   Settings, BookOpen, Edit, MinusCircle, ExternalLink, X, CheckCircle, Trash2, AlertTriangle
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { Button, Card, Col, Empty, Row, Skeleton, Space, Statistic, Table, Tag, Typography } from 'antd';
+import { Button, Card, Col, Empty, Form, Input, Modal, Row, Select, Skeleton, Space, Statistic, Table, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useAuth } from '../components/Auth/AuthProvider';
 import { ROLES } from '../constants/rbac';
@@ -47,14 +47,7 @@ const AdminDashboard: React.FC = () => {
   const [editingStudent, setEditingStudent] = useState<StudentRecord | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  const [newStudent, setNewStudent] = useState({
-    name: '',
-    phone: '',
-    parent_phone: '',
-    school: '',
-    grade: '一年级',
-    subjects: [] as string[]
-  });
+  const [form] = Form.useForm();
   const [isAdding, setIsAdding] = useState(false);
   const [isEditStudentMode, setIsEditStudentMode] = useState(false);
   const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
@@ -105,14 +98,15 @@ const AdminDashboard: React.FC = () => {
   const handleAddStudentClick = () => {
     setIsEditStudentMode(false);
     setEditingStudentId(null);
-    setNewStudent({ name: '', phone: '', parent_phone: '', school: '', grade: '一年级', subjects: [] });
+    form.resetFields();
+    form.setFieldsValue({ grade: '一年级', subjects: [] });
     setIsAddModalOpen(true);
   };
 
   const handleEditStudentClick = (student: StudentRecord) => {
     setIsEditStudentMode(true);
     setEditingStudentId(student.id);
-    setNewStudent({
+    form.setFieldsValue({
       name: student.name || '',
       phone: student.phone || '',
       parent_phone: student.parent_phone || student.phone || '',
@@ -142,13 +136,14 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleAddStudent = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newStudent.parent_phone.length !== 11) {
+  const handleAddStudent = async (values: any) => {
+    const { name, phone, parent_phone, school, grade, subjects } = values;
+
+    if (parent_phone.length !== 11) {
       toast.error('请输入11位有效家长手机号');
       return;
     }
-    if (newStudent.subjects.length === 0) {
+    if (!subjects || subjects.length === 0) {
       toast.error('请至少选择一个报读科目');
       return;
     }
@@ -158,12 +153,12 @@ const AdminDashboard: React.FC = () => {
       if (isEditStudentMode && editingStudentId) {
         // Edit mode
         const { error } = await supabase.from('students').update({
-          name: newStudent.name,
-          phone: newStudent.phone || newStudent.parent_phone,
-          parent_phone: newStudent.parent_phone,
-          school: newStudent.school,
-          grade: newStudent.grade,
-          subjects: newStudent.subjects
+          name: name,
+          phone: phone || parent_phone,
+          parent_phone: parent_phone,
+          school: school,
+          grade: grade,
+          subjects: subjects
         }).eq('id', editingStudentId);
 
         if (error) {
@@ -173,13 +168,13 @@ const AdminDashboard: React.FC = () => {
         toast.success('✅ 学员信息修改成功！');
       } else {
         // Add mode
-        const password = newStudent.parent_phone.slice(-6);
+        const password = parent_phone.slice(-6);
 
         let profileId;
         const { data: existingProfile } = await supabase
           .from('profiles')
           .select('id')
-          .eq('phone', newStudent.parent_phone)
+          .eq('phone', parent_phone)
           .single();
 
         if (existingProfile) {
@@ -188,10 +183,10 @@ const AdminDashboard: React.FC = () => {
           const { data: insertedProfile, error: profileError } = await supabase
             .from('profiles')
             .insert([{
-              phone: newStudent.parent_phone,
+              phone: parent_phone,
               password: password,
               role: 'parent',
-              full_name: newStudent.name + '的家长'
+              full_name: name + '的家长'
             }])
             .select('id')
             .single();
@@ -201,17 +196,17 @@ const AdminDashboard: React.FC = () => {
         }
 
         const initialBalances: Record<string, number> = {};
-        newStudent.subjects.forEach(sub => {
+        subjects.forEach((sub: string) => {
           initialBalances[sub] = 0;
         });
 
         const { error: dbError } = await supabase.from('students').insert([{
-          name: newStudent.name,
-          phone: newStudent.phone || newStudent.parent_phone,
-          parent_phone: newStudent.parent_phone,
-          school: newStudent.school,
-          grade: newStudent.grade,
-          subjects: newStudent.subjects,
+          name: name,
+          phone: phone || parent_phone,
+          parent_phone: parent_phone,
+          school: school,
+          grade: grade,
+          subjects: subjects,
           course_balances: initialBalances,
           status: 'enrolled',
           auth_id: profileId,
@@ -224,7 +219,6 @@ const AdminDashboard: React.FC = () => {
         toast.success('✅ 新增学员成功！');
       }
 
-      setNewStudent({ name: '', phone: '', parent_phone: '', school: '', grade: '一年级', subjects: [] });
       setIsAddModalOpen(false);
       fetchStudents();
     } catch (err: any) {
@@ -449,88 +443,60 @@ const AdminDashboard: React.FC = () => {
         )}
       </Card>
 
-      {/* 新增学员弹窗 */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => !isAdding && setIsAddModalOpen(false)}></div>
-          <div className="relative bg-slate-900 border border-white/10 w-full max-w-lg rounded-3xl p-8 shadow-[0_0_50px_rgba(0,0,0,0.8)] animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
-            <button onClick={() => !isAdding && setIsAddModalOpen(false)} className="absolute top-6 right-6 text-gray-400 hover:text-white transition-colors">
-              <X className="w-5 h-5" />
-            </button>
-            <h3 className="text-xl font-bold text-white tracking-widest mb-6 border-b border-white/5 pb-4">
-              {isEditStudentMode ? '编辑学员信息' : '录入新学员'}
-            </h3>
-            
-            <form onSubmit={handleAddStudent} className="space-y-5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-xs font-mono font-bold text-gray-400 mb-2 uppercase tracking-[0.2em]">学员姓名 *</label>
-                  <input 
-                    type="text" required value={newStudent.name} onChange={(e) => setNewStudent({...newStudent, name: e.target.value})}
-                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white font-bold focus:outline-none focus:border-cyan-500/50 focus:bg-black/80 transition-all shadow-inner"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-mono font-bold text-gray-400 mb-2 uppercase tracking-[0.2em]">家长手机号 * (用于登录)</label>
-                  <input 
-                    type="tel" required value={newStudent.parent_phone} onChange={(e) => setNewStudent({...newStudent, parent_phone: e.target.value})}
-                    placeholder="11位手机号"
-                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white font-mono font-bold focus:outline-none focus:border-cyan-500/50 focus:bg-black/80 transition-all shadow-inner"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-mono font-bold text-gray-400 mb-2 uppercase tracking-[0.2em]">就读学校</label>
-                  <input 
-                    type="text" value={newStudent.school} onChange={(e) => setNewStudent({...newStudent, school: e.target.value})}
-                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 focus:bg-black/80 transition-all shadow-inner"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-mono font-bold text-gray-400 mb-2 uppercase tracking-[0.2em]">年级 *</label>
-                  <select 
-                    value={newStudent.grade} onChange={(e) => setNewStudent({...newStudent, grade: e.target.value})}
-                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 focus:bg-black/80 transition-all shadow-inner appearance-none"
-                  >
-                    {GRADE_OPTIONS.map(g => <option key={g} value={g} className="bg-slate-900">{g}</option>)}
-                  </select>
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-xs font-mono font-bold text-gray-400 mb-3 uppercase tracking-[0.2em]">报读科目 * (多选)</label>
-                <div className="grid grid-cols-2 gap-3">
-                  {systemSubjects.map(sub => (
-                    <label key={sub} className={`flex items-center p-3 rounded-xl border cursor-pointer transition-all ${newStudent.subjects.includes(sub) ? 'bg-cyan-500/20 border-cyan-500/50' : 'bg-black/50 border-white/10 hover:border-white/30'}`}>
-                      <input 
-                        type="checkbox" 
-                        className="hidden"
-                        checked={newStudent.subjects.includes(sub)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setNewStudent({...newStudent, subjects: [...newStudent.subjects, sub]});
-                          } else {
-                            setNewStudent({...newStudent, subjects: newStudent.subjects.filter(s => s !== sub)});
-                          }
-                        }}
-                      />
-                      <div className={`w-4 h-4 rounded border flex items-center justify-center mr-3 ${newStudent.subjects.includes(sub) ? 'bg-cyan-500 border-cyan-500' : 'border-gray-500'}`}>
-                        {newStudent.subjects.includes(sub) && <CheckCircle className="w-3 h-3 text-white" />}
-                      </div>
-                      <span className={`text-sm font-bold ${newStudent.subjects.includes(sub) ? 'text-cyan-400' : 'text-gray-300'}`}>{sub}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
+      <Modal
+        title={isEditStudentMode ? '编辑学员信息' : '录入新学员'}
+        open={isAddModalOpen}
+        onCancel={() => !isAdding && setIsAddModalOpen(false)}
+        onOk={() => form.submit()}
+        confirmLoading={isAdding}
+        width={600}
+      >
+        <Form form={form} layout="vertical" onFinish={handleAddStudent} requiredMark={false}>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="name" label="学员姓名" rules={[{ required: true, message: '请输入学员姓名' }]}>
+                <Input placeholder="例如：李小明" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item 
+                name="parent_phone" 
+                label="家长手机号 (用于登录)" 
+                rules={[
+                  { required: true, message: '请输入家长手机号' },
+                  { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的 11 位手机号' }
+                ]}
+              >
+                <Input placeholder="11位手机号" />
+              </Form.Item>
+            </Col>
+          </Row>
+          
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="school" label="就读学校">
+                <Input placeholder="例如：第一小学" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="grade" label="年级" rules={[{ required: true, message: '请选择年级' }]}>
+                <Select placeholder="请选择年级" options={GRADE_OPTIONS.map(g => ({ label: g, value: g }))} />
+              </Form.Item>
+            </Col>
+          </Row>
 
-              <div className="pt-6">
-                <button type="submit" disabled={isAdding} className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-4 rounded-xl tracking-widest transition-all shadow-[0_0_20px_rgba(34,211,238,0.4)] active:scale-95 disabled:opacity-50 flex justify-center items-center">
-                  {isAdding ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : (isEditStudentMode ? '确认保存修改' : '确认创建并分配初始密码')}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+          <Form.Item name="subjects" label="报读科目" rules={[{ required: true, message: '请至少选择一个报读科目' }]}>
+            <Select
+              mode="multiple"
+              placeholder="请选择报读科目"
+              options={systemSubjects.map(sub => ({ label: sub, value: sub }))}
+              maxTagCount="responsive"
+              style={{ width: '100%' }}
+              notFoundContent="暂无科目，请先前往科目配置中添加"
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
 
       {/* 课时充值弹窗 */}
       {isTopupModalOpen && selectedTopupStudent && (

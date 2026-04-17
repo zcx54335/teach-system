@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
-import { Avatar, Button, Card, Empty, Form, Input, Modal, Skeleton, Space, Table, Transfer, Typography, message } from 'antd';
+import { Avatar, Button, Card, Empty, Form, Input, Modal, Select, Skeleton, Space, Table, Transfer, Typography, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import type { TransferItem } from 'antd/es/transfer';
 
@@ -18,6 +18,8 @@ type Student = {
   teacher_id?: string | null;
 };
 
+
+
 export default function TeachersManagement() {
   const navigate = useNavigate();
   const [form] = Form.useForm();
@@ -25,6 +27,7 @@ export default function TeachersManagement() {
   const [isLoading, setIsLoading] = useState(true);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
+  const [subjectOptions, setSubjectOptions] = useState<{ label: string; value: string }[]>([]);
 
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
   const [isTeacherModalOpen, setIsTeacherModalOpen] = useState(false);
@@ -45,13 +48,31 @@ export default function TeachersManagement() {
 
   const fetchData = async () => {
     setIsLoading(true);
-    const [teacherRes, studentRes] = await Promise.all([
-      supabase.from('profiles').select('*').eq('role', 'teacher').order('created_at', { ascending: false }),
-      supabase.from('students').select('*').order('created_at', { ascending: false }),
-    ]);
-    setTeachers((teacherRes.data as Teacher[]) || []);
-    setStudents((studentRes.data as Student[]) || []);
-    setIsLoading(false);
+    try {
+      const [teacherRes, studentRes, settingsRes] = await Promise.all([
+        supabase.from('profiles').select('*').eq('role', 'teacher').order('created_at', { ascending: false }),
+        supabase.from('students').select('*').order('created_at', { ascending: false }),
+        supabase.from('system_settings').select('subjects_list').single(),
+      ]);
+
+      setTeachers((teacherRes.data as Teacher[]) || []);
+      setStudents((studentRes.data as Student[]) || []);
+
+      if (settingsRes.data && Array.isArray(settingsRes.data.subjects_list)) {
+        const options = settingsRes.data.subjects_list.map((sub: string) => ({
+          label: sub,
+          value: sub,
+        }));
+        setSubjectOptions(options);
+      } else {
+        setSubjectOptions([]);
+      }
+    } catch (error) {
+      console.error('Fetch data error:', error);
+      message.error('加载数据失败');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const studentCountMap = useMemo(() => {
@@ -110,22 +131,28 @@ export default function TeachersManagement() {
   const openCreate = () => {
     setEditingTeacher(null);
     form.resetFields();
+    form.setFieldsValue({ subject: [] });
     setIsTeacherModalOpen(true);
   };
 
   const openEdit = (t: Teacher) => {
     setEditingTeacher(t);
-    form.setFieldsValue({ full_name: t.full_name, phone: t.phone, subject: t.subject || '' });
+    form.setFieldsValue({ 
+      full_name: t.full_name, 
+      phone: t.phone, 
+      subject: t.subject ? t.subject.split(',').map((s) => s.trim()).filter(Boolean) : [] 
+    });
     setIsTeacherModalOpen(true);
   };
 
-  const saveTeacher = async (values: { full_name: string; phone: string; subject?: string }) => {
+  const saveTeacher = async (values: { full_name: string; phone: string; subject?: string[] }) => {
     setIsSubmitting(true);
     try {
+      const subjectStr = values.subject && values.subject.length > 0 ? values.subject.join(', ') : null;
       if (editingTeacher) {
         const { error } = await supabase
           .from('profiles')
-          .update({ full_name: values.full_name, phone: values.phone, subject: values.subject || null })
+          .update({ full_name: values.full_name, phone: values.phone, subject: subjectStr })
           .eq('id', editingTeacher.id);
         if (error) throw error;
         message.success('教师信息已更新');
@@ -133,7 +160,7 @@ export default function TeachersManagement() {
         const { error } = await supabase.from('profiles').insert({
           full_name: values.full_name,
           phone: values.phone,
-          subject: values.subject || null,
+          subject: subjectStr,
           role: 'teacher',
         });
         if (error) throw error;
@@ -157,11 +184,16 @@ export default function TeachersManagement() {
       okButtonProps: { danger: true },
       cancelText: '取消',
       onOk: async () => {
-        const { error: releaseError } = await supabase.from('students').update({ teacher_id: null }).eq('teacher_id', t.id);
-        if (releaseError) {
-          message.error('释放名下学员失败');
-          return;
+        const assignedStudents = students.filter((s) => s.teacher_id === t.id);
+        if (assignedStudents.length > 0) {
+          const studentIds = assignedStudents.map((s) => s.id);
+          const { error: releaseError } = await supabase.from('students').update({ teacher_id: null }).in('id', studentIds);
+          if (releaseError) {
+            message.error('释放名下学员失败');
+            return;
+          }
         }
+
         const { error } = await supabase.from('profiles').delete().eq('id', t.id);
         if (error) {
           message.error('删除失败');
@@ -279,11 +311,25 @@ export default function TeachersManagement() {
           <Form.Item name="full_name" label="姓名" rules={[{ required: true, message: '请输入姓名' }]}>
             <Input placeholder="例如：张老师" />
           </Form.Item>
-          <Form.Item name="phone" label="手机号" rules={[{ required: true, message: '请输入手机号' }]}>
+          <Form.Item 
+            name="phone" 
+            label="手机号" 
+            rules={[
+              { required: true, message: '请输入手机号' },
+              { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的 11 位手机号' }
+            ]}
+          >
             <Input placeholder="请输入手机号" />
           </Form.Item>
           <Form.Item name="subject" label="主授科目">
-            <Input placeholder="例如：数学" />
+            <Select
+              mode="multiple"
+              placeholder="请选择主授科目"
+              options={subjectOptions}
+              maxTagCount="responsive"
+              style={{ width: '100%' }}
+              notFoundContent="暂无科目，请先前往科目配置中添加"
+            />
           </Form.Item>
         </Form>
       </Modal>
