@@ -136,6 +136,7 @@ const AdminDashboard: React.FC = () => {
       name: student.name || '',
       phone: student.phone || '',
       parent_phone: student.parent_phone || student.phone || '',
+      password: (student as any).password_hash || '',
       school: student.school || '',
       grade: student.grade || '一年级',
       subjects: student.subjects || []
@@ -163,7 +164,7 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleAddStudent = async (values: any) => {
-    const { name, phone, parent_phone, school, grade, subjects } = values;
+    const { name, phone, parent_phone, password, school, grade, subjects } = values;
 
     if (parent_phone.length !== 11) {
       toast.error('请输入11位有效家长手机号');
@@ -178,14 +179,25 @@ const AdminDashboard: React.FC = () => {
     try {
       if (isEditStudentMode && editingStudentId) {
         // Edit mode
-        const { error } = await supabase.from('students').update({
+        const updateData: any = {
           name: name,
           phone: phone || parent_phone,
           parent_phone: parent_phone,
           school: school,
           grade: grade,
           subjects: subjects
-        }).eq('id', editingStudentId);
+        };
+        
+        if (password) {
+          updateData.password_hash = password;
+          // Sync password to users table if auth_id exists
+          const { data: stuData } = await supabase.from('students').select('auth_id').eq('id', editingStudentId).single();
+          if (stuData?.auth_id) {
+            await supabase.from('users').update({ password: password }).eq('id', stuData.auth_id);
+          }
+        }
+
+        const { error } = await supabase.from('students').update(updateData).eq('id', editingStudentId);
 
         if (error) {
           if (error.code === '23505') throw new Error('手机号已被占用，请检查');
@@ -194,11 +206,13 @@ const AdminDashboard: React.FC = () => {
         toast.success('✅ 学员信息修改成功！');
       } else {
         // Add mode
-        const password = parent_phone.slice(-6);
+        if (!password) {
+          throw new Error('请输入家长账号初始密码');
+        }
 
         let profileId;
         const { data: existingProfile } = await supabase
-          .from('profiles')
+          .from('users')
           .select('id')
           .eq('phone', parent_phone)
           .single();
@@ -207,12 +221,12 @@ const AdminDashboard: React.FC = () => {
           profileId = existingProfile.id;
         } else {
           const { data: insertedProfile, error: profileError } = await supabase
-            .from('profiles')
+            .from('users')
             .insert([{
               phone: parent_phone,
               password: password,
               role: 'parent',
-              full_name: name + '的家长'
+              name: name + '的家长'
             }])
             .select('id')
             .single();
@@ -552,12 +566,11 @@ const AdminDashboard: React.FC = () => {
         width={600}
       >
         <Form form={form} layout="vertical" onFinish={handleAddStudent} requiredMark={false}>
+          <Form.Item name="name" label="学员姓名" rules={[{ required: true, message: '请输入学员姓名' }]}>
+            <Input placeholder="例如：李小明" />
+          </Form.Item>
+          
           <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="name" label="学员姓名" rules={[{ required: true, message: '请输入学员姓名' }]}>
-                <Input placeholder="例如：李小明" />
-              </Form.Item>
-            </Col>
             <Col span={12}>
               <Form.Item 
                 name="parent_phone" 
@@ -568,6 +581,15 @@ const AdminDashboard: React.FC = () => {
                 ]}
               >
                 <Input placeholder="11位手机号" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item 
+                name="password" 
+                label="家长账号初始密码" 
+                rules={[{ required: !isEditStudentMode, message: '请输入初始密码' }]}
+              >
+                <Input.Password placeholder={isEditStudentMode ? "留空则不修改密码" : "请输入初始密码"} />
               </Form.Item>
             </Col>
           </Row>

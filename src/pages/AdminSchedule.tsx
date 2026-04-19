@@ -66,7 +66,7 @@ const AdminSchedule: React.FC = () => {
     let studentQuery = supabase.from('students').select('*').order('created_at', { ascending: false });
     let scheduleQuery = supabase.from('schedules').select('*').order('start_time', { ascending: true });
     let settingsQuery = supabase.from('system_settings').select('*').eq('id', 1).single();
-    let teacherQuery = supabase.from('profiles').select('*').eq('role', 'teacher');
+    let teacherQuery = supabase.from('users').select('*').eq('role', 'teacher');
 
     if (user?.role === ROLES.TEACHER) {
       studentQuery = studentQuery.eq('teacher_id', user.id);
@@ -422,7 +422,7 @@ const AdminSchedule: React.FC = () => {
           <Form.Item name="teacher_id" label="上课老师" rules={[{ required: true, message: '请选择老师' }]}>
             <Select
               placeholder="请选择老师"
-              options={availableTeachers.map(t => ({ label: t.full_name || t.phone, value: t.id }))}
+              options={availableTeachers.map(t => ({ label: t.name || t.phone, value: t.id }))}
             />
           </Form.Item>
         </Form>

@@ -31,7 +31,7 @@ export default function Dashboard() {
 
       const [studentsRes, teachersRes, monthSchedulesRes, monthOrdersRes, last30DeductionsRes, last30SchedulesRes, last30OrdersRes] = await Promise.all([
         supabase.from('students').select('id', { count: 'exact', head: true }),
-        supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'teacher'),
+        supabase.from('users').select('id', { count: 'exact', head: true }).eq('role', 'teacher'),
         supabase.from('schedules').select('id,date,status').gte('date', monthStart).lte('date', monthEnd).eq('status', 'completed'),
         supabase.from('orders').select('id,created_at,total_price').gte('created_at', now.startOf('month').toISOString()).lte('created_at', now.endOf('month').toISOString()),
         supabase.from('schedules').select('id,date,status').gte('date', last30Start).lte('date', now.format('YYYY-MM-DD')).eq('status', 'completed'),

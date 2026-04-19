@@ -7,8 +7,9 @@ import type { TransferItem } from 'antd/es/transfer';
 
 type Teacher = {
   id: string;
-  full_name: string;
+  name: string;
   phone: string;
+  password?: string;
   subject?: string;
 };
 
@@ -46,7 +47,7 @@ export default function TeachersManagement() {
 
   const filteredTeachers = useMemo(() => {
     return teachers.filter(t => {
-      const matchName = !appliedSearchName || (t.full_name && t.full_name.toLowerCase().includes(appliedSearchName.toLowerCase()));
+      const matchName = !appliedSearchName || (t.name && t.name.toLowerCase().includes(appliedSearchName.toLowerCase()));
       const matchPhone = !appliedSearchPhone || (t.phone && t.phone.toLowerCase().includes(appliedSearchPhone.toLowerCase()));
       const matchSubject = !appliedSearchSubject || (t.subject && t.subject.includes(appliedSearchSubject));
       return matchName && matchPhone && matchSubject;
@@ -66,7 +67,7 @@ export default function TeachersManagement() {
     setIsLoading(true);
     try {
       const [teacherRes, studentRes, settingsRes] = await Promise.all([
-        supabase.from('profiles').select('*').eq('role', 'teacher').order('created_at', { ascending: false }),
+        supabase.from('users').select('*').eq('role', 'teacher').order('created_at', { ascending: false }),
         supabase.from('students').select('*').order('created_at', { ascending: false }),
         supabase.from('system_settings').select('subjects_list').single(),
       ]);
@@ -104,7 +105,7 @@ export default function TeachersManagement() {
       title: '姓名',
       key: 'profile',
       render: (_: unknown, record: Teacher) => (
-        <Typography.Text strong>{record.full_name}</Typography.Text>
+        <Typography.Text strong>{record.name}</Typography.Text>
       ),
     },
     {
@@ -155,28 +156,37 @@ export default function TeachersManagement() {
   const openEdit = (t: Teacher) => {
     setEditingTeacher(t);
     form.setFieldsValue({ 
-      full_name: t.full_name, 
+      name: t.name, 
       phone: t.phone, 
+      password: t.password || '',
       subject: t.subject ? t.subject.split(',').map((s) => s.trim()).filter(Boolean) : [] 
     });
     setIsTeacherModalOpen(true);
   };
 
-  const saveTeacher = async (values: { full_name: string; phone: string; subject?: string[] }) => {
+  const saveTeacher = async (values: { name: string; phone: string; password?: string; subject?: string[] }) => {
     setIsSubmitting(true);
     try {
       const subjectStr = values.subject && values.subject.length > 0 ? values.subject.join(', ') : null;
       if (editingTeacher) {
+        const updateData: any = { name: values.name, phone: values.phone, subject: subjectStr };
+        if (values.password) {
+          updateData.password = values.password;
+        }
         const { error } = await supabase
-          .from('profiles')
-          .update({ full_name: values.full_name, phone: values.phone, subject: subjectStr })
+          .from('users')
+          .update(updateData)
           .eq('id', editingTeacher.id);
         if (error) throw error;
         message.success('教师信息已更新');
       } else {
-        const { error } = await supabase.from('profiles').insert({
-          full_name: values.full_name,
+        if (!values.password) {
+          throw new Error('请输入初始密码');
+        }
+        const { error } = await supabase.from('users').insert({
+          name: values.name,
           phone: values.phone,
+          password: values.password,
           subject: subjectStr,
           role: 'teacher',
         });
@@ -211,7 +221,7 @@ export default function TeachersManagement() {
           }
         }
 
-        const { error } = await supabase.from('profiles').delete().eq('id', t.id);
+        const { error } = await supabase.from('users').delete().eq('id', t.id);
         if (error) {
           message.error('删除失败');
           return;
@@ -366,18 +376,25 @@ export default function TeachersManagement() {
         confirmLoading={isSubmitting}
       >
         <Form form={form} layout="vertical" onFinish={saveTeacher} requiredMark={false}>
-          <Form.Item name="full_name" label="姓名" rules={[{ required: true, message: '请输入姓名' }]}>
+          <Form.Item name="name" label="姓名" rules={[{ required: true, message: '请输入姓名' }]}>
             <Input placeholder="例如：张老师" />
           </Form.Item>
           <Form.Item 
             name="phone" 
-            label="手机号" 
+            label="手机号 (用于登录)" 
             rules={[
               { required: true, message: '请输入手机号' },
               { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的 11 位手机号' }
             ]}
           >
             <Input placeholder="请输入手机号" />
+          </Form.Item>
+          <Form.Item 
+            name="password" 
+            label="初始密码" 
+            rules={[{ required: !editingTeacher, message: '请输入初始密码' }]}
+          >
+            <Input.Password placeholder={editingTeacher ? "留空则不修改密码" : "请输入初始登录密码"} />
           </Form.Item>
           <Form.Item name="subject" label="主授科目">
             <Select
