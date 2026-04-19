@@ -60,6 +60,15 @@ const AdminDashboard: React.FC = () => {
   const [systemSubjects, setSystemSubjects] = useState<string[]>([]);
   const GRADE_OPTIONS = ['学前', '一年级', '二年级', '三年级', '四年级', '五年级', '六年级', '初一', '初二', '初三'];
 
+  // Search states
+  const [searchName, setSearchName] = useState('');
+  const [searchPhone, setSearchPhone] = useState('');
+  const [searchSubject, setSearchSubject] = useState<string | undefined>(undefined);
+
+  const [appliedSearchName, setAppliedSearchName] = useState('');
+  const [appliedSearchPhone, setAppliedSearchPhone] = useState('');
+  const [appliedSearchSubject, setAppliedSearchSubject] = useState<string | undefined>(undefined);
+
   const fetchStudents = async () => {
     setIsLoading(true);
     const [stuRes, settingsRes] = await Promise.all([
@@ -67,6 +76,16 @@ const AdminDashboard: React.FC = () => {
         let q = supabase.from('students').select('*').order('created_at', { ascending: false });
         if (user?.role === ROLES.TEACHER) {
           q = q.eq('teacher_id', user.id);
+        }
+        if (appliedSearchName) {
+          q = q.ilike('name', `%${appliedSearchName}%`);
+        }
+        if (appliedSearchPhone) {
+          // Can match either phone or parent_phone
+          q = q.or(`phone.ilike.%${appliedSearchPhone}%,parent_phone.ilike.%${appliedSearchPhone}%`);
+        }
+        if (appliedSearchSubject) {
+          q = q.contains('subjects', [appliedSearchSubject]);
         }
         return q;
       })(),
@@ -82,9 +101,14 @@ const AdminDashboard: React.FC = () => {
     setIsLoading(false);
   };
 
+  // Re-fetch when applied search parameters change
   useEffect(() => {
+    // Only fetch if it's not the initial mount to avoid double fetch
+    // since we already have an empty dependency array useEffect below
     fetchStudents();
-    
+  }, [appliedSearchName, appliedSearchPhone, appliedSearchSubject]);
+
+  useEffect(() => {
     // Calculate system uptime (assume launch date is Jan 1, 2024)
     const launchDate = new Date('2024-01-01').getTime();
     const now = new Date().getTime();
@@ -390,12 +414,6 @@ const AdminDashboard: React.FC = () => {
           >
             充值
           </Button>
-          <Button type="link" onClick={() => handleDeductClass(record.id, record.remaining_classes, record.name)}>
-            一键消课
-          </Button>
-          <Button type="link" onClick={() => window.open(`/#/parent?id=${record.id}`, '_blank', 'noopener,noreferrer')}>
-            查看报告
-          </Button>
           {canManageStudents && (
             <Button type="link" danger onClick={() => handleDeleteStudentClick(record)}>
               删除
@@ -440,7 +458,54 @@ const AdminDashboard: React.FC = () => {
         </Col>
       </Row>
 
-      <Card title="学员列表">
+      <Card title={
+        <div className="flex items-center justify-between">
+          <span>学员列表</span>
+          <Space size="middle">
+            <Space>
+              <Input
+                placeholder="搜索姓名"
+                allowClear
+                value={searchName}
+                onChange={e => setSearchName(e.target.value)}
+                onPressEnter={() => {
+                  setAppliedSearchName(searchName);
+                  setAppliedSearchPhone(searchPhone);
+                  setAppliedSearchSubject(searchSubject);
+                }}
+                style={{ width: 140 }}
+              />
+              <Input
+                placeholder="搜索手机号"
+                allowClear
+                value={searchPhone}
+                onChange={e => setSearchPhone(e.target.value)}
+                onPressEnter={() => {
+                  setAppliedSearchName(searchName);
+                  setAppliedSearchPhone(searchPhone);
+                  setAppliedSearchSubject(searchSubject);
+                }}
+                style={{ width: 160 }}
+              />
+              <Select
+                placeholder="筛选科目"
+                allowClear
+                value={searchSubject}
+                onChange={value => setSearchSubject(value)}
+                options={systemSubjects.map(sub => ({ label: sub, value: sub }))}
+                style={{ width: 140 }}
+              />
+              <Button type="default" onClick={() => {
+                setAppliedSearchName(searchName);
+                setAppliedSearchPhone(searchPhone);
+                setAppliedSearchSubject(searchSubject);
+              }}>
+                搜索
+              </Button>
+            </Space>
+          </Space>
+        </div>
+      }>
         {isLoading ? (
           <Skeleton active />
         ) : students.length === 0 ? (
