@@ -1,0 +1,1 @@
+alter table "public"."schedules" add column "teacher_id" uuid references "public"."profiles"("id");

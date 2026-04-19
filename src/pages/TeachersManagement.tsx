@@ -36,6 +36,22 @@ export default function TeachersManagement() {
   const [assignTeacherId, setAssignTeacherId] = useState<string | null>(null);
   const [isAssignOpen, setIsAssignOpen] = useState(false);
   const [targetKeys, setTargetKeys] = useState<string[]>([]);
+  const [searchName, setSearchName] = useState('');
+  const [searchPhone, setSearchPhone] = useState('');
+  const [searchSubject, setSearchSubject] = useState<string | undefined>(undefined);
+
+  const [appliedSearchName, setAppliedSearchName] = useState('');
+  const [appliedSearchPhone, setAppliedSearchPhone] = useState('');
+  const [appliedSearchSubject, setAppliedSearchSubject] = useState<string | undefined>(undefined);
+
+  const filteredTeachers = useMemo(() => {
+    return teachers.filter(t => {
+      const matchName = !appliedSearchName || (t.full_name && t.full_name.toLowerCase().includes(appliedSearchName.toLowerCase()));
+      const matchPhone = !appliedSearchPhone || (t.phone && t.phone.toLowerCase().includes(appliedSearchPhone.toLowerCase()));
+      const matchSubject = !appliedSearchSubject || (t.subject && t.subject.includes(appliedSearchSubject));
+      return matchName && matchPhone && matchSubject;
+    });
+  }, [teachers, appliedSearchName, appliedSearchPhone, appliedSearchSubject]);
 
   useEffect(() => {
     const sessionStr = localStorage.getItem('xiaoyu_user');
@@ -85,20 +101,21 @@ export default function TeachersManagement() {
 
   const columns: ColumnsType<Teacher> = [
     {
-      title: '头像与姓名',
+      title: '姓名',
       key: 'profile',
       render: (_: unknown, record: Teacher) => (
-        <Space>
-          <Avatar style={{ background: '#1677ff' }}>{record.full_name?.charAt(0) || 'T'}</Avatar>
-          <div className="flex flex-col leading-4">
-            <Typography.Text strong>{record.full_name}</Typography.Text>
-            {record.subject ? (
-              <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                {record.subject}
-              </Typography.Text>
-            ) : null}
-          </div>
-        </Space>
+        <Typography.Text strong>{record.full_name}</Typography.Text>
+      ),
+    },
+    {
+      title: '主授科目',
+      key: 'subject',
+      render: (_: unknown, record: Teacher) => (
+        record.subject && record.subject.trim() !== '' ? (
+          <Typography.Text type="secondary">
+            {record.subject}
+          </Typography.Text>
+        ) : <Typography.Text type="secondary" style={{ opacity: 0.5 }}>暂无</Typography.Text>
       ),
     },
     { title: '手机号', dataIndex: 'phone', key: 'phone', width: 160 },
@@ -261,39 +278,80 @@ export default function TeachersManagement() {
           </Typography.Title>
           <Typography.Text type="secondary">教师档案与名下学员归属管理</Typography.Text>
         </div>
-        <Button type="primary" onClick={openCreate}>
-          新增教师
-        </Button>
+        <Space size="middle">
+          <Space>
+            <Input
+              placeholder="搜索姓名"
+              allowClear
+              value={searchName}
+              onChange={e => setSearchName(e.target.value)}
+              onPressEnter={() => {
+                setAppliedSearchName(searchName);
+                setAppliedSearchPhone(searchPhone);
+                setAppliedSearchSubject(searchSubject);
+              }}
+              style={{ width: 140 }}
+            />
+            <Input
+              placeholder="搜索手机号"
+              allowClear
+              value={searchPhone}
+              onChange={e => setSearchPhone(e.target.value)}
+              onPressEnter={() => {
+                setAppliedSearchName(searchName);
+                setAppliedSearchPhone(searchPhone);
+                setAppliedSearchSubject(searchSubject);
+              }}
+              style={{ width: 160 }}
+            />
+            <Select
+              placeholder="筛选科目"
+              allowClear
+              value={searchSubject}
+              onChange={value => setSearchSubject(value)}
+              options={subjectOptions}
+              style={{ width: 140 }}
+            />
+            <Button type="default" onClick={() => {
+              setAppliedSearchName(searchName);
+              setAppliedSearchPhone(searchPhone);
+              setAppliedSearchSubject(searchSubject);
+            }}>
+              搜索
+            </Button>
+          </Space>
+          <Button type="primary" onClick={openCreate}>
+            新增教师
+          </Button>
+        </Space>
       </div>
 
       <Card>
         {isLoading ? (
           <Skeleton active />
-        ) : teachers.length === 0 ? (
+        ) : filteredTeachers.length === 0 ? (
           <Empty
-            description="暂无师资数据，点击新增第一位教师"
+            description={(searchName || searchPhone || searchSubject) ? "未找到匹配的教师" : "暂无师资数据，点击新增第一位教师"}
             image={Empty.PRESENTED_IMAGE_SIMPLE}
           >
-            <Button type="primary" onClick={openCreate}>
-              新增教师
-            </Button>
+            {!(searchName || searchPhone || searchSubject) && (
+              <Button type="primary" onClick={openCreate}>
+                新增教师
+              </Button>
+            )}
           </Empty>
         ) : (
           <Table
             rowKey="id"
             columns={columns}
-            dataSource={teachers}
+            dataSource={filteredTeachers}
             pagination={{ pageSize: 10 }}
             locale={{
               emptyText: (
                 <Empty
-                  description="暂无师资数据，点击新增第一位教师"
+                  description="暂无匹配数据"
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
-                >
-                  <Button type="primary" onClick={openCreate}>
-                    新增教师
-                  </Button>
-                </Empty>
+                />
               ),
             }}
           />

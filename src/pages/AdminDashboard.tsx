@@ -6,7 +6,7 @@ import {
   Settings, BookOpen, Edit, MinusCircle, ExternalLink, X, CheckCircle, Trash2, AlertTriangle
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { Button, Card, Col, Empty, Form, Input, Modal, Row, Select, Skeleton, Space, Statistic, Table, Tag, Typography } from 'antd';
+import { Button, Card, Col, Empty, Form, Input, InputNumber, Modal, Row, Select, Skeleton, Space, Statistic, Table, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useAuth } from '../components/Auth/AuthProvider';
 import { ROLES } from '../constants/rbac';
@@ -48,6 +48,8 @@ const AdminDashboard: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const [form] = Form.useForm();
+  const [topupForm] = Form.useForm();
+  const [scoreForm] = Form.useForm();
   const [isAdding, setIsAdding] = useState(false);
   const [isEditStudentMode, setIsEditStudentMode] = useState(false);
   const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
@@ -228,10 +230,11 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleTopup = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleTopup = async (values: { topupSubject: string; topupAmount: number; topupNotes?: string }) => {
+    const { topupSubject, topupAmount, topupNotes } = values;
     if (!selectedTopupStudent || !topupSubject || topupAmount <= 0) return;
 
+    setIsAdding(true);
     try {
       const currentBalances = selectedTopupStudent.course_balances || {};
       const currentAmount = currentBalances[topupSubject] || 0;
@@ -241,26 +244,37 @@ const AdminDashboard: React.FC = () => {
         [topupSubject]: currentAmount + topupAmount
       };
 
-      const { error } = await supabase
+      // 1. Update students table (balances and total remaining)
+      const { error: updateError } = await supabase
         .from('students')
         .update({ 
           course_balances: newBalances,
-          // 为了兼容老页面，如果是首个科目，同时加到 remaining_classes
-          ...(Object.keys(currentBalances).length === 0 || topupSubject === selectedTopupStudent.subjects[0] ? {
-            remaining_classes: (selectedTopupStudent.remaining_classes || 0) + topupAmount
-          } : {})
+          remaining_classes: (selectedTopupStudent.remaining_classes || 0) + topupAmount,
+          total_classes: (selectedTopupStudent.total_classes || 0) + topupAmount
         })
         .eq('id', selectedTopupStudent.id);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
-      toast.success(`✅ 充值成功！已为 ${selectedTopupStudent.name} 的 ${topupSubject} 增加 ${topupAmount} 课时。`);
+      // 2. Insert recharge record
+      const { error: insertError } = await supabase
+        .from('recharge_records')
+        .insert([{
+          student_id: selectedTopupStudent.id,
+          subject: topupSubject,
+          amount: topupAmount,
+          notes: topupNotes || ''
+        }]);
+
+      if (insertError) throw insertError;
+
+      toast.success(`✅ 充值成功！已为 ${selectedTopupStudent.name} 增加 ${topupAmount} 课时。`);
       setIsTopupModalOpen(false);
-      setTopupAmount(0);
-      setTopupSubject('');
       fetchStudents();
     } catch (err: any) {
       toast.error('充值失败：' + err.message);
+    } finally {
+      setIsAdding(false);
     }
   };
   const handleDeductClass = async (studentId: string, currentRemaining: number, studentName: string) => {
@@ -290,21 +304,21 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleSaveScores = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSaveScores = async (values: any) => {
     if (!editingStudent) return;
     
+    setIsAdding(true);
     try {
       const { error } = await supabase
         .from('students')
         .update({
-          calc_score: editingStudent.calc_score,
-          logic_score: editingStudent.logic_score,
-          spatial_score: editingStudent.spatial_score,
-          app_score: editingStudent.app_score,
-          data_score: editingStudent.data_score,
-          physics_score: editingStudent.physics_score,
-          chemistry_score: editingStudent.chemistry_score,
+          calc_score: values.calc_score,
+          logic_score: values.logic_score,
+          spatial_score: values.spatial_score,
+          app_score: values.app_score,
+          data_score: values.data_score,
+          physics_score: values.physics_score,
+          chemistry_score: values.chemistry_score,
         })
         .eq('id', editingStudent.id);
 
@@ -314,6 +328,8 @@ const AdminDashboard: React.FC = () => {
       fetchStudents();
     } catch (err: any) {
       toast.error('更新失败：' + err.message);
+    } finally {
+      setIsAdding(false);
     }
   };
 
@@ -344,12 +360,31 @@ const AdminDashboard: React.FC = () => {
       render: (_: unknown, record: StudentRecord) => (
         <Space size={4} wrap>
           <Button type="link" onClick={() => handleEditStudentClick(record)}>
-            编辑
+            编辑档案
+          </Button>
+          <Button 
+            type="link" 
+            onClick={() => {
+              setEditingStudent(record);
+              scoreForm.setFieldsValue({
+                calc_score: record.calc_score || 0,
+                logic_score: record.logic_score || 0,
+                spatial_score: record.spatial_score || 0,
+                app_score: record.app_score || 0,
+                data_score: record.data_score || 0,
+                physics_score: record.physics_score || 0,
+                chemistry_score: record.chemistry_score || 0,
+              });
+              setIsEditModalOpen(true);
+            }}
+          >
+            编辑分数
           </Button>
           <Button
             type="link"
             onClick={() => {
               setSelectedTopupStudent(record);
+              topupForm.resetFields();
               setIsTopupModalOpen(true);
             }}
           >
@@ -499,120 +534,80 @@ const AdminDashboard: React.FC = () => {
       </Modal>
 
       {/* 课时充值弹窗 */}
-      {isTopupModalOpen && selectedTopupStudent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsTopupModalOpen(false)}></div>
-          <div className="relative bg-slate-900 border border-white/10 w-full max-w-md rounded-3xl p-8 shadow-[0_0_50px_rgba(0,0,0,0.8)] animate-in zoom-in-95 duration-200">
-            <button onClick={() => setIsTopupModalOpen(false)} className="absolute top-6 right-6 text-gray-400 hover:text-white transition-colors">
-              <X className="w-5 h-5" />
-            </button>
-            <h3 className="text-xl font-bold text-white tracking-widest mb-6 border-b border-white/5 pb-4">
-              为 {selectedTopupStudent.name} 充值课时
-            </h3>
-            
-            <form onSubmit={handleTopup} className="space-y-5">
-              <div>
-                <label className="block text-xs font-mono font-bold text-gray-400 mb-2 uppercase tracking-[0.2em]">选择充值科目</label>
-                <select 
-                  required value={topupSubject} onChange={(e) => setTopupSubject(e.target.value)}
-                  className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500/50 focus:bg-black/80 transition-all shadow-inner appearance-none"
-                >
-                  <option value="" disabled>请选择科目</option>
-                  {(selectedTopupStudent.subjects || []).map(sub => (
-                    <option key={sub} value={sub} className="bg-slate-900">{sub} (当前余额: {(selectedTopupStudent.course_balances || {})[sub] || 0})</option>
-                  ))}
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-xs font-mono font-bold text-gray-400 mb-2 uppercase tracking-[0.2em]">充值数量 (课时)</label>
-                <input 
-                  type="number" required min="1" step="1"
-                  value={topupAmount || ''} onChange={(e) => setTopupAmount(parseInt(e.target.value) || 0)}
-                  className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white font-bold focus:outline-none focus:border-green-500/50 focus:bg-black/80 transition-all shadow-inner text-2xl"
-                />
-              </div>
-
-              <div className="pt-6">
-                <button type="submit" className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold py-4 rounded-xl tracking-widest transition-all shadow-[0_0_20px_rgba(34,197,94,0.4)] active:scale-95">
-                  确认充值
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <Modal
+        title={`为 ${selectedTopupStudent?.name} 充值课时`}
+        open={isTopupModalOpen}
+        onCancel={() => setIsTopupModalOpen(false)}
+        onOk={() => topupForm.submit()}
+        confirmLoading={isAdding}
+        width={400}
+      >
+        <Form form={topupForm} layout="vertical" onFinish={handleTopup} requiredMark={false}>
+          <Form.Item name="topupSubject" label="选择充值科目" rules={[{ required: true, message: '请选择充值科目' }]}>
+            <Select placeholder="请选择科目">
+              {(selectedTopupStudent?.subjects || []).map(sub => (
+                <Select.Option key={sub} value={sub}>
+                  {sub} (当前余额: {(selectedTopupStudent?.course_balances || {})[sub] || 0})
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item name="topupAmount" label="充值数量 (课时)" rules={[{ required: true, message: '请输入充值数量' }]}>
+            <InputNumber min={1} style={{ width: '100%' }} placeholder="请输入数量" />
+          </Form.Item>
+          <Form.Item name="topupNotes" label="充值备注">
+            <Input.TextArea rows={3} placeholder="可选：填写充值相关备注" />
+          </Form.Item>
+        </Form>
+      </Modal>
 
       {/* 编辑分数弹窗 */}
-      {isEditModalOpen && editingStudent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsEditModalOpen(false)}></div>
-          <div className="relative bg-slate-900 border border-white/10 w-full max-w-md rounded-3xl p-8 shadow-[0_0_50px_rgba(0,0,0,0.8)] animate-in zoom-in-95 duration-200">
-            <button onClick={() => setIsEditModalOpen(false)} className="absolute top-6 right-6 text-gray-400 hover:text-white transition-colors">
-              <X className="w-5 h-5" />
-            </button>
-            <h3 className="text-xl font-bold text-white tracking-widest mb-6 border-b border-white/5 pb-4">
-              编辑能力雷达图 - {editingStudent.name}
-            </h3>
-            
-            <form onSubmit={handleSaveScores} className="space-y-5">
-              <div className="grid grid-cols-2 gap-5">
-                {['calc_score', 'logic_score', 'spatial_score', 'app_score', 'data_score', 'physics_score', 'chemistry_score'].map((field) => (
-                  <div key={field}>
-                    <label className="block text-[10px] font-mono font-bold text-gray-400 mb-2 uppercase tracking-[0.2em]">
-                      {field.replace('_score', '')} (0-5)
-                    </label>
-                    <input 
-                      type="number"
-                      min="0"
-                      max="5"
-                      step="0.1"
-                      value={(editingStudent as any)[field] || 0}
-                      onChange={(e) => setEditingStudent({...editingStudent, [field]: parseFloat(e.target.value)})}
-                      className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white font-mono font-bold focus:outline-none focus:border-cyan-500/50 focus:bg-black/80 transition-all shadow-inner"
-                    />
-                  </div>
-                ))}
-              </div>
-              <div className="pt-6">
-                <button type="submit" className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-4 rounded-xl tracking-widest transition-all shadow-[0_0_20px_rgba(34,211,238,0.4)] hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] active:scale-95">
-                  保存更新
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <Modal
+        title={`编辑能力雷达图 - ${editingStudent?.name}`}
+        open={isEditModalOpen}
+        onCancel={() => setIsEditModalOpen(false)}
+        onOk={() => scoreForm.submit()}
+        confirmLoading={isAdding}
+        width={600}
+      >
+        <Form form={scoreForm} layout="vertical" onFinish={handleSaveScores} requiredMark={false}>
+          <Row gutter={16}>
+            {['calc_score', 'logic_score', 'spatial_score', 'app_score', 'data_score', 'physics_score', 'chemistry_score'].map((field) => (
+              <Col span={12} key={field}>
+                <Form.Item 
+                  name={field} 
+                  label={`${field.replace('_score', '')} (0-5)`}
+                  rules={[{ required: true, message: '请输入分数' }]}
+                >
+                  <InputNumber min={0} max={5} step={0.1} style={{ width: '100%' }} />
+                </Form.Item>
+              </Col>
+            ))}
+          </Row>
+        </Form>
+      </Modal>
+
       {/* Delete Student Modal */}
-      {deleteStudentModalOpen && studentToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setDeleteStudentModalOpen(false)}></div>
-          <div className="relative bg-slate-900 border border-red-500/30 w-full max-w-sm rounded-3xl p-6 shadow-[0_0_50px_rgba(239,68,68,0.2)] animate-in zoom-in-95 duration-200">
-            <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4 mx-auto">
-              <AlertTriangle className="w-6 h-6 text-red-500" />
-            </div>
-            <h3 className="text-xl font-bold text-white text-center mb-2">确认删除学员？</h3>
-            <p className="text-sm text-gray-400 text-center mb-6">
-              您正在删除学员 <span className="text-white font-bold">{studentToDelete.name}</span>。<br/>
-              此操作不可逆，学员的所有课时和记录将被永久删除。
-            </p>
-            <div className="flex gap-3">
-              <button 
-                onClick={() => setDeleteStudentModalOpen(false)}
-                className="flex-1 py-3 rounded-xl font-bold bg-white/5 text-gray-400 hover:bg-white/10 transition-colors"
-              >
-                取消
-              </button>
-              <button 
-                onClick={handleConfirmDeleteStudent}
-                className="flex-1 py-3 rounded-xl font-bold bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/50 transition-colors"
-              >
-                确认删除
-              </button>
-            </div>
+      <Modal
+        title={
+          <div className="flex items-center gap-2 text-red-500">
+            <AlertTriangle className="w-5 h-5" />
+            <span>确认删除学员？</span>
           </div>
-        </div>
-      )}
+        }
+        open={deleteStudentModalOpen}
+        onCancel={() => setDeleteStudentModalOpen(false)}
+        onOk={handleConfirmDeleteStudent}
+        okText="确认删除"
+        okButtonProps={{ danger: true }}
+        cancelText="取消"
+        width={400}
+      >
+        <p className="text-gray-400 my-4">
+          您正在删除学员 <span className="text-white font-bold">{studentToDelete?.name}</span>。<br/>
+          此操作不可逆，学员的所有课时和记录将被永久删除。
+        </p>
+      </Modal>
 
     </div>
   );

@@ -4,7 +4,8 @@ import {
   Calendar as CalendarIcon, ChevronLeft, ChevronRight, Users, BookOpen, 
   Sparkles, CheckSquare, Square, Plus, Clock, ArrowLeft, CheckCircle
 } from 'lucide-react';
-import { Button, Empty, Skeleton } from 'antd';
+import { Button, Empty, Skeleton, Modal, Form, DatePicker, TimePicker, Select } from 'antd';
+import dayjs from 'dayjs';
 import toast from 'react-hot-toast';
 import { useAuth } from '../components/Auth/AuthProvider';
 import { ROLES } from '../constants/rbac';
@@ -57,22 +58,27 @@ const AdminSchedule: React.FC = () => {
   const [newSchedStudents, setNewSchedStudents] = useState<string[]>([]);
   const [isSavingSchedule, setIsSavingSchedule] = useState(false);
 
+  const [form] = Form.useForm();
+  const [teachers, setTeachers] = useState<any[]>([]);
+
   const fetchData = async () => {
     setIsLoading(true);
     let studentQuery = supabase.from('students').select('*').order('created_at', { ascending: false });
     let scheduleQuery = supabase.from('schedules').select('*').order('start_time', { ascending: true });
     let settingsQuery = supabase.from('system_settings').select('*').eq('id', 1).single();
+    let teacherQuery = supabase.from('profiles').select('*').eq('role', 'teacher');
 
     if (user?.role === ROLES.TEACHER) {
       studentQuery = studentQuery.eq('teacher_id', user.id);
       scheduleQuery = scheduleQuery.eq('teacher_id', user.id);
     }
 
-    const [studentRes, scheduleRes, settingsRes] = await Promise.all([studentQuery, scheduleQuery, settingsQuery]);
+    const [studentRes, scheduleRes, settingsRes, teacherRes] = await Promise.all([studentQuery, scheduleQuery, settingsQuery, teacherQuery]);
 
     if (studentRes.data) setStudents(studentRes.data);
     if (scheduleRes.data) setSchedules(scheduleRes.data);
     if (settingsRes.data) setSystemSettings(settingsRes.data);
+    if (teacherRes.data) setTeachers(teacherRes.data);
     
     setIsLoading(false);
   };
@@ -82,71 +88,121 @@ const AdminSchedule: React.FC = () => {
   }, []);
 
   // --- ADD SCHEDULE MODAL LOGIC ---
-  const availableSubjects = useMemo(() => {
-    if (systemSettings?.subjects_list) {
-      return systemSettings.subjects_list;
-    }
-    const subs = new Set<string>();
-    students.forEach(s => {
-      if (Array.isArray(s.subjects)) s.subjects.forEach(sub => subs.add(sub));
+  const handleOpenAddModal = () => {
+    form.resetFields();
+    form.setFieldsValue({
+      date: dayjs(selectedDateStr, 'YYYY-MM-DD'),
+      start_time: dayjs('10:00', 'HH:mm'),
+      end_time: dayjs('12:00', 'HH:mm'),
+      student_ids: [],
     });
-    return Array.from(subs);
-  }, [students, systemSettings]);
+    setIsAddModalOpen(true);
+  };
 
-  useEffect(() => {
-    if (!newSchedSubject) {
-      setNewSchedStudents([]);
-      return;
-    }
-    const matching = students.filter(s => s.subjects?.includes(newSchedSubject));
-    setNewSchedStudents(matching.map(s => s.id));
-  }, [newSchedSubject, students]);
-
-  const handleStartChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setNewSchedStart(val);
-    if (val && systemSettings?.default_duration) {
-      const [h, m] = val.split(':').map(Number);
-      const totalMins = h * 60 + m + systemSettings.default_duration;
-      const newH = String(Math.floor(totalMins / 60) % 24).padStart(2, '0');
-      const newM = String(totalMins % 60).padStart(2, '0');
-      setNewSchedEnd(`${newH}:${newM}`);
+  const handleStartChange = (time: dayjs.Dayjs | null) => {
+    if (time && systemSettings?.default_duration) {
+      const newEndTime = time.add(systemSettings.default_duration, 'minute');
+      form.setFieldsValue({ end_time: newEndTime });
     }
   };
-  const handleSaveSchedule = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newSchedSubject || newSchedStudents.length === 0) {
-      toast.error('请选择科目并至少勾选一名学员'); 
+
+  const handleStudentChange = (selectedStudentIds: string[]) => {
+    // If students are selected, auto-select their common subjects and teachers if possible
+    if (selectedStudentIds.length === 0) {
+      form.setFieldsValue({ subject: undefined, teacher_id: undefined });
       return;
     }
+
+    const selectedStudents = students.filter(s => selectedStudentIds.includes(s.id));
+    
+    // Find common subjects
+    let commonSubjects = selectedStudents[0].subjects || [];
+    for (let i = 1; i < selectedStudents.length; i++) {
+      const subs = selectedStudents[i].subjects || [];
+      commonSubjects = commonSubjects.filter((s: string) => subs.includes(s));
+    }
+
+    // Find common teacher
+    let commonTeacher = selectedStudents[0].teacher_id;
+    for (let i = 1; i < selectedStudents.length; i++) {
+      if (selectedStudents[i].teacher_id !== commonTeacher) {
+        commonTeacher = undefined;
+        break;
+      }
+    }
+
+    form.setFieldsValue({
+      subject: commonSubjects.length === 1 ? commonSubjects[0] : undefined,
+      teacher_id: commonTeacher || undefined
+    });
+  };
+
+  // Compute available subjects for the dropdown based on selected students
+  const studentIds = Form.useWatch('student_ids', form) || [];
+  const availableSubjects = useMemo(() => {
+    if (!studentIds || studentIds.length === 0) {
+      return systemSettings?.subjects_list || [];
+    }
+    const selectedStudents = students.filter(s => studentIds.includes(s.id));
+    let commonSubjects = selectedStudents[0].subjects || [];
+    for (let i = 1; i < selectedStudents.length; i++) {
+      const subs = selectedStudents[i].subjects || [];
+      commonSubjects = commonSubjects.filter((s: string) => subs.includes(s));
+    }
+    return commonSubjects;
+  }, [studentIds, students, systemSettings]);
+
+  const handleSubjectChange = (subject: string) => {
+    // If a subject is selected, automatically select a teacher who teaches this subject
+    if (!subject) {
+      form.setFieldsValue({ teacher_id: undefined });
+      return;
+    }
+    
+    // Find teachers who teach this subject (assuming subject string is comma separated in their profile)
+    const matchingTeachers = teachers.filter(t => t.subject && t.subject.includes(subject));
+    
+    // If we only have 1 matching teacher, auto select them
+    if (matchingTeachers.length === 1) {
+      form.setFieldsValue({ teacher_id: matchingTeachers[0].id });
+    } else {
+      // If multiple or zero, clear the selection so user has to pick
+      form.setFieldsValue({ teacher_id: undefined });
+    }
+  };
+
+  // Compute available teachers for the dropdown based on selected subject
+  const currentSubject = Form.useWatch('subject', form);
+  const availableTeachers = useMemo(() => {
+    if (!currentSubject) {
+      return teachers;
+    }
+    return teachers.filter(t => t.subject && t.subject.includes(currentSubject));
+  }, [currentSubject, teachers]);
+
+  const handleSaveSchedule = async (values: any) => {
+    const { date, start_time, end_time, student_ids, subject, teacher_id } = values;
+
+    if (!subject || !student_ids || student_ids.length === 0 || !teacher_id) {
+      toast.error('请选择学员、科目和上课老师');
+      return;
+    }
+
     setIsSavingSchedule(true);
     try {
-      let teacherId: string | null = null;
-      if (user?.role === ROLES.TEACHER) {
-        teacherId = user.id;
-      } else {
-        const teacherIds = new Set<string>();
-        for (const sid of newSchedStudents) {
-          const t = students.find((s) => s.id === sid)?.teacher_id;
-          if (typeof t === 'string' && t) teacherIds.add(t);
-        }
-        if (teacherIds.size === 1) teacherId = Array.from(teacherIds)[0];
-      }
-
       const { error } = await supabase.from('schedules').insert({
-        date: newSchedDate,
-        start_time: newSchedStart,
-        end_time: newSchedEnd,
-        subject: newSchedSubject,
-        student_ids: newSchedStudents,
+        date: date.format('YYYY-MM-DD'),
+        start_time: start_time.format('HH:mm'),
+        end_time: end_time.format('HH:mm'),
+        subject: subject,
+        student_ids: student_ids,
         status: 'pending',
-        ...(teacherId ? { teacher_id: teacherId } : {}),
+        teacher_id: teacher_id,
       });
       if (error) throw error;
       
       toast.success('排课成功！');
       setIsAddModalOpen(false);
-      setNewSchedSubject('');
       fetchData(); // Refetch to show on calendar
     } catch (err: any) {
       toast.error('保存失败: ' + err.message);
@@ -179,10 +235,7 @@ const AdminSchedule: React.FC = () => {
         </div>
         {user?.role === ROLES.SUPER_ADMIN && (
           <button 
-            onClick={() => {
-              setNewSchedDate(selectedDateStr);
-              setIsAddModalOpen(true);
-            }}
+            onClick={handleOpenAddModal}
             className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-2.5 px-5 rounded-xl flex items-center transition-all shadow-[0_0_15px_rgba(6,182,212,0.4)]"
           >
             <Plus className="w-5 h-5 mr-1" /> 新增排课
@@ -267,10 +320,7 @@ const AdminSchedule: React.FC = () => {
                 <Empty description="该日期暂无排课安排">
                   <Button
                     type="primary"
-                    onClick={() => {
-                      setNewSchedDate(selectedDateStr);
-                      setIsAddModalOpen(true);
-                    }}
+                    onClick={handleOpenAddModal}
                   >
                     立即排课
                   </Button>
@@ -323,97 +373,60 @@ const AdminSchedule: React.FC = () => {
       </div>
 
       {/* ADD SCHEDULE MODAL */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/10 rounded-2xl w-full max-w-md shadow-sm dark:shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="p-5 border-b border-white/5 flex items-center justify-between shrink-0">
-              <h3 className="text-xl font-bold tracking-widest text-slate-800 dark:text-white">新增排课</h3>
-              <button onClick={() => setIsAddModalOpen(false)} className="text-slate-500 dark:text-gray-400 hover:text-slate-800 dark:hover:text-white transition-colors">✕</button>
-            </div>
-            
-            <div className="p-5 overflow-y-auto flex-1">
-              <form id="add-schedule-form" onSubmit={handleSaveSchedule} className="space-y-5">
-                <div>
-                  <label className="block text-xs font-mono font-bold text-slate-500 dark:text-gray-400 mb-2 uppercase tracking-[0.2em]">上课日期</label>
-                  <input 
-                    type="date" required value={newSchedDate} onChange={(e) => setNewSchedDate(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-black/50 border border-slate-100 dark:border-white/10 rounded-xl px-4 py-3 text-white font-mono focus:border-cyan-500/50"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-mono font-bold text-slate-500 dark:text-gray-400 mb-2 uppercase tracking-[0.2em]">开始时间</label>
-                    <input 
-                      type="time" required value={newSchedStart} onChange={handleStartChange}
-                      className="w-full bg-slate-50 dark:bg-black/50 border border-slate-100 dark:border-white/10 rounded-xl px-4 py-3 text-white font-mono focus:border-cyan-500/50"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-mono font-bold text-slate-500 dark:text-gray-400 mb-2 uppercase tracking-[0.2em]">结束时间</label>
-                    <input 
-                      type="time" required value={newSchedEnd} onChange={(e) => setNewSchedEnd(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-black/50 border border-slate-100 dark:border-white/10 rounded-xl px-4 py-3 text-white font-mono focus:border-cyan-500/50"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-mono font-bold text-slate-500 dark:text-gray-400 mb-2 uppercase tracking-[0.2em]">排课科目</label>
-                  <select 
-                    required value={newSchedSubject} onChange={(e) => setNewSchedSubject(e.target.value)}
-                    className="w-full appearance-none bg-slate-50 dark:bg-black/50 border border-slate-100 dark:border-white/10 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:border-cyan-500/50 focus:bg-white dark:focus:bg-black/50"
-                  >
-                    <option value="" disabled>请选择科目</option>
-                    {availableSubjects.map(sub => <option key={sub} value={sub}>{sub}</option>)}
-                  </select>
-                </div>
-
-                {newSchedSubject && (
-                  <div className="bg-slate-50 dark:bg-black/30 rounded-xl p-4 border border-slate-100 dark:border-white/5">
-                    <label className="block text-xs font-mono font-bold text-slate-500 dark:text-gray-400 mb-3 uppercase tracking-[0.2em]">参与学员 (已报该科目)</label>
-                    {students.filter(s => s.subjects?.includes(newSchedSubject)).length === 0 ? (
-                      <div className="text-xs text-slate-400 dark:text-gray-500">暂无该科目学员</div>
-                    ) : (
-                      <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
-                        {students.filter(s => s.subjects?.includes(newSchedSubject)).map(stu => {
-                          const isChecked = newSchedStudents.includes(stu.id);
-                          return (
-                            <label key={stu.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition-colors">
-                              <input 
-                                type="checkbox" 
-                                checked={isChecked}
-                                onChange={(e) => {
-                                  if (e.target.checked) setNewSchedStudents(prev => [...prev, stu.id]);
-                                  else setNewSchedStudents(prev => prev.filter(id => id !== stu.id));
-                                }}
-                                className="w-4 h-4 accent-cyan-500 rounded bg-black/50 border-white/10"
-                              />
-                              <span className={`text-sm font-bold ${isChecked ? 'text-slate-800 dark:text-white' : 'text-slate-500 dark:text-gray-400'}`}>{stu.name}</span>
-                              <span className="text-xs text-slate-400 dark:text-gray-500 ml-auto font-mono">{stu.grade || ''}</span>
-                            </label>
-                          )
-                        })}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </form>
-            </div>
-            
-            <div className="p-5 border-t border-white/5 bg-slate-50 dark:bg-black/20 shrink-0">
-              <button 
-                form="add-schedule-form"
-                type="submit"
-                disabled={isSavingSchedule || !newSchedSubject || newSchedStudents.length === 0}
-                className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-3.5 rounded-xl tracking-widest transition-all disabled:opacity-50"
-              >
-                {isSavingSchedule ? '保存中...' : '确认排课'}
-              </button>
-            </div>
+      <Modal
+        title="新增排课"
+        open={isAddModalOpen}
+        onCancel={() => setIsAddModalOpen(false)}
+        onOk={() => form.submit()}
+        confirmLoading={isSavingSchedule}
+        width={600}
+        okText="确认排课"
+      >
+        <Form 
+          form={form} 
+          layout="vertical" 
+          onFinish={handleSaveSchedule} 
+          requiredMark={false}
+        >
+          <Form.Item name="date" label="上课日期" rules={[{ required: true, message: '请选择上课日期' }]}>
+            <DatePicker style={{ width: '100%' }} format="YYYY-MM-DD" />
+          </Form.Item>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item name="start_time" label="开始时间" rules={[{ required: true, message: '请选择开始时间' }]}>
+              <TimePicker style={{ width: '100%' }} format="HH:mm" onChange={handleStartChange} />
+            </Form.Item>
+            <Form.Item name="end_time" label="结束时间" rules={[{ required: true, message: '请选择结束时间' }]}>
+              <TimePicker style={{ width: '100%' }} format="HH:mm" />
+            </Form.Item>
           </div>
-        </div>
-      )}
+
+          <Form.Item name="student_ids" label="参与学员" rules={[{ required: true, message: '请选择参与学员' }]}>
+            <Select
+              mode="multiple"
+              placeholder="请选择学员"
+              options={students.map(s => ({ label: s.name, value: s.id }))}
+              onChange={handleStudentChange}
+              maxTagCount="responsive"
+            />
+          </Form.Item>
+
+          <Form.Item name="subject" label="排课科目" rules={[{ required: true, message: '请选择科目' }]}>
+            <Select
+              placeholder="请选择科目"
+              options={availableSubjects.map((sub: string) => ({ label: sub, value: sub }))}
+              onChange={handleSubjectChange}
+            />
+          </Form.Item>
+
+          <Form.Item name="teacher_id" label="上课老师" rules={[{ required: true, message: '请选择老师' }]}>
+            <Select
+              placeholder="请选择老师"
+              options={availableTeachers.map(t => ({ label: t.full_name || t.phone, value: t.id }))}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };

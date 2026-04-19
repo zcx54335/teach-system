@@ -1,0 +1,17 @@
+alter table "public"."students" add column "phone" text;
+alter table "public"."students" add column "parent_phone" text;
+alter table "public"."students" add column "school" text;
+alter table "public"."students" add column "subjects" text[];
+alter table "public"."students" add column "course_balances" jsonb default '{}'::jsonb;
+alter table "public"."students" add column "total_classes" integer default 0;
+alter table "public"."students" add column "calc_score" numeric default 0;
+alter table "public"."students" add column "logic_score" numeric default 0;
+alter table "public"."students" add column "spatial_score" numeric default 0;
+alter table "public"."students" add column "app_score" numeric default 0;
+alter table "public"."students" add column "data_score" numeric default 0;
+alter table "public"."students" add column "physics_score" numeric default 0;
+alter table "public"."students" add column "chemistry_score" numeric default 0;
+alter table "public"."students" add column "status" text default 'enrolled';
+alter table "public"."students" add column "auth_id" uuid references "public"."profiles"("id");
+alter table "public"."students" add column "password_hash" text;
+alter table "public"."students" add column "last_deducted_at" timestamp with time zone;
