@@ -29,7 +29,7 @@ const AdminLayout: React.FC = () => {
             <Hexagon className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-black tracking-widest text-white">小鱼思维</h1>
+            <h1 className="text-lg font-black tracking-widest text-white">熊熊</h1>
             <p className="text-[10px] font-mono text-white/60 uppercase tracking-widest">Admin</p>
           </div>
         </div>

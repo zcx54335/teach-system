@@ -1,0 +1,19 @@
+page { background-color: #F4F6F9; } 
+.hw-container { padding: 32px 24px 120px; min-height: 100vh; } 
+.page-title { font-size: 44px; font-weight: 800; color: #111418; margin-bottom: 32px; display: block; padding: 0 8px; letter-spacing: 1px; } 
+
+.hw-card { 
+  background: #FFFFFF; border-radius: 24px; padding: 24px; margin-bottom: 20px; 
+  display: flex; justify-content: space-between; align-items: center; 
+  box-shadow: 0 8px 24px rgba(17,20,24,0.04); border-left: 6px solid #FFAB00; 
+} 
+.hw-info { display: flex; flex-direction: column; flex: 1; margin-right: 16px; } 
+.hw-title { font-size: 28px; font-weight: 800; color: #111418; margin-bottom: 6px; } 
+.hw-student { font-size: 24px; color: #8B95A1; } 
+
+.review-btn { 
+  background: #00E599; color: #FFFFFF; padding: 12px 28px; border-radius: 32px; 
+  font-size: 24px; font-weight: bold; white-space: nowrap; box-shadow: 0 4px 12px rgba(0,229,153,0.2); 
+} 
+.review-btn:active { transform: scale(0.95); opacity: 0.9; } 
+.loading-text { text-align: center; padding: 80px 0; color: #8B95A1; font-size: 26px; display: block; } 

@@ -10,8 +10,8 @@ type Settings = {
 
 export default function SettingsManagement() {
   const [settings, setSettings] = useState<Settings>({
-    studio_name: '小鱼思维',
-    report_footer: 'POWERED BY 小鱼思维',
+    studio_name: '熊熊',
+    report_footer: 'POWERED BY 熊熊',
     default_duration: 120,
   });
   const [isLoading, setIsLoading] = useState(true);
@@ -22,11 +22,11 @@ export default function SettingsManagement() {
       setIsLoading(true);
       const { data } = await supabase.from('system_settings').select('*').eq('id', 1).single();
       if (data) {
-        setSettings({
-          studio_name: data.studio_name || '小鱼思维',
-          report_footer: data.report_footer || 'POWERED BY 小鱼思维',
-          default_duration: data.default_duration || 120,
-        });
+          setSettings({
+            studio_name: data.studio_name || '熊熊',
+            report_footer: data.report_footer || 'POWERED BY 熊熊',
+            default_duration: data.default_duration || 120,
+          });
       }
       setIsLoading(false);
     };

@@ -1,0 +1,5 @@
+.parent-tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 110px; background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(20px); display: flex; justify-content: space-around; align-items: center; box-shadow: 0 -4px 32px rgba(0,0,0,0.04); padding-bottom: env(safe-area-inset-bottom); z-index: 999; } 
+.tab-item { flex: 1; display: flex; justify-content: center; align-items: center; height: 100%; position: relative; color: #8B95A1; font-size: 28px; font-weight: 600; transition: all 0.2s; } 
+.tab-item.active { color: #111418; font-weight: 800; } 
+.tab-indicator { position: absolute; top: 0; width: 48px; height: 6px; background: #00E599; border-radius: 0 0 6px 6px; display: none; } 
+.tab-item.active .tab-indicator { display: block; }

@@ -28,16 +28,15 @@ export default function PersonalSettings() {
       }
       try {
         const session = JSON.parse(sessionStr);
-        const { data } = await supabase.from('profiles').select('*').eq('id', session.id).single();
+        const { data } = await supabase.from('users').select('*').eq('id', session.id).single();
         if (data) {
-          setProfile(data as Profile);
+          setProfile({ id: data.id, full_name: data.name, phone: data.phone });
           form.setFieldsValue({
-            full_name: data.full_name || '',
+            full_name: data.name || '',
             phone: data.phone || '',
-            bio: data.bio || '',
           });
         }
-      } catch {}
+      } catch (err) {}
       setIsLoading(false);
     };
     load();
@@ -47,8 +46,8 @@ export default function PersonalSettings() {
     if (!profile?.id) return;
     setIsSaving(true);
     const { error } = await supabase
-      .from('profiles')
-      .update({ full_name: values.full_name, phone: values.phone, bio: values.bio || null })
+      .from('users')
+      .update({ name: values.full_name, phone: values.phone })
       .eq('id', profile.id);
     if (error) {
       message.error('保存失败');

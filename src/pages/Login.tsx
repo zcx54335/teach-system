@@ -110,7 +110,7 @@ const Login: React.FC = () => {
   }, [navigate, redirectUrl, user]);
 
   const pageTitle = useMemo(() => (initialType === 'parent' ? '家长登录' : '欢迎回来 👋'), [initialType]);
-  const pageSubTitle = useMemo(() => (initialType === 'parent' ? '家长中心' : '小鱼思维校办系统'), [initialType]);
+  const pageSubTitle = useMemo(() => (initialType === 'parent' ? 'PARENT WORKSPACE' : 'MANAGEMENT SYSTEM'), [initialType]);
 
   const isDark = appTheme === 'dark' || (appTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
@@ -177,9 +177,9 @@ const Login: React.FC = () => {
 
     try {
       const { data: profile, error } = await supabase
-        .from('system_users')
+        .from('users')
         .select('*')
-        .eq('account', values.identifier)
+        .or(`phone.eq.${values.identifier},username.eq.${values.identifier}`)
         .single();
 
       console.error("Supabase 查询结果:", { data: profile, error });
@@ -187,6 +187,11 @@ const Login: React.FC = () => {
       if (error || !profile) {
         setError('该账号未注册，请联系管理员开通');
       } else if (profile.password === values.password) {
+        if (profile.role === 'parent') {
+          setError('家长账号不允许登录后台系统，请使用小程序');
+          return;
+        }
+
         // 处理记住账号
         if (values.remember) {
           localStorage.setItem('rememberedIdentifier', values.identifier);
@@ -209,15 +214,15 @@ const Login: React.FC = () => {
 
         const rawId = (profile as any).id;
         if (rawId === null || rawId === undefined || String(rawId).trim() === '') {
-          console.error('system_users row missing id field', { row: profile });
-          setError('账号数据缺少 id 字段，请检查 system_users.id');
+          console.error('users row missing id field', { row: profile });
+          setError('账号数据缺少 id 字段，请检查 users.id');
           return;
         }
         const id = String(rawId);
 
         const sessionData = {
           id,
-          account: (profile.account as string) || '',
+          account: (profile.phone as string) || (profile.username as string) || "",
           role,
           full_name:
             ((profile.full_name as string | null) || (profile.name as string | null)) ||

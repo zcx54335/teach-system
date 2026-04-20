@@ -1,0 +1,33 @@
+page { background-color: #F4F6F9; } 
+.teacher-container { min-height: 100vh; padding: 40px 32px 120px; position: relative; } 
+
+/* 顶部看板 */ 
+.header-section { margin-bottom: 48px; } 
+.greeting { font-size: 48px; font-weight: 700; color: #111418; display: block; margin-bottom: 8px; } 
+.sub-greeting { font-size: 28px; color: #8B95A1; } 
+
+/* 数据卡片 */ 
+.stats-card { background: linear-gradient(135deg, #181A20 0%, #2A2D35 100%); border-radius: 40px; padding: 48px 40px; display: flex; justify-content: space-between; margin-bottom: 48px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); } 
+.stat-item { display: flex; flex-direction: column; } 
+.stat-value { font-size: 64px; font-weight: 800; color: #00E599; margin-bottom: 8px; font-family: 'DIN Alternate', sans-serif; } 
+.stat-label { font-size: 26px; color: #8B95A1; } 
+.stat-divider { width: 2px; background: rgba(255,255,255,0.1); border-radius: 2px; } 
+
+/* 课程列表 */ 
+.section-title { font-size: 34px; font-weight: 600; color: #111418; margin-bottom: 24px; display: flex; align-items: center; } 
+.section-title::before { content: ''; display: inline-block; width: 8px; height: 32px; background: #00E599; border-radius: 8px; margin-right: 16px; } 
+
+.lesson-card { background: #FFFFFF; border-radius: 32px; padding: 36px 32px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 12px 32px rgba(17,20,24,0.03); border: 1px solid rgba(255,255,255,0.8); transition: transform 0.2s; } 
+.lesson-card:active { transform: scale(0.98); } 
+.lesson-info { display: flex; flex-direction: column; flex: 1; margin-right: 20px; overflow: hidden; } 
+.student-name { font-size: 32px; font-weight: 600; color: #111418; margin-bottom: 12px; } 
+.lesson-topic { font-size: 26px; color: #8B95A1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } 
+.lesson-date { font-size: 26px; font-weight: 600; color: #111418; background: #F4F6F9; padding: 12px 24px; border-radius: 20px; flex-shrink: 0; } 
+
+/* 核心操作横幅 */ 
+.action-banner { background: linear-gradient(135deg, #00E599 0%, #00CC88 100%); border-radius: 32px; padding: 32px 40px; display: flex; align-items: center; margin-bottom: 48px; box-shadow: 0 16px 32px rgba(0,229,153,0.3); transition: transform 0.2s; } 
+.action-banner:active { transform: scale(0.98); } 
+.ab-icon { font-size: 64px; margin-right: 24px; } 
+.ab-content { display: flex; flex-direction: column; } 
+.ab-title { font-size: 36px; font-weight: 800; color: #FFFFFF; margin-bottom: 8px; } 
+.ab-sub { font-size: 24px; color: rgba(255,255,255,0.9); }

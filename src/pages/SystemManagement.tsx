@@ -43,8 +43,8 @@ const SystemManagement: React.FC = () => {
   // Settings Management State
   // ----------------------------------------
   const [settings, setSettings] = useState({
-    studio_name: '小鱼思维',
-    report_footer: 'POWERED BY 小鱼思维',
+    studio_name: '熊熊',
+    report_footer: 'POWERED BY 熊熊',
     subjects_list: ['数学', '物理', '化学', '英语', '语文'],
     default_duration: 120
   });
@@ -97,8 +97,8 @@ const SystemManagement: React.FC = () => {
     if (teacherRes.data) setTeachers(teacherRes.data);
     if (settingsRes.data) {
       setSettings({
-        studio_name: settingsRes.data.studio_name || '小鱼思维',
-        report_footer: settingsRes.data.report_footer || 'POWERED BY 小鱼思维',
+        studio_name: settingsRes.data.studio_name || '熊熊',
+        report_footer: settingsRes.data.report_footer || 'POWERED BY 熊熊',
         subjects_list: settingsRes.data.subjects_list || ['数学', '物理', '化学', '英语', '语文'],
         default_duration: settingsRes.data.default_duration || 120
       });

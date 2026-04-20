@@ -140,6 +140,7 @@ const MainLayout: React.FC = () => {
           label: '学员档案',
           icon: <Users className="w-4 h-4" />,
         },
+
         {
           key: '/dashboard/teachers',
           label: '师资管理',
@@ -186,13 +187,8 @@ const MainLayout: React.FC = () => {
         },
         {
           key: '/dashboard/schedule',
-          label: '排课与家校',
+          label: '排课管理',
           icon: <BookOpen className="w-4 h-4" />,
-        },
-        {
-          key: '/dashboard/students',
-          label: '学员档案',
-          icon: <Users className="w-4 h-4" />,
         },
       ];
     }
@@ -330,21 +326,19 @@ const MainLayout: React.FC = () => {
           ['--sider-text' as any]: token.colorTextSecondary,
         }}
       >
-        <div className="h-16 px-4 flex items-center justify-center gap-3">
-          <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center"
-            style={{ background: token.colorFillAlter }}
-          >
-            <Hexagon className="w-5 h-5" style={{ color: token.colorText }} />
-          </div>
-          {!collapsed && (
-            <div className="min-w-0 text-center">
-              <div className="text-[15px] font-black tracking-wide leading-5" style={{ color: token.colorText }}>
-                小鱼思维校办系统
+        <div className="h-20 px-6 flex items-center gap-4">
+          {!collapsed ? (
+            <div className="flex flex-col justify-center w-full mt-2">
+              <div className="text-xl font-black tracking-[0.15em] uppercase" style={{ color: token.colorText }}>
+                熊熊
               </div>
-              <div className="text-[11px] leading-4" style={{ color: token.colorTextSecondary }}>
-                {roleLabel}
+              <div className="text-[10px] font-mono tracking-widest mt-1 opacity-60 uppercase" style={{ color: token.colorTextSecondary }}>
+                {roleLabel === '超级管理员' ? 'ADMINISTRATOR' : 'TEACHER WORKSPACE'}
               </div>
+            </div>
+          ) : (
+            <div className="w-full text-center mt-2 text-lg font-black tracking-widest" style={{ color: token.colorText }}>
+              X
             </div>
           )}
         </div>

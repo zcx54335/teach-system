@@ -1,0 +1,83 @@
+page { background-color: #F4F6F9; } 
+.record-container { min-height: 100vh; padding: 40px 32px 140px; } 
+.welcome { font-size: 48px; font-weight: 700; color: #111418; margin-bottom: 48px; display: block; letter-spacing: 2px; } 
+.empty-state { padding: 80px 40px; text-align: center; color: #8B95A1; font-size: 28px; background: #FFFFFF; border-radius: 32px; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.03); } 
+.month-group { margin-bottom: 48px; } 
+.month-title { font-size: 34px; font-weight: 600; color: #111418; margin-bottom: 24px; display: flex; align-items: center; } 
+.month-title::before { content: ''; display: inline-block; width: 8px; height: 32px; background: #00E599; border-radius: 8px; margin-right: 16px; } 
+.task-card { background: #FFFFFF; border-radius: 32px; margin-bottom: 32px; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.06); overflow: hidden; } 
+
+/* === 核心修复区：表头防挤压 === */ 
+.task-header { padding: 36px 32px; background: #181A20; display: flex; justify-content: space-between; align-items: center; } 
+.task-header:active { opacity: 0.9; } 
+
+.header-left { display: flex; flex-direction: column; flex: 1; overflow: hidden; margin-right: 24px; } 
+.task-date { font-size: 26px; color: #8B95A1; margin-bottom: 8px; } 
+.task-title { font-size: 32px; font-weight: 600; color: #FFFFFF; letter-spacing: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } 
+
+.header-right { display: flex; align-items: center; flex-shrink: 0; } 
+/* --- 标签：胶囊状，颜色更清透 --- */ 
+.status-tag { white-space: nowrap; flex-shrink: 0; padding: 10px 24px; border-radius: 40px; font-size: 24px; font-weight: 600; margin-right: 20px; letter-spacing: 1px; } 
+/* ============================== */ 
+
+.tag-pending { background: #FFF0F0; color: #FF4D4F; border: 1px solid rgba(255, 77, 79, 0.1); } 
+.tag-submitted { background: #F0F5FF; color: #4D94FF; border: 1px solid rgba(77, 148, 255, 0.1); } 
+.tag-reviewed { background: #E6FFF6; color: #00CC88; border: 1px solid rgba(0, 204, 136, 0.1); } 
+.arrow { width: 48px; height: 48px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #FFFFFF; font-size: 20px; flex-shrink: 0; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); } 
+.arrow.open { transform: rotate(180deg); background: rgba(0, 229, 153, 0.2); color: #00E599; } 
+
+/* --- 展开区域样式 --- */ 
+.task-body { padding: 40px 32px; background: #FFFFFF; } 
+.media-section { padding-bottom: 32px; margin-bottom: 32px; border-bottom: 1px dashed #E5E8EF; } 
+.media-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; } 
+.section-title { font-size: 28px; color: #111418; font-weight: 600; margin-bottom: 24px; display: block; } 
+.image-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; } 
+.grid-image { width: 100%; height: 180px; border-radius: 16px; object-fit: cover; background-color: #F4F6F9; box-shadow: 0 4px 12px rgba(0,0,0,0.05); } 
+
+/* --- 上传按钮：质感提升，从生硬边框变成精致虚线 --- */ 
+.upload-btn { width: 100%; height: 180px; border-radius: 24px; background-color: #FAFBFC; border: 2px dashed #D3D8E0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #8B95A1; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); } 
+.upload-btn:active { background-color: #F0F2F5; border-color: #00E599; color: #00E599; transform: scale(0.98); } 
+.upload-icon { font-size: 64px; margin-bottom: 4px; font-weight: 200; line-height: 1; color: currentColor; } 
+.upload-text { font-size: 24px; font-weight: 500; } 
+
+.info-row { display: flex; flex-direction: column; margin-bottom: 32px; } 
+.info-row:last-child { margin-bottom: 0; } 
+.label { color: #8B95A1; font-size: 26px; margin-bottom: 12px; font-weight: 500; } 
+.content { color: #1A1D26; font-size: 32px; font-weight: 600; line-height: 1.5; } 
+
+/* --- 评语框：增加左侧粗边框的引用视觉 --- */ 
+.review-box, .pending-box { position: relative; overflow: hidden; padding: 32px; border-radius: 24px; font-size: 28px; line-height: 1.8; margin-top: 16px; } 
+.review-box { background: #F8F9FA; color: #3E4552; } 
+.review-box::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 8px; background: #00E599; } 
+.pending-box { font-weight: 400; color: #FF4D4F; background: #FFF0F0; padding: 28px; border-radius: 20px; font-size: 28px; text-align: center; }
+
+/* 教师端专属样式 */
+.teacher-tabs { display: flex; margin-bottom: 40px; background: #FFFFFF; border-radius: 24px; padding: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.03); }
+.teacher-tab { flex: 1; text-align: center; font-size: 30px; font-weight: 600; color: #8B95A1; padding: 24px 0; border-radius: 16px; transition: all 0.3s; }
+.teacher-tab.active { background: #1A1D26; color: #00E599; }
+.review-btn { background: linear-gradient(135deg, #00E599 0%, #00CC88 100%); color: #FFFFFF; font-size: 26px; font-weight: 600; padding: 12px 32px; border-radius: 40px; border: none; margin-left: 20px; box-shadow: 0 8px 16px rgba(0, 229, 153, 0.2); }
+.review-btn:active { transform: scale(0.95); }
+
+/* 教务双模式聚合页 - 顶部丝滑切换器 */
+.tab-switch-container { display: flex; background: #E8ECEF; border-radius: 24px; padding: 8px; margin-bottom: 40px; } 
+.tab-switch-item { flex: 1; text-align: center; padding: 16px 0; font-size: 28px; font-weight: 600; color: #8B95A1; border-radius: 16px; transition: all 0.3s; } 
+.tab-switch-item.active { background: #FFFFFF; color: #111418; box-shadow: 0 4px 16px rgba(0,0,0,0.05); } 
+
+.hw-card { background: #FFFFFF; border-radius: 32px; padding: 32px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 12px 32px rgba(17,20,24,0.03); border-left: 8px solid #FFAB00; } 
+.hw-info { display: flex; flex-direction: column; flex: 1; margin-right: 16px; } 
+.hw-title { font-size: 30px; font-weight: 800; color: #111418; margin-bottom: 8px; } 
+.hw-student { font-size: 26px; color: #8B95A1; } 
+
+/* 教师端聚合页 - 学员库样式 */
+.student-list { display: flex; flex-direction: column; gap: 24px; margin-bottom: 120px; }
+.student-card { background-color: #FFFFFF; border-radius: 40px; padding: 40px; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.03); display: flex; justify-content: space-between; align-items: center; }
+.card-left { display: flex; align-items: center; gap: 32px; }
+.avatar-container { width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, #111418 0%, #2A2D35 100%); display: flex; justify-content: center; align-items: center; box-shadow: 0 12px 24px rgba(17,20,24,0.15); }
+.avatar-text { font-size: 40px; font-weight: 800; color: #FFFFFF; }
+.info-container { display: flex; flex-direction: column; gap: 12px; }
+.student-name { font-size: 36px; font-weight: 800; color: #111418; }
+.student-desc { font-size: 26px; color: #8B95A1; }
+.card-right { display: flex; align-items: baseline; }
+.remain-label { font-size: 26px; color: #8B95A1; margin-right: 12px; }
+.remain-value { font-size: 44px; font-weight: 800; color: #00E599; font-family: 'DIN Alternate', sans-serif; }
+.remain-unit { font-size: 26px; color: #00E599; margin-left: 8px; font-weight: 600; }

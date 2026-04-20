@@ -1,0 +1,17 @@
+page { background-color: #FFFFFF; } 
+.login-container { min-height: 100vh; padding: 100px 60px; display: flex; flex-direction: column; justify-content: center; } 
+.brand-section { text-align: center; margin-bottom: 100px; } 
+.logo-emoji { font-size: 100px; line-height: 1.2; display: block; margin-bottom: 24px; text-shadow: 0 8px 24px rgba(0,0,0,0.1); } 
+.brand-title { font-size: 56px; font-weight: 800; color: #1A1D26; display: block; letter-spacing: 4px; margin-bottom: 16px; } 
+.brand-subtitle { font-size: 28px; color: #8B95A1; letter-spacing: 2px; } 
+
+.form-section { display: flex; flex-direction: column; gap: 32px; } 
+.input-group { position: relative; } 
+.minimal-input { background-color: #F4F6F9; height: 110px; border-radius: 32px; padding: 0 40px; font-size: 32px; color: #1A1D26; transition: all 0.3s ease; } 
+/* 聚焦时加入微弱的绿色光晕 */ 
+.minimal-input:focus { background-color: #FFFFFF; box-shadow: 0 0 0 4px rgba(0, 229, 153, 0.15); } 
+.input-placeholder { color: #A0AAB7; } 
+
+.action-section { margin-top: 48px; } 
+.login-btn { height: 110px; border-radius: 55px; background: linear-gradient(135deg, #00E599 0%, #00CC88 100%); color: #FFFFFF; font-size: 36px; font-weight: 600; display: flex; align-items: center; justify-content: center; box-shadow: 0 16px 32px rgba(0, 229, 153, 0.3); border: none; transition: transform 0.2s; } 
+.login-btn:active { transform: scale(0.96); box-shadow: 0 8px 16px rgba(0, 229, 153, 0.2); }

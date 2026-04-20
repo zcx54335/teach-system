@@ -17,7 +17,7 @@ export interface StudentRecord {
   name: string; // mapped from studentName
   grade: string;
   total_classes: number;
-  remaining_classes: number;
+  remaining_lessons: number;
   last_deducted_at: string | null;
   phone?: string;
   time?: string; // 模拟上课时间，用于展示
@@ -45,7 +45,7 @@ const deductClass = async (
   const { error: updateError } = await supabase
     .from('students')
     .update({ 
-      remaining_classes: currentRemaining - 1,
+      remaining_lessons: currentRemaining - 1,
       last_deducted_at: new Date().toISOString(),
       ...scores
     })
@@ -162,7 +162,7 @@ const Schedule: React.FC<PageProps> = ({ localProgress, students = [], setStuden
 
   // 触发二次确认
   const promptDeduct = (student: StudentRecord) => {
-    if (student.remaining_classes <= 0) {
+    if (student.remaining_lessons <= 0) {
       showToast("课时已耗尽，请提醒家长续费", "error");
       return;
     }
@@ -171,7 +171,7 @@ const Schedule: React.FC<PageProps> = ({ localProgress, students = [], setStuden
       studentId: student.id, 
       studentName: student.name, 
       grade: student.grade,
-      remainingClasses: student.remaining_classes,
+      remainingClasses: student.remaining_lessons,
       topic: '',
       comment: '',
       homeworkTask: '',
@@ -278,7 +278,7 @@ ${tagsStr}
       if (s.id === studentId) {
         return { 
           ...s, 
-          remaining_classes: newRemaining,
+          remaining_lessons: newRemaining,
           last_deducted_at: new Date().toISOString(),
           ...scores
         };
@@ -509,7 +509,7 @@ ${tagsStr}
                 className="group relative bg-stem-panel backdrop-blur-md border border-white/5 rounded-2xl p-5 overflow-hidden"
               >
                 {/* 装饰线条 */}
-                <div className={`absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b opacity-50 ${student.remaining_classes > 0 ? 'from-stem-green to-transparent' : 'from-red-500 to-transparent'}`}></div>
+                <div className={`absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b opacity-50 ${student.remaining_lessons > 0 ? 'from-stem-green to-transparent' : 'from-red-500 to-transparent'}`}></div>
                 
                 <div className="flex justify-between items-start relative z-10">
                   <div className="space-y-2">
@@ -525,7 +525,7 @@ ${tagsStr}
                         时间: <span className="text-white/80">{student.time || "14:00 - 15:30"}</span>
                       </div>
                       <div className="text-xs font-mono text-white/40">
-                        剩余课时: <span className={`font-bold text-sm ${student.remaining_classes > 0 ? 'text-stem-green' : 'text-red-500'}`}>{student.remaining_classes}</span> / {student.total_classes}
+                        剩余课时: <span className={`font-bold text-sm ${student.remaining_lessons > 0 ? 'text-stem-green' : 'text-red-500'}`}>{student.remaining_lessons}</span> / {student.total_classes}
                       </div>
                     </div>
                     
@@ -544,13 +544,13 @@ ${tagsStr}
                       className={`
                         relative overflow-hidden px-6 py-3 rounded-xl font-mono text-xs tracking-widest transition-all duration-300
                         backdrop-blur-md border w-28 text-center
-                        ${student.remaining_classes > 0 
+                        ${student.remaining_lessons > 0 
                           ? "bg-white/5 border-stem-green/30 text-stem-green hover:bg-stem-green/10 hover:shadow-[0_0_20px_rgba(0,255,157,0.2)] active:scale-90" 
                           : "bg-red-500/10 border-red-500/30 text-red-500 hover:bg-red-500/20 active:scale-95"
                         }
                       `}
                     >
-                      {student.remaining_classes > 0 ? "消课" : "提醒续费"}
+                      {student.remaining_lessons > 0 ? "消课" : "提醒续费"}
                     </button>
 
                     {/* 海报生成按钮 */}
@@ -782,7 +782,7 @@ ${tagsStr}
                 {/* 左侧：巨大的剩余课时及明确的中文标签 */}
                 <div className="flex flex-col items-center justify-center space-y-6 pt-4">
                   <div className="text-8xl font-light tracking-tighter text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.3)] leading-none h-[96px] flex items-center">
-                    {posterModal.student.remaining_classes}
+                    {posterModal.student.remaining_lessons}
                   </div>
                   <p className="text-sm font-bold text-cyan-400 tracking-[0.2em] uppercase">
                     剩余课时
@@ -792,7 +792,7 @@ ${tagsStr}
                 {/* 右侧：次要数据 */}
                 <div className="flex flex-col justify-center space-y-4 border-l border-white/10 pl-6 h-full">
                   <p className="text-xs font-mono text-gray-400">
-                    累计已上: <span className="text-white font-bold text-sm ml-1">{posterModal.student.total_classes - posterModal.student.remaining_classes}</span>
+                    累计已上: <span className="text-white font-bold text-sm ml-1">{posterModal.student.total_classes - posterModal.student.remaining_lessons}</span>
                   </p>
                   <p className="text-xs font-mono text-gray-400">
                     最近上课: <span className="text-white font-bold text-sm ml-1">{posterModal.student.last_deducted_at ? new Date(posterModal.student.last_deducted_at).toLocaleDateString() : '-'}</span>

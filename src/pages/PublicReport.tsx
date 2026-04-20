@@ -95,7 +95,7 @@ const PublicReport: React.FC = () => {
         <div className="relative z-10 text-center">
           <div className="inline-flex items-center bg-white/10 border border-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-cyan-50 text-xs font-bold tracking-[0.2em] mb-6">
             <Sparkles className="w-3.5 h-3.5 mr-1.5 text-cyan-300" />
-            小鱼思维 · VIP 专属服务
+            熊熊 · VIP 专属服务
           </div>
           
           <h1 className="text-3xl md:text-4xl font-black text-white tracking-wide mb-4 drop-shadow-md">

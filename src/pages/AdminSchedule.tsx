@@ -41,8 +41,10 @@ const getCalendarDays = (date: Date) => {
 const AdminSchedule: React.FC = () => {
   const { user } = useAuth();
   const [students, setStudents] = useState<any[]>([]);
+  const [allLessons, setAllLessons] = useState<any[]>([]);
   const [schedules, setSchedules] = useState<any[]>([]);
   const [systemSettings, setSystemSettings] = useState<any>(null);
+  const [teacherLinks, setTeacherLinks] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // View State
@@ -64,21 +66,70 @@ const AdminSchedule: React.FC = () => {
   const fetchData = async () => {
     setIsLoading(true);
     let studentQuery = supabase.from('students').select('*').order('created_at', { ascending: false });
-    let scheduleQuery = supabase.from('schedules').select('*').order('start_time', { ascending: true });
+    let lessonQuery = supabase.from('lessons').select('*').order('lesson_date', { ascending: true });
     let settingsQuery = supabase.from('system_settings').select('*').eq('id', 1).single();
     let teacherQuery = supabase.from('users').select('*').eq('role', 'teacher');
 
     if (user?.role === ROLES.TEACHER) {
-      studentQuery = studentQuery.eq('teacher_id', user.id);
-      scheduleQuery = scheduleQuery.eq('teacher_id', user.id);
+      // Need to fetch links for teacher's students
+      const { data: links } = await supabase.from('teacher_student_link').select('student_id').eq('teacher_id', user.id).eq('status', 'active');
+      const studentIds = links ? links.map(l => l.student_id) : [];
+      if (studentIds.length > 0) {
+        studentQuery = studentQuery.in('id', studentIds);
+      } else {
+        studentQuery = studentQuery.in('id', ['00000000-0000-0000-0000-000000000000']);
+      }
+      lessonQuery = lessonQuery.eq('teacher_id', user.id);
     }
 
-    const [studentRes, scheduleRes, settingsRes, teacherRes] = await Promise.all([studentQuery, scheduleQuery, settingsQuery, teacherQuery]);
+    const [studentRes, lessonRes, settingsRes, teacherRes, linksRes] = await Promise.all([
+      studentQuery, 
+      lessonQuery, 
+      settingsQuery, 
+      teacherQuery,
+      supabase.from('teacher_student_link').select('*').eq('status', 'active')
+    ]);
 
     if (studentRes.data) setStudents(studentRes.data);
-    if (scheduleRes.data) setSchedules(scheduleRes.data);
     if (settingsRes.data) setSystemSettings(settingsRes.data);
     if (teacherRes.data) setTeachers(teacherRes.data);
+    if (linksRes.data) setTeacherLinks(linksRes.data);
+    
+    if (lessonRes.data) {
+      setAllLessons(lessonRes.data);
+      const rawLessons = lessonRes.data;
+      const scheduleMap = new Map<string, any>();
+      rawLessons.forEach((lesson: any) => {
+        const key = `${lesson.lesson_date}_${lesson.start_time}_${lesson.end_time}_${lesson.subject}_${lesson.teacher_id}`;
+        if (!scheduleMap.has(key)) {
+          scheduleMap.set(key, {
+            id: key,
+            date: lesson.lesson_date,
+            start_time: lesson.start_time,
+            end_time: lesson.end_time,
+            subject: lesson.subject,
+            teacher_id: lesson.teacher_id,
+            status: lesson.status === 'scheduled' ? 'pending' : lesson.status,
+            student_ids: [lesson.student_id],
+            raw_lessons: [lesson]
+          });
+        } else {
+          const sched = scheduleMap.get(key);
+          sched.student_ids.push(lesson.student_id);
+          sched.raw_lessons.push(lesson);
+          if (lesson.status === 'completed') {
+            sched.status = 'completed';
+          }
+        }
+      });
+      // sort by start_time
+      const groupedSchedules = Array.from(scheduleMap.values()).sort((a, b) => {
+        if (a.start_time < b.start_time) return -1;
+        if (a.start_time > b.start_time) return 1;
+        return 0;
+      });
+      setSchedules(groupedSchedules);
+    }
     
     setIsLoading(false);
   };
@@ -88,6 +139,22 @@ const AdminSchedule: React.FC = () => {
   }, []);
 
   // --- ADD SCHEDULE MODAL LOGIC ---
+  const studentStats = useMemo(() => {
+    return students.map(student => {
+      const scheduledLessons = allLessons.filter(l => 
+        l.student_id === student.id && 
+        (l.status === 'scheduled' || l.status === 'pending_approval')
+      );
+      const pendingCount = scheduledLessons.length;
+      const toSchedule = (student.remaining_lessons || 0) - pendingCount;
+      return {
+        ...student,
+        toSchedule: toSchedule > 0 ? toSchedule : 0,
+        pendingCount
+      };
+    });
+  }, [students, allLessons]);
+
   const handleOpenAddModal = () => {
     form.resetFields();
     form.setFieldsValue({
@@ -107,7 +174,6 @@ const AdminSchedule: React.FC = () => {
   };
 
   const handleStudentChange = (selectedStudentIds: string[]) => {
-    // If students are selected, auto-select their common subjects and teachers if possible
     if (selectedStudentIds.length === 0) {
       form.setFieldsValue({ subject: undefined, teacher_id: undefined });
       return;
@@ -115,17 +181,18 @@ const AdminSchedule: React.FC = () => {
 
     const selectedStudents = students.filter(s => selectedStudentIds.includes(s.id));
     
-    // Find common subjects
     let commonSubjects = selectedStudents[0].subjects || [];
     for (let i = 1; i < selectedStudents.length; i++) {
       const subs = selectedStudents[i].subjects || [];
       commonSubjects = commonSubjects.filter((s: string) => subs.includes(s));
     }
 
-    // Find common teacher
-    let commonTeacher = selectedStudents[0].teacher_id;
+    const firstStudentLinks = teacherLinks.filter(l => l.student_id === selectedStudents[0].id);
+    let commonTeacher = firstStudentLinks.length === 1 ? firstStudentLinks[0].teacher_id : undefined;
+
     for (let i = 1; i < selectedStudents.length; i++) {
-      if (selectedStudents[i].teacher_id !== commonTeacher) {
+      const studentLinks = teacherLinks.filter(l => l.student_id === selectedStudents[i].id);
+      if (!studentLinks.some(l => l.teacher_id === commonTeacher)) {
         commonTeacher = undefined;
         break;
       }
@@ -190,18 +257,46 @@ const AdminSchedule: React.FC = () => {
 
     setIsSavingSchedule(true);
     try {
-      const { error } = await supabase.from('schedules').insert({
-        date: date.format('YYYY-MM-DD'),
+      const isTeacher = user?.role === ROLES.TEACHER;
+      const status = isTeacher ? 'pending_approval' : 'scheduled';
+
+      const insertData = student_ids.map((student_id: string) => ({
+        lesson_date: date.format('YYYY-MM-DD'),
         start_time: start_time.format('HH:mm'),
         end_time: end_time.format('HH:mm'),
         subject: subject,
-        student_ids: student_ids,
-        status: 'pending',
+        student_id: student_id,
+        status: status,
         teacher_id: teacher_id,
-      });
+      }));
+
+      const { error } = await supabase.from('lessons').insert(insertData);
       if (error) throw error;
       
-      toast.success('排课成功！');
+      if (isTeacher) {
+        toast.success('排课申请已提交，等待管理员审批！');
+        // Notify admin
+        const { data: admins } = await supabase.from('users').select('id').eq('role', 'admin');
+        if (admins && admins.length > 0) {
+          const adminNotifications = admins.map(admin => ({
+            user_id: admin.id,
+            title: '新排课审批提醒',
+            content: `老师发起了一条 ${date.format('YYYY-MM-DD')} ${start_time.format('HH:mm')} 的【${subject}】排课申请，请及时审批。`,
+            type: 'system'
+          }));
+          await supabase.from('notifications').insert(adminNotifications);
+        }
+      } else {
+        toast.success('排课成功！');
+        // Notify teacher if admin scheduled it
+        const studentNames = students.filter(s => student_ids.includes(s.id)).map(s => s.name).join('、');
+        await supabase.from('notifications').insert({
+          user_id: teacher_id,
+          title: '新增排课通知',
+          content: `管理员为您安排了新的课程：${date.format('YYYY-MM-DD')} ${start_time.format('HH:mm')}-${end_time.format('HH:mm')} 的【${subject}】课，学员：${studentNames}。`,
+          type: 'system'
+        });
+      }
       setIsAddModalOpen(false);
       fetchData(); // Refetch to show on calendar
     } catch (err: any) {
@@ -228,24 +323,42 @@ const AdminSchedule: React.FC = () => {
       <header className="mb-6 shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl md:text-3xl font-bold tracking-widest text-slate-800 dark:text-white flex items-center">
-            <CalendarIcon className="w-6 h-6 md:w-8 md:h-8 mr-3 text-cyan-600 dark:text-cyan-400" />
-            课程排期规划
-          </h2>
-          <p className="text-xs md:text-sm text-slate-500 dark:text-gray-400 font-mono tracking-widest mt-2">FUTURE SCHEDULE MANAGEMENT</p>
-        </div>
-        {user?.role === ROLES.SUPER_ADMIN && (
+              <CalendarIcon className="w-6 h-6 md:w-8 md:h-8 mr-3 text-cyan-600 dark:text-cyan-400" />
+              课程排期规划
+            </h2>
+            <p className="text-xs md:text-sm text-slate-500 dark:text-gray-400 font-mono tracking-widest mt-2">FUTURE SCHEDULE MANAGEMENT</p>
+          </div>
           <button 
             onClick={handleOpenAddModal}
             className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-2.5 px-5 rounded-xl flex items-center transition-all shadow-[0_0_15px_rgba(6,182,212,0.4)]"
           >
             <Plus className="w-5 h-5 mr-1" /> 新增排课
           </button>
-        )}
-      </header>
+        </header>
 
-      <div className="flex flex-col lg:flex-row gap-6 min-h-0">
-        {/* Left: Calendar Board */}
-        <div className="w-full lg:w-1/3 flex flex-col bg-white dark:bg-white/[0.02] backdrop-blur-3xl border border-slate-100 dark:border-white/10 rounded-3xl p-5 shadow-sm dark:shadow-2xl shrink-0">
+      <div className="flex flex-col xl:flex-row gap-6 min-h-0">
+        
+        {/* Leftmost: Student List Sidebar */}
+        <div className="w-full xl:w-64 flex flex-col bg-white dark:bg-white/[0.02] backdrop-blur-3xl border border-slate-100 dark:border-white/10 rounded-3xl p-5 shadow-sm dark:shadow-2xl shrink-0">
+          <h3 className="text-lg font-bold text-slate-800 dark:text-white tracking-widest mb-4 flex items-center">
+            <Users className="w-5 h-5 mr-2 text-cyan-600 dark:text-cyan-400" />
+            学员排课概览
+          </h3>
+          <div className="flex flex-col gap-3 overflow-y-auto pr-2 max-h-[600px] xl:max-h-[calc(100vh-16rem)] custom-scrollbar">
+            {studentStats.map(student => (
+              <div key={student.id} className="flex justify-between items-center p-3 rounded-xl bg-slate-50 dark:bg-black/20 border border-slate-100 dark:border-white/5 transition-colors hover:bg-slate-100 dark:hover:bg-white/5">
+                <span className="font-bold text-slate-700 dark:text-white truncate max-w-[120px]">{student.name}</span>
+                <span className="text-xs font-mono text-slate-500 dark:text-gray-400 whitespace-nowrap">
+                  待排: <strong className={`text-sm ml-1 ${student.toSchedule > 0 ? 'text-cyan-600 dark:text-cyan-400' : 'text-gray-400 dark:text-gray-600'}`}>{student.toSchedule}</strong>
+                </span>
+              </div>
+            ))}
+            {studentStats.length === 0 && <Empty description="暂无学员" image={Empty.PRESENTED_IMAGE_SIMPLE} />}
+          </div>
+        </div>
+
+        {/* Middle: Calendar Board */}
+        <div className="w-full lg:w-1/2 xl:w-80 flex flex-col bg-white dark:bg-white/[0.02] backdrop-blur-3xl border border-slate-100 dark:border-white/10 rounded-3xl p-5 shadow-sm dark:shadow-2xl shrink-0">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-bold text-slate-800 dark:text-white tracking-widest">教学日历</h3>
             <div className="flex items-center gap-4 bg-slate-100 dark:bg-black/30 rounded-full px-3 py-1 border border-slate-100 dark:border-white/5">
@@ -347,6 +460,12 @@ const AdminSchedule: React.FC = () => {
                     </div>
                   )}
                   
+                  {sched.status === 'pending_approval' && (
+                    <div className="absolute top-4 right-4 text-orange-500/80 flex items-center text-xs font-mono font-bold tracking-widest">
+                      <Clock className="w-4 h-4 mr-1" /> 待审批
+                    </div>
+                  )}
+                  
                   <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
                     <div className="flex-shrink-0 bg-slate-50 dark:bg-black/40 px-4 py-3 rounded-xl border border-slate-100 dark:border-white/5 flex flex-col items-center justify-center w-28">
                       <Clock className={`w-5 h-5 mb-1 ${sched.status === 'completed' ? 'text-gray-500' : 'text-cyan-400'}`} />
@@ -364,6 +483,34 @@ const AdminSchedule: React.FC = () => {
                         </span>
                       </div>
                     </div>
+                    {user?.role === ROLES.SUPER_ADMIN && sched.status === 'pending_approval' && (
+                      <div className="mt-4 sm:mt-0 flex gap-2">
+                        <Button 
+                          type="primary" 
+                          size="small"
+                          onClick={async () => {
+                            const ids = sched.raw_lessons.map((l: any) => l.id);
+                            await supabase.from('lessons').update({ status: 'scheduled' }).in('id', ids);
+                            toast.success('审批通过！');
+                            fetchData();
+                          }}
+                        >
+                          通过
+                        </Button>
+                        <Button 
+                          danger 
+                          size="small"
+                          onClick={async () => {
+                            const ids = sched.raw_lessons.map((l: any) => l.id);
+                            await supabase.from('lessons').delete().in('id', ids);
+                            toast.success('已拒绝排课！');
+                            fetchData();
+                          }}
+                        >
+                          拒绝
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))

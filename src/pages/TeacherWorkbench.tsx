@@ -33,6 +33,7 @@ const TeacherWorkbench: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [students, setStudents] = useState<any[]>([]);
+  const [allPendingLessons, setAllPendingLessons] = useState<any[]>([]);
   const [schedules, setSchedules] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -65,20 +66,72 @@ const TeacherWorkbench: React.FC = () => {
 
     let studentQuery = supabase.from('students').select('*');
     // Fetch ALL schedules for the selected date (both pending and completed)
-    let scheduleQuery = supabase.from('schedules')
+    let lessonQuery = supabase.from('lessons')
       .select('*')
-      .eq('date', dateStr)
+      .eq('lesson_date', dateStr)
       .order('start_time', { ascending: true });
+      
+    // Fetch ALL pending schedules for these students across ALL dates
+    let pendingQuery = supabase.from('lessons')
+      .select('id, student_id, status')
+      .in('status', ['scheduled', 'pending_approval']);
 
     if (user?.role === ROLES.TEACHER) {
-      studentQuery = studentQuery.eq('teacher_id', user.id);
-      scheduleQuery = scheduleQuery.eq('teacher_id', user.id);
+      const { data: links } = await supabase.from('teacher_student_link').select('student_id').eq('teacher_id', user.id).eq('status', 'active');
+      const studentIds = links ? links.map(l => l.student_id) : [];
+      if (studentIds.length > 0) {
+        studentQuery = studentQuery.in('id', studentIds);
+      } else {
+        studentQuery = studentQuery.in('id', ['00000000-0000-0000-0000-000000000000']);
+      }
+      lessonQuery = lessonQuery.eq('teacher_id', user.id);
+      pendingQuery = pendingQuery.eq('teacher_id', user.id);
     }
 
-    const [studentRes, scheduleRes] = await Promise.all([studentQuery, scheduleQuery]);
+    const [studentRes, lessonRes, pendingRes] = await Promise.all([studentQuery, lessonQuery, pendingQuery]);
 
     if (studentRes.data) setStudents(studentRes.data);
-    if (scheduleRes.data) setSchedules(scheduleRes.data);
+    if (pendingRes.data) setAllPendingLessons(pendingRes.data);
+    
+    if (lessonRes.data) {
+      const rawLessons = lessonRes.data;
+      const scheduleMap = new Map<string, any>();
+      rawLessons.forEach((lesson: any) => {
+        const key = `${lesson.lesson_date}_${lesson.start_time}_${lesson.end_time}_${lesson.subject}_${lesson.teacher_id}`;
+        if (!scheduleMap.has(key)) {
+          scheduleMap.set(key, {
+            id: key,
+            date: lesson.lesson_date,
+            start_time: lesson.start_time,
+            end_time: lesson.end_time,
+            subject: lesson.subject,
+            teacher_id: lesson.teacher_id,
+            status: lesson.status === 'scheduled' ? 'pending' : lesson.status,
+            student_ids: [lesson.student_id],
+            // Combine teacher_feedback for report_data if any
+            report_data: { 
+              topic: lesson.subject, 
+              homework: lesson.homework_title, 
+              teacherComment: lesson.teacher_feedback,
+              topicImages: lesson.board_images || [],
+              homeworkImages: [] // lessons table doesn't have homework_images, so we keep it empty or we can add it to DB later.
+            }
+          });
+        } else {
+          const sched = scheduleMap.get(key);
+          sched.student_ids.push(lesson.student_id);
+          if (lesson.status === 'completed') {
+            sched.status = 'completed';
+          }
+        }
+      });
+      const groupedSchedules = Array.from(scheduleMap.values()).sort((a, b) => {
+        if (a.start_time < b.start_time) return -1;
+        if (a.start_time > b.start_time) return 1;
+        return 0;
+      });
+      setSchedules(groupedSchedules);
+    }
     
     setIsLoading(false);
   };
@@ -87,6 +140,16 @@ const TeacherWorkbench: React.FC = () => {
     fetchData();
     setActiveSchedule(null); // Reset when date changes
   }, [selectedDate]);
+
+  const studentPendingStats = React.useMemo(() => {
+    return students.map(student => {
+      const pendingCount = allPendingLessons.filter(l => l.student_id === student.id).length;
+      return {
+        ...student,
+        pendingCount
+      };
+    });
+  }, [students, allPendingLessons]);
 
   const enterDeductionMode = (sched: any) => {
     setActiveSchedule(sched);
@@ -234,10 +297,18 @@ const TeacherWorkbench: React.FC = () => {
       }
       
       // 3. Update schedule status and save rich report data for public access
-      const { error: schedError } = await supabase.from('schedules').update({ 
+      const { error: schedError } = await supabase.from('lessons').update({ 
         status: 'completed',
-        report_data: reportData
-      }).eq('id', activeSchedule.id);
+        teacher_feedback: teacherComment,
+        homework_title: homework,
+        board_images: reportData.topicImages
+      })
+      .eq('lesson_date', activeSchedule.date)
+      .eq('start_time', activeSchedule.start_time)
+      .eq('end_time', activeSchedule.end_time)
+      .eq('subject', activeSchedule.subject)
+      .eq('teacher_id', activeSchedule.teacher_id)
+      .in('student_id', selectedStudentIds);
       
       if (schedError) throw schedError;
 
@@ -337,8 +408,31 @@ const TeacherWorkbench: React.FC = () => {
         </div>
       </header>
 
-      <Card title="教学日历" className="shadow-sm">
-        <div className="flex flex-col lg:flex-row gap-6">
+      <div className="flex flex-col xl:flex-row gap-6">
+        
+        {/* Leftmost: Student List Sidebar */}
+        <div className="w-full xl:w-64 flex flex-col bg-white dark:bg-white/[0.02] backdrop-blur-3xl border border-slate-100 dark:border-white/10 rounded-3xl p-5 shadow-sm dark:shadow-2xl shrink-0">
+          <h3 className="text-lg font-bold text-slate-800 dark:text-white tracking-widest mb-4 flex items-center">
+            <Users className="w-5 h-5 mr-2 text-cyan-600 dark:text-cyan-400" />
+            学员待消课概览
+          </h3>
+          <div className="flex flex-col gap-3 overflow-y-auto pr-2 max-h-[600px] xl:max-h-[calc(100vh-16rem)] custom-scrollbar">
+            {studentPendingStats.map(student => (
+              <div key={student.id} className="flex justify-between items-center p-3 rounded-xl bg-slate-50 dark:bg-black/20 border border-slate-100 dark:border-white/5 transition-colors hover:bg-slate-100 dark:hover:bg-white/5">
+                <span className="font-bold text-slate-700 dark:text-white truncate max-w-[120px]">{student.name}</span>
+                <span className="text-xs font-mono text-slate-500 dark:text-gray-400 whitespace-nowrap">
+                  待消: <strong className={`text-sm ml-1 ${student.pendingCount > 0 ? 'text-orange-500 dark:text-orange-400' : 'text-gray-400 dark:text-gray-600'}`}>{student.pendingCount}</strong>
+                </span>
+              </div>
+            ))}
+            {studentPendingStats.length === 0 && <Empty description="暂无学员" image={Empty.PRESENTED_IMAGE_SIMPLE} />}
+          </div>
+        </div>
+
+        {/* Right: Main Content (Calendar and Schedule List) */}
+        <div className="flex-1 flex flex-col gap-6">
+          <Card title="教学日历" className="shadow-sm">
+            <div className="flex flex-col lg:flex-row gap-6">
           <div className="flex-1">
             <Calendar fullscreen={false} value={calendarValue} onSelect={(v: Dayjs) => setSelectedDate(v.toDate())} />
           </div>
@@ -563,6 +657,8 @@ const TeacherWorkbench: React.FC = () => {
           </div>
         )}
       </Card>
+        </div>
+      </div>
 
       <Modal
         open={showQRModal}

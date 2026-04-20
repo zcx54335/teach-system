@@ -13,7 +13,7 @@ interface CRMStudentRecord {
   name: string;
   grade: string;
   total_classes: number;
-  remaining_classes: number;
+  remaining_lessons: number;
   status: 'enrolled' | 'intent' | 'completed';
   price_per_lesson: number;
   total_amount: number;
@@ -227,7 +227,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
         status: 'enrolled',
         auth_id: profileData.id,
         password_hash: password, // 保存初始密码供参考
-        remaining_classes: 0
+        remaining_lessons: 0
       }]).select().single();
 
       if (dbError) {
@@ -273,7 +273,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
       const { error } = await supabase
         .from('students')
         .update({ 
-          remaining_classes: newRemaining,
+          remaining_lessons: newRemaining,
           last_deducted_at: new Date().toISOString()
         })
         .eq('id', studentId);
@@ -306,9 +306,9 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
   const isParent = currentUser?.role === 'parent';
   
   const enrolledStudents = students.filter(s => s.status === 'enrolled').length;
-  const totalRemainingClasses = students.reduce((acc, curr) => acc + (curr.remaining_classes || 0), 0);
+  const totalRemainingClasses = students.reduce((acc, curr) => acc + (curr.remaining_lessons || 0), 0);
   const expectedRevenue = students.reduce((acc, curr) => {
-    return acc + ((curr.remaining_classes || 0) * (curr.price_per_lesson || 0));
+    return acc + ((curr.remaining_lessons || 0) * (curr.price_per_lesson || 0));
   }, 0);
 
   // Parent specific logic
@@ -536,7 +536,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
                 </thead>
                 <tbody className="divide-y divide-white/5">
                   {students.map(student => {
-                    const isWarning = student.remaining_classes <= 3 && student.status === 'enrolled';
+                    const isWarning = student.remaining_lessons <= 3 && student.status === 'enrolled';
                     const statusStyle = getStatusDisplay(student.status);
                     
                     return (
@@ -561,7 +561,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
                         <td className="px-6 py-4">
                           <div className="flex items-center space-x-2">
                             <div className={`text-sm font-bold ${isWarning ? 'text-red-400' : 'text-cyan-400'}`}>
-                              {student.remaining_classes}
+                              {student.remaining_lessons}
                             </div>
                             <span className="text-xs text-slate-400 dark:text-gray-500">/ {student.total_classes}</span>
                           </div>
@@ -569,7 +569,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
                         <td className="px-6 py-4 text-right">
                           <div className="flex items-center justify-end space-x-2">
                             <button 
-                              onClick={() => handleDeductClass(student.id, student.remaining_classes, student.name)}
+                              onClick={() => handleDeductClass(student.id, student.remaining_lessons, student.name)}
                               className="text-[10px] font-mono text-stem-orange border border-stem-orange/30 px-3 py-1.5 rounded hover:bg-stem-orange/20 transition-colors tracking-widest"
                             >
                               消课

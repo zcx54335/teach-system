@@ -32,7 +32,7 @@ interface StudentRecord {
   name: string;
   grade: string;
   total_classes: number;
-  remaining_classes: number;
+  remaining_lessons: number;
   last_deducted_at: string | null;
   phone?: string;
   time?: string;
@@ -171,8 +171,8 @@ const ParentDashboard: React.FC = () => {
               requestAnimationFrame(step);
             };
 
-            animateDOMNumber('student-remaining', data.remaining_classes ?? 0);
-            animateDOMNumber('student-used', (data.total_classes ?? 0) - (data.remaining_classes ?? 0));
+            animateDOMNumber('student-remaining', data.remaining_lessons ?? 0);
+            animateDOMNumber('student-used', (data.total_classes ?? 0) - (data.remaining_lessons ?? 0));
 
             // 更新雷达图数据 (强制重绘)
             const radarContainer = document.getElementById('radar-container');
@@ -445,7 +445,7 @@ const ParentDashboard: React.FC = () => {
     setIsUpdatingPassword(true);
     try {
       const { error } = await supabase
-        .from('profiles')
+        .from('users')
         .update({ password: newPassword })
         .eq('id', session.user.id);
         
@@ -773,13 +773,13 @@ const ParentDashboard: React.FC = () => {
               REMAINING CLASSES
             </p>
             <div id="student-remaining" className="text-7xl font-light tracking-tighter text-cyan-400 drop-shadow-[0_0_20px_rgba(34,211,238,0.4)]">
-              {student?.remaining_classes ?? '--'}
+              {student?.remaining_lessons ?? '--'}
             </div>
           </div>
 
           <div className="flex items-center space-x-2 text-sm text-gray-300 font-light tracking-wider bg-white/5 border border-white/10 px-6 py-2 rounded-2xl backdrop-blur-md shadow-lg mb-8">
             <BookOpen className="w-4 h-4 text-cyan-400" />
-            <span>累计已上：<strong id="student-used" className="text-white font-medium">{(student?.total_classes ?? 0) - (student?.remaining_classes ?? 0)}</strong> 课时</span>
+            <span>累计已上：<strong id="student-used" className="text-white font-medium">{(student?.total_classes ?? 0) - (student?.remaining_lessons ?? 0)}</strong> 课时</span>
           </div>
 
           <div className="w-full bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl">

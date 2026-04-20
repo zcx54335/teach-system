@@ -20,7 +20,7 @@ interface StudentRecord {
   grade: string;
   subjects: string[];
   course_balances: Record<string, number>;
-  remaining_classes: number;
+  remaining_lessons: number;
   total_classes: number;
   calc_score: number;
   logic_score: number;
@@ -58,7 +58,31 @@ const AdminDashboard: React.FC = () => {
   const [studentToDelete, setStudentToDelete] = useState<StudentRecord | null>(null);
 
   const [systemSubjects, setSystemSubjects] = useState<string[]>([]);
-  const GRADE_OPTIONS = ['学前', '一年级', '二年级', '三年级', '四年级', '五年级', '六年级', '初一', '初二', '初三'];
+  const GRADE_OPTIONS = ['学前', '一年级', '二年级', '三年级', '四年级', '五年级', '六年级', '初一', '初二', '初三', '高一', '高二', '高三'];
+
+  const selectedGrade = Form.useWatch('grade', form);
+
+  const filteredSubjects = React.useMemo(() => {
+    if (!selectedGrade) return systemSubjects;
+    
+    const isPrimary = ['一年级', '二年级', '三年级', '四年级', '五年级', '六年级'].includes(selectedGrade);
+    const isMiddle = ['初一', '初二', '初三'].includes(selectedGrade);
+    const isHigh = ['高一', '高二', '高三'].includes(selectedGrade);
+    const isPreschool = selectedGrade === '学前';
+
+    return systemSubjects.filter(sub => {
+      if (isPrimary) {
+        return !sub.includes('初中') && !sub.includes('高中') && !sub.includes('学前');
+      } else if (isMiddle) {
+        return !sub.includes('小学') && !sub.includes('学前') && !sub.includes('高中');
+      } else if (isHigh) {
+        return !sub.includes('小学') && !sub.includes('初中') && !sub.includes('学前');
+      } else if (isPreschool) {
+        return !sub.includes('小学') && !sub.includes('初中') && !sub.includes('高中');
+      }
+      return true;
+    });
+  }, [selectedGrade, systemSubjects]);
 
   // Search states
   const [searchName, setSearchName] = useState('');
@@ -71,34 +95,57 @@ const AdminDashboard: React.FC = () => {
 
   const fetchStudents = async () => {
     setIsLoading(true);
-    const [stuRes, settingsRes] = await Promise.all([
-      (() => {
-        let q = supabase.from('students').select('*').order('created_at', { ascending: false });
-        if (user?.role === ROLES.TEACHER) {
-          q = q.eq('teacher_id', user.id);
-        }
-        if (appliedSearchName) {
-          q = q.ilike('name', `%${appliedSearchName}%`);
-        }
-        if (appliedSearchPhone) {
-          // Can match either phone or parent_phone
-          q = q.or(`phone.ilike.%${appliedSearchPhone}%,parent_phone.ilike.%${appliedSearchPhone}%`);
-        }
-        if (appliedSearchSubject) {
-          q = q.contains('subjects', [appliedSearchSubject]);
-        }
-        return q;
-      })(),
-      supabase.from('system_settings').select('subjects_list').eq('id', 1).single()
-    ]);
-      
-    if (stuRes.data) {
-      setStudents(stuRes.data);
+    try {
+      let allowedStudentIds: string[] | null = null;
+
+      if (user?.role === ROLES.TEACHER) {
+        const { data: links } = await supabase
+          .from('teacher_student_link')
+          .select('student_id')
+          .eq('teacher_id', user.id)
+          .eq('status', 'active');
+        allowedStudentIds = links ? links.map(l => l.student_id) : [];
+      }
+
+      const [stuRes, settingsRes] = await Promise.all([
+        (() => {
+          let q = supabase.from('students').select('*').order('created_at', { ascending: false });
+          if (allowedStudentIds !== null) {
+            if (allowedStudentIds.length === 0) {
+              // Return empty result if no students
+              q = q.in('id', ['00000000-0000-0000-0000-000000000000']);
+            } else {
+              q = q.in('id', allowedStudentIds);
+            }
+          }
+          if (appliedSearchName) {
+            q = q.ilike('name', `%${appliedSearchName}%`);
+          }
+          if (appliedSearchPhone) {
+            // Can match either phone or parent_phone or parent_username
+            q = q.or(`phone.ilike.%${appliedSearchPhone}%,parent_phone.ilike.%${appliedSearchPhone}%,parent_username.ilike.%${appliedSearchPhone}%`);
+          }
+          if (appliedSearchSubject) {
+            q = q.contains('subjects', [appliedSearchSubject]);
+          }
+          return q;
+        })(),
+        supabase.from('system_settings').select('subjects_list').eq('id', 1).single()
+      ]);
+
+      if (stuRes.error) throw stuRes.error;
+      if (stuRes.data) {
+        setStudents(stuRes.data);
+      }
+      if (settingsRes.data?.subjects_list) {
+        setSystemSubjects(settingsRes.data.subjects_list);
+      }
+    } catch (error) {
+      console.error('Error fetching students:', error);
+      toast.error('加载学员失败');
+    } finally {
+      setIsLoading(false);
     }
-    if (settingsRes.data?.subjects_list) {
-      setSystemSubjects(settingsRes.data.subjects_list);
-    }
-    setIsLoading(false);
   };
 
   // Re-fetch when applied search parameters change
@@ -135,7 +182,8 @@ const AdminDashboard: React.FC = () => {
     form.setFieldsValue({
       name: student.name || '',
       phone: student.phone || '',
-      parent_phone: student.parent_phone || student.phone || '',
+      parent_phone: student.parent_phone || '',
+      parent_username: (student as any).parent_username || '',
       password: (student as any).password_hash || '',
       school: student.school || '',
       grade: student.grade || '一年级',
@@ -164,9 +212,13 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleAddStudent = async (values: any) => {
-    const { name, phone, parent_phone, password, school, grade, subjects } = values;
+    const { name, phone, parent_phone, parent_username, password, school, grade, subjects } = values;
 
-    if (parent_phone.length !== 11) {
+    if (!parent_phone && !parent_username) {
+      toast.error('手机号和用户名至少填写一项');
+      return;
+    }
+    if (parent_phone && parent_phone.length !== 11) {
       toast.error('请输入11位有效家长手机号');
       return;
     }
@@ -181,8 +233,9 @@ const AdminDashboard: React.FC = () => {
         // Edit mode
         const updateData: any = {
           name: name,
-          phone: phone || parent_phone,
-          parent_phone: parent_phone,
+          phone: phone || parent_phone || null,
+          parent_phone: parent_phone || null,
+          parent_username: parent_username || null,
           school: school,
           grade: grade,
           subjects: subjects
@@ -193,14 +246,26 @@ const AdminDashboard: React.FC = () => {
           // Sync password to users table if auth_id exists
           const { data: stuData } = await supabase.from('students').select('auth_id').eq('id', editingStudentId).single();
           if (stuData?.auth_id) {
-            await supabase.from('users').update({ password: password }).eq('id', stuData.auth_id);
+            await supabase.from('users').update({ 
+              password: password,
+              phone: parent_phone || null,
+              username: parent_username || null
+            }).eq('id', stuData.auth_id);
+          }
+        } else {
+          const { data: stuData } = await supabase.from('students').select('auth_id').eq('id', editingStudentId).single();
+          if (stuData?.auth_id) {
+            await supabase.from('users').update({ 
+              phone: parent_phone || null,
+              username: parent_username || null
+            }).eq('id', stuData.auth_id);
           }
         }
 
         const { error } = await supabase.from('students').update(updateData).eq('id', editingStudentId);
 
         if (error) {
-          if (error.code === '23505') throw new Error('手机号已被占用，请检查');
+          if (error.code === '23505') throw new Error('手机号或用户名已被占用，请检查');
           throw error;
         }
         toast.success('✅ 学员信息修改成功！');
@@ -211,11 +276,15 @@ const AdminDashboard: React.FC = () => {
         }
 
         let profileId;
-        const { data: existingProfile } = await supabase
-          .from('users')
-          .select('id')
-          .eq('phone', parent_phone)
-          .single();
+        
+        let existingProfile = null;
+        if (parent_phone) {
+          const { data } = await supabase.from('users').select('id').eq('phone', parent_phone).single();
+          existingProfile = data;
+        } else if (parent_username) {
+          const { data } = await supabase.from('users').select('id').eq('username', parent_username).single();
+          existingProfile = data;
+        }
 
         if (existingProfile) {
           profileId = existingProfile.id;
@@ -223,7 +292,8 @@ const AdminDashboard: React.FC = () => {
           const { data: insertedProfile, error: profileError } = await supabase
             .from('users')
             .insert([{
-              phone: parent_phone,
+              phone: parent_phone || null,
+              username: parent_username || null,
               password: password,
               role: 'parent',
               name: name + '的家长'
@@ -242,8 +312,9 @@ const AdminDashboard: React.FC = () => {
 
         const { error: dbError } = await supabase.from('students').insert([{
           name: name,
-          phone: phone || parent_phone,
-          parent_phone: parent_phone,
+          phone: phone || parent_phone || null,
+          parent_phone: parent_phone || null,
+          parent_username: parent_username || null,
           school: school,
           grade: grade,
           subjects: subjects,
@@ -251,7 +322,7 @@ const AdminDashboard: React.FC = () => {
           status: 'enrolled',
           auth_id: profileId,
           password_hash: password,
-          remaining_classes: 0 
+          remaining_lessons: 0 
         }]);
 
         if (dbError) throw new Error(`DB Error: ${dbError.message}`);
@@ -287,7 +358,7 @@ const AdminDashboard: React.FC = () => {
         .from('students')
         .update({ 
           course_balances: newBalances,
-          remaining_classes: (selectedTopupStudent.remaining_classes || 0) + topupAmount,
+          remaining_lessons: (selectedTopupStudent.remaining_lessons || 0) + topupAmount,
           total_classes: (selectedTopupStudent.total_classes || 0) + topupAmount
         })
         .eq('id', selectedTopupStudent.id);
@@ -328,7 +399,7 @@ const AdminDashboard: React.FC = () => {
       const { error } = await supabase
         .from('students')
         .update({ 
-          remaining_classes: newRemaining,
+          remaining_lessons: newRemaining,
           last_deducted_at: new Date().toISOString()
         })
         .eq('id', studentId);
@@ -372,7 +443,7 @@ const AdminDashboard: React.FC = () => {
   };
 
   const totalStudents = students.length;
-  const totalRemainingClasses = students.reduce((acc, curr) => acc + (curr.remaining_classes || 0), 0);
+  const totalRemainingClasses = students.reduce((acc, curr) => acc + (curr.remaining_lessons || 0), 0);
   const canManageStudents = user?.role === ROLES.SUPER_ADMIN;
 
   const columns: ColumnsType<StudentRecord> = [
@@ -382,14 +453,44 @@ const AdminDashboard: React.FC = () => {
       key: 'name',
       render: (v: string) => <span className="font-semibold">{v}</span>,
     },
-    { title: '手机号', dataIndex: 'phone', key: 'phone', width: 160 },
+    { 
+      title: '登录账号(手机号/用户名)', 
+      dataIndex: 'phone', 
+      key: 'phone', 
+      width: 220,
+      render: (_: any, record: any) => (
+        <span>
+          {record.parent_phone || '-'} 
+          {record.parent_username ? ` / ${record.parent_username}` : ''}
+        </span>
+      )
+    },
     { title: '年级', dataIndex: 'grade', key: 'grade', width: 120, render: (v: string) => v || '未分配' },
     {
       title: '剩余课时',
-      dataIndex: 'remaining_classes',
-      key: 'remaining_classes',
-      width: 140,
-      render: (v: number) => <Tag color={v <= 3 ? 'red' : 'blue'}>{v}</Tag>,
+      key: 'remaining_lessons',
+      width: 220,
+      render: (_: any, record: StudentRecord) => {
+        const balances = record.course_balances || {};
+        const entries = Object.entries(balances);
+        
+        if (entries.length === 0) {
+          return <span className="text-gray-400">暂无数据</span>;
+        }
+
+        return (
+          <div className="flex flex-col gap-1.5">
+            {entries.map(([subject, count]) => (
+              <div key={subject} className="flex items-center justify-between text-sm">
+                <span className="text-slate-500 dark:text-gray-400 mr-2">{subject}</span>
+                <Tag color={count <= 3 ? 'red' : 'blue'} className="m-0 min-w-[32px] text-center">
+                  {count}
+                </Tag>
+              </div>
+            ))}
+          </div>
+        );
+      },
     },
     {
       title: '操作',
@@ -575,34 +676,73 @@ const AdminDashboard: React.FC = () => {
               <Form.Item 
                 name="parent_phone" 
                 label="家长手机号 (用于登录)" 
+                dependencies={['parent_username']}
                 rules={[
-                  { required: true, message: '请输入家长手机号' },
-                  { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的 11 位手机号' }
+                  ({ getFieldValue }) => ({
+                    validator(_, value) {
+                      if (!value && !getFieldValue('parent_username')) {
+                        return Promise.reject(new Error('手机号和用户名至少填写一项'));
+                      }
+                      if (value && value.length !== 11) {
+                        return Promise.reject(new Error('请输入11位有效家长手机号'));
+                      }
+                      return Promise.resolve();
+                    },
+                  }),
                 ]}
               >
-                <Input placeholder="11位手机号" />
+                <Input placeholder="手机号或用户名二选一" />
               </Form.Item>
             </Col>
+            <Col span={12}>
+              <Form.Item 
+                name="parent_username" 
+                label="家长用户名 (用于登录)" 
+                dependencies={['parent_phone']}
+                rules={[
+                  ({ getFieldValue }) => ({
+                    validator(_, value) {
+                      if (!value && !getFieldValue('parent_phone')) {
+                        return Promise.reject(new Error('手机号和用户名至少填写一项'));
+                      }
+                      if (value && !/^[a-zA-Z0-9_]{4,20}$/.test(value)) {
+                        return Promise.reject(new Error('用户名只能包含字母、数字或下划线，且长度为4-20位'));
+                      }
+                      return Promise.resolve();
+                    },
+                  }),
+                ]}
+              >
+                <Input placeholder="手机号或用户名二选一" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
             <Col span={12}>
               <Form.Item 
                 name="password" 
                 label="家长账号初始密码" 
                 rules={[{ required: !isEditStudentMode, message: '请输入初始密码' }]}
               >
-                <Input.Password placeholder={isEditStudentMode ? "留空则不修改密码" : "请输入初始密码"} />
+                <Input.Password placeholder={isEditStudentMode ? "留空则不修改密码" : "请输入初始登录密码"} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="school" label="就读学校" rules={[{ required: true, message: '请输入就读学校' }]}>
+                <Input placeholder="例如：育才小学" />
               </Form.Item>
             </Col>
           </Row>
-          
+
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="school" label="就读学校">
-                <Input placeholder="例如：第一小学" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
               <Form.Item name="grade" label="年级" rules={[{ required: true, message: '请选择年级' }]}>
-                <Select placeholder="请选择年级" options={GRADE_OPTIONS.map(g => ({ label: g, value: g }))} />
+                <Select 
+                  placeholder="请选择年级" 
+                  options={GRADE_OPTIONS.map(g => ({ label: g, value: g }))} 
+                  onChange={() => form.setFieldsValue({ subjects: [] })}
+                />
               </Form.Item>
             </Col>
           </Row>
@@ -611,7 +751,7 @@ const AdminDashboard: React.FC = () => {
             <Select
               mode="multiple"
               placeholder="请选择报读科目"
-              options={systemSubjects.map(sub => ({ label: sub, value: sub }))}
+              options={filteredSubjects.map(sub => ({ label: sub, value: sub }))}
               maxTagCount="responsive"
               style={{ width: '100%' }}
               notFoundContent="暂无科目，请先前往科目配置中添加"

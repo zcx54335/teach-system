@@ -202,7 +202,7 @@ const ParentCenter: React.FC = () => {
               <div className="text-right">
                 <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mb-1">剩余课时</p>
                 <p className="text-3xl font-light text-cyan-400 tracking-tighter drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]">
-                  {student.remaining_classes}
+                  {student.remaining_lessons}
                 </p>
               </div>
             </div>

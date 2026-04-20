@@ -178,7 +178,14 @@ export default function App() {
                       </PrivateRoute>
                     }
                   />
-                  <Route path="students" element={<AdminDashboard />} />
+                  <Route
+                    path="students"
+                    element={
+                      <PrivateRoute allowedRoles={[ROLES.SUPER_ADMIN]}>
+                        <AdminDashboard />
+                      </PrivateRoute>
+                    }
+                  />
                   <Route path="schedule" element={<AdminSchedule />} />
                   <Route
                     path="history"
