@@ -60,7 +60,7 @@ const PublicReport: React.FC = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
-        <div className="w-12 h-12 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mb-4"></div>
+        <div className="w-12 h-12 border-4 border-gold-500/30 border-t-gold-500 rounded-full animate-spin mb-4"></div>
         <p className="text-gray-500 font-medium tracking-widest animate-pulse">正在获取专属学情报告...</p>
       </div>
     );
@@ -89,20 +89,20 @@ const PublicReport: React.FC = () => {
       
       {/* Hero Header */}
       <div className="bg-gradient-to-br from-[#0f172a] to-[#1e293b] px-6 pt-14 pb-12 rounded-b-[2.5rem] shadow-xl relative overflow-hidden">
-        <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-gold-500/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute bottom-[-10%] left-[-10%] w-48 h-48 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
         
         <div className="relative z-10 text-center">
-          <div className="inline-flex items-center bg-white/10 border border-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-cyan-50 text-xs font-bold tracking-[0.2em] mb-6">
-            <Sparkles className="w-3.5 h-3.5 mr-1.5 text-cyan-300" />
+          <div className="inline-flex items-center bg-white/10 border border-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-gold-50 text-xs font-bold tracking-[0.2em] mb-6">
+            <Sparkles className="w-3.5 h-3.5 mr-1.5 text-gold-300" />
             熊熊 · VIP 专属服务
           </div>
           
           <h1 className="text-3xl md:text-4xl font-black text-white tracking-wide mb-4 drop-shadow-md">
-            {studentNames} <span className="font-medium text-cyan-100">的专属学情报告</span>
+            {studentNames} <span className="font-medium text-gold-100">的专属学情报告</span>
           </h1>
           
-          <div className="flex flex-wrap items-center justify-center gap-3 text-cyan-100/80 text-sm font-medium tracking-wide">
+          <div className="flex flex-wrap items-center justify-center gap-3 text-gold-100/80 text-sm font-medium tracking-wide">
             <span className="bg-white/5 px-3 py-1 rounded-lg border border-white/10">{schedule.subject}</span>
             <span>•</span>
             <span>{schedule.date}</span>

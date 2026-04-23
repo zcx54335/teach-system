@@ -80,7 +80,7 @@ export default function TeachersManagement() {
         supabase.from('users').select('*').eq('role', 'teacher').order('created_at', { ascending: false }),
         supabase.from('students').select('*').order('created_at', { ascending: false }),
         supabase.from('system_settings').select('subjects_list').single(),
-        supabase.from('teacher_student_link').select('*').eq('status', 'active'),
+        supabase.from('teacher_student_link').select('*'),
       ]);
 
       setTeachers((teacherRes.data as Teacher[]) || []);
@@ -106,7 +106,7 @@ export default function TeachersManagement() {
 
   const studentCountMap = useMemo(() => {
     const map: Record<string, number> = {};
-    links.forEach((l) => {
+    links.filter(l => l.status === 'active').forEach((l) => {
       if (l.teacher_id) map[l.teacher_id] = (map[l.teacher_id] || 0) + 1;
     });
     return map;
@@ -268,7 +268,7 @@ export default function TeachersManagement() {
     setAssignTeacherId(teacherId);
     setAssignSubject(undefined);
     setIsAssignOpen(true);
-    const assigned = links.filter((l) => l.teacher_id === teacherId).map((l) => l.student_id);
+    const assigned = links.filter((l) => l.teacher_id === teacherId && l.status === 'active').map((l) => l.student_id);
     setTargetKeys(assigned);
   };
 
@@ -281,7 +281,7 @@ export default function TeachersManagement() {
     return students
       .filter(s => {
         // If the student is already assigned to THIS teacher, always show them (so they can be unassigned)
-        const isAssignedToCurrentTeacher = links.some(l => l.teacher_id === assignTeacherId && l.student_id === s.id);
+        const isAssignedToCurrentTeacher = links.some(l => l.teacher_id === assignTeacherId && l.student_id === s.id && l.status === 'active');
         if (isAssignedToCurrentTeacher) return true;
         
         // If the student is already assigned to ANOTHER teacher for this subject, DO NOT show them
@@ -328,7 +328,7 @@ export default function TeachersManagement() {
   const saveAssign = async () => {
     if (!assignTeacherId) return;
 
-    const currentAssigned = new Set(links.filter((l) => l.teacher_id === assignTeacherId).map((l) => l.student_id));
+    const currentAssigned = new Set(links.filter((l) => l.teacher_id === assignTeacherId && l.status === 'active').map((l) => l.student_id));
     const nextAssigned = new Set(targetKeys);
     const toAdd: string[] = [];
     const toRemove: string[] = [];
@@ -343,20 +343,33 @@ export default function TeachersManagement() {
     setIsSubmitting(true);
     try {
       if (toAdd.length) {
-        const insertData = toAdd.map(studentId => ({
-          teacher_id: assignTeacherId,
-          student_id: studentId,
-          status: 'active'
-        }));
-        const { error } = await supabase.from('teacher_student_link').insert(insertData);
-        if (error) throw error;
+        for (const studentId of toAdd) {
+          // Check if the record already exists (even if inactive) to handle unique constraint
+          const existingLink = links.find(l => l.teacher_id === assignTeacherId && l.student_id === studentId);
+          if (existingLink) {
+            // If it exists but was inactive, just update it to active
+            const { error } = await supabase
+              .from('teacher_student_link')
+              .update({ status: 'active' })
+              .eq('id', existingLink.id);
+            if (error) throw error;
+          } else {
+            // Otherwise, insert a new link
+            const { error } = await supabase.from('teacher_student_link').insert({
+              teacher_id: assignTeacherId,
+              student_id: studentId,
+              status: 'active'
+            });
+            if (error) throw error;
+          }
+        }
 
         // Create notification for the teacher
         const addedStudentNames = students.filter(s => toAdd.includes(s.id)).map(s => s.name).join('、');
         await supabase.from('notifications').insert({
           user_id: assignTeacherId,
-          title: '学员分配通知',
-          content: `系统管理员已为您分配了新的学员：${addedStudentNames}，请注意查看。`,
+          title: `系统管理员已为您分配了新的学员：${addedStudentNames}`,
+          content: `尊敬的老师，系统管理员已将以下学员分配至您的【${assignSubject}】科目下：\n\n学员名单：${addedStudentNames}\n\n请您及时在工作台中查看学员档案并关注排课安排。`,
           type: 'system'
         });
       }

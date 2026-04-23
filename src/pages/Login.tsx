@@ -350,8 +350,8 @@ const Login: React.FC = () => {
                     transformOrigin: 'left',
                     transform: 'scaleX(0)',
                     willChange: 'transform',
-                    background: 'linear-gradient(90deg, #13c2c2 0%, #52c41a 100%)',
-                    boxShadow: 'inset 0 0 8px rgba(82, 196, 26, 0.4)',
+                    background: 'linear-gradient(90deg, #D4AF37 0%, #F5D76E 100%)',
+                    boxShadow: 'inset 0 0 8px rgba(212, 175, 55, 0.4)',
                     opacity: isDark ? 0.9 : 0.75,
                   }}
                 />

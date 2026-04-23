@@ -60,10 +60,10 @@ function AntdProvider({ children }: { children: React.ReactNode }) {
           ...(isDark
             ? {
                 Button: {
-                  colorPrimary: '#13c2c2',
-                  colorPrimaryHover: '#36cfc9',
-                  colorPrimaryActive: '#08979c',
-                  primaryShadow: '0 10px 26px rgba(19, 194, 194, 0.35)',
+                  colorPrimary: '#D4AF37',
+                  colorPrimaryHover: '#F5D76E',
+                  colorPrimaryActive: '#C5A017',
+                  primaryShadow: '0 10px 26px rgba(212, 175, 55, 0.35)',
                 },
               }
             : {}),

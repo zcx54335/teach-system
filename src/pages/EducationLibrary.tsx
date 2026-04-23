@@ -16,7 +16,7 @@ const data: LibraryItem[] = [];
 export default function EducationLibrary() {
   const columns: ColumnsType<LibraryItem> = [
     { title: '名称', dataIndex: 'title', key: 'title' },
-    { title: '类型', dataIndex: 'type', key: 'type', width: 120, render: (v) => <Tag color={v === '题库' ? 'cyan' : 'blue'}>{v}</Tag> },
+    { title: '类型', dataIndex: 'type', key: 'type', width: 120, render: (v) => <Tag color={v === '题库' ? 'gold' : 'blue'}>{v}</Tag> },
     { title: '科目', dataIndex: 'subject', key: 'subject', width: 120 },
     { title: '更新时间', dataIndex: 'updatedAt', key: 'updatedAt', width: 140 },
     {

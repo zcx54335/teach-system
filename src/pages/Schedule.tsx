@@ -476,7 +476,7 @@ ${tagsStr}
                       {dayStudents.map((_, idx) => (
                         <div 
                           key={idx} 
-                          className={`w-1 h-1 rounded-full ${isSelected ? 'bg-stem-green shadow-[0_0_8px_#00ff9d]' : 'bg-white/40'}`}
+                          className={`w-1 h-1 rounded-full ${isSelected ? 'bg-stem-green shadow-[0_0_8px_#D4AF37]' : 'bg-white/40'}`}
                         />
                       ))}
                     </div>
@@ -492,7 +492,7 @@ ${tagsStr}
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-4">
             <div className="flex items-center justify-between px-2 mb-2">
               <h2 className="text-sm font-mono text-stem-green flex items-center">
-                <span className="w-2 h-2 bg-stem-green rounded-full mr-2 shadow-[0_0_10px_#00ff9d]"></span>
+                <span className="w-2 h-2 bg-stem-green rounded-full mr-2 shadow-[0_0_10px_#D4AF37]"></span>
                 日期: {selectedDate.toString().padStart(2, '0')}
               </h2>
               <button 
@@ -557,9 +557,9 @@ ${tagsStr}
                     <button
                       onClick={() => generatePoster(student)}
                       title="生成家长专属分享海报"
-                      className="group relative flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 hover:bg-cyan-500/20 hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(34,211,238,0.3)] transition-all duration-300 active:scale-90"
+                      className="group relative flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 hover:bg-gold-500/20 hover:border-gold-500/50 hover:shadow-[0_0_15px_rgba(34,211,238,0.3)] transition-all duration-300 active:scale-90"
                     >
-                      <Share2 className="w-4 h-4 text-white/50 group-hover:text-cyan-400 transition-colors" />
+                      <Share2 className="w-4 h-4 text-white/50 group-hover:text-gold-400 transition-colors" />
                     </button>
                   </div>
                 </div>
@@ -605,13 +605,13 @@ ${tagsStr}
                   value={confirmModal.topic}
                   onChange={(e) => setConfirmModal({...confirmModal, topic: e.target.value})}
                   placeholder="例如：逻辑思维与图形推导"
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50 transition-all"
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-gold-500 focus:ring-1 focus:ring-gold-500/50 transition-all"
                 />
               </div>
 
               {/* 能力评估雷达图打分 */}
               <div className="space-y-3 pt-4 border-t border-white/10">
-                <label className="text-xs font-mono text-cyan-400 tracking-widest uppercase flex items-center">
+                <label className="text-xs font-mono text-gold-400 tracking-widest uppercase flex items-center">
                   <Hexagon className="w-4 h-4 mr-2" /> 课后能力评估 (1-5分)
                 </label>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-4 bg-white/5 border border-white/10 rounded-xl p-4">
@@ -619,7 +619,7 @@ ${tagsStr}
                     <div key={key} className="flex flex-col space-y-2">
                       <div className="flex justify-between items-center text-xs">
                         <span className="text-gray-300 font-medium">{label}</span>
-                        <span className="text-cyan-400 font-bold">{confirmModal.scores[key]}</span>
+                        <span className="text-gold-400 font-bold">{confirmModal.scores[key]}</span>
                       </div>
                       <input 
                         type="range" 
@@ -631,7 +631,7 @@ ${tagsStr}
                           ...confirmModal, 
                           scores: { ...confirmModal.scores, [key]: parseInt(e.target.value) }
                         })}
-                        className="w-full accent-cyan-500 bg-gray-700 rounded-lg appearance-none h-1.5 cursor-pointer"
+                        className="w-full accent-gold-500 bg-gray-700 rounded-lg appearance-none h-1.5 cursor-pointer"
                       />
                     </div>
                   ))}
@@ -643,12 +643,12 @@ ${tagsStr}
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-mono text-gray-400 tracking-widest uppercase flex items-center">
                     课后评语
-                    {isGeneratingAI && <span className="ml-2 text-[10px] text-cyan-400 animate-pulse">AI 生成中...</span>}
+                    {isGeneratingAI && <span className="ml-2 text-[10px] text-gold-400 animate-pulse">AI 生成中...</span>}
                   </label>
                   <button 
                     onClick={generateAIComment}
                     disabled={isGeneratingAI}
-                    className="flex items-center space-x-1 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 border border-cyan-500/30 text-cyan-400 px-3 py-1.5 rounded-lg text-xs font-bold tracking-widest transition-all active:scale-95 disabled:opacity-50"
+                    className="flex items-center space-x-1 bg-gradient-to-r from-gold-500/20 to-blue-500/20 hover:from-gold-500/30 hover:to-blue-500/30 border border-gold-500/30 text-gold-400 px-3 py-1.5 rounded-lg text-xs font-bold tracking-widest transition-all active:scale-95 disabled:opacity-50"
                   >
                     <Sparkles className="w-3 h-3" />
                     <span>AI 智能填充</span>
@@ -667,7 +667,7 @@ ${tagsStr}
                       }}
                       className={`text-[10px] font-mono px-2 py-1 rounded-full border transition-colors ${
                         selectedTags.includes(tag) 
-                          ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300' 
+                          ? 'bg-gold-500/20 border-gold-500 text-gold-300' 
                           : 'bg-white/5 border-white/10 text-gray-400 hover:border-white/30'
                       }`}
                     >
@@ -681,7 +681,7 @@ ${tagsStr}
                   onChange={(e) => setConfirmModal({...confirmModal, comment: e.target.value})}
                   placeholder="点击上方 ✨ AI 按钮自动生成，或手动输入评语..."
                   rows={4}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50 transition-all resize-none"
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-gold-500 focus:ring-1 focus:ring-gold-500/50 transition-all resize-none"
                 />
               </div>
 
@@ -762,7 +762,7 @@ ${tagsStr}
           >
             {/* 海报背景纹理 */}
             <div className="absolute inset-0 bg-blueprint bg-blueprint opacity-20 pointer-events-none"></div>
-            <div className="absolute -top-32 -left-32 w-96 h-96 bg-cyan-500/20 rounded-full blur-[100px]"></div>
+            <div className="absolute -top-32 -left-32 w-96 h-96 bg-gold-500/20 rounded-full blur-[100px]"></div>
             <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-stem-green/10 rounded-full blur-[100px]"></div>
 
             {/* 顶部 Hero 区 */}
@@ -770,21 +770,21 @@ ${tagsStr}
               <h1 className="text-5xl font-black text-white tracking-widest mb-2">
                 {posterModal.student.name}
               </h1>
-              <div className="h-px w-8 bg-cyan-400"></div>
+              <div className="h-px w-8 bg-gold-400"></div>
             </div>
 
             {/* 中部核心数据区 */}
             <div className="relative z-10 flex-1 px-8 flex flex-col justify-center">
-              <div className="bg-white/5 backdrop-blur-xl border border-cyan-500/30 rounded-3xl p-8 shadow-[0_0_50px_rgba(34,211,238,0.1)] relative overflow-hidden flex items-center justify-between">
+              <div className="bg-white/5 backdrop-blur-xl border border-gold-500/30 rounded-3xl p-8 shadow-[0_0_50px_rgba(34,211,238,0.1)] relative overflow-hidden flex items-center justify-between">
                 {/* 装饰发光边角 */}
-                <div className="absolute top-0 left-0 w-16 h-16 border-t-2 border-l-2 border-cyan-400 rounded-tl-3xl opacity-50"></div>
+                <div className="absolute top-0 left-0 w-16 h-16 border-t-2 border-l-2 border-gold-400 rounded-tl-3xl opacity-50"></div>
                 
                 {/* 左侧：巨大的剩余课时及明确的中文标签 */}
                 <div className="flex flex-col items-center justify-center space-y-6 pt-4">
                   <div className="text-8xl font-light tracking-tighter text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.3)] leading-none h-[96px] flex items-center">
                     {posterModal.student.remaining_lessons}
                   </div>
-                  <p className="text-sm font-bold text-cyan-400 tracking-[0.2em] uppercase">
+                  <p className="text-sm font-bold text-gold-400 tracking-[0.2em] uppercase">
                     剩余课时
                   </p>
                 </div>
@@ -805,8 +805,8 @@ ${tagsStr}
             <div className="relative z-10 px-8 pb-12 flex justify-between items-end">
               <div className="flex flex-col space-y-3">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center border border-cyan-500/50">
-                    <span className="text-cyan-400 font-serif font-bold italic">师</span>
+                  <div className="w-10 h-10 rounded-full bg-gold-500/20 flex items-center justify-center border border-gold-500/50">
+                    <span className="text-gold-400 font-serif font-bold italic">师</span>
                   </div>
                   <div>
                     <p className="text-sm font-bold text-white tracking-widest">杨老师</p>
@@ -848,8 +848,8 @@ ${tagsStr}
           <div className="relative z-10 flex flex-col items-center w-full max-w-sm">
             {isGenerating ? (
               <div className="flex flex-col items-center space-y-4">
-                <div className="w-12 h-12 border-4 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin"></div>
-                <p className="text-cyan-400 font-mono text-sm tracking-widest animate-pulse">GENERATING POSTER...</p>
+                <div className="w-12 h-12 border-4 border-gold-500/30 border-t-gold-400 rounded-full animate-spin"></div>
+                <p className="text-gold-400 font-mono text-sm tracking-widest animate-pulse">GENERATING POSTER...</p>
               </div>
             ) : (
               posterModal.imageUrl && (
@@ -869,7 +869,7 @@ ${tagsStr}
                   />
                   
                   <div className="mt-8 flex flex-col items-center space-y-2">
-                    <div className="flex items-center space-x-2 text-cyan-400 bg-cyan-500/10 px-4 py-2 rounded-full border border-cyan-500/20">
+                    <div className="flex items-center space-x-2 text-gold-400 bg-gold-500/10 px-4 py-2 rounded-full border border-gold-500/20">
                       <Download className="w-4 h-4" />
                       <span className="text-xs font-mono tracking-widest">长按图片保存，发送给家长</span>
                     </div>

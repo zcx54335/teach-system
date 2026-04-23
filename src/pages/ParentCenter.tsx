@@ -128,31 +128,31 @@ const ParentCenter: React.FC = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#020617] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin"></div>
+        <div className="w-10 h-10 border-4 border-gold-500/30 border-t-gold-400 rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white font-inter selection:bg-cyan-500/30 overflow-x-hidden relative flex flex-col">
+    <div className="min-h-screen bg-[#020617] text-white font-inter selection:bg-gold-500/30 overflow-x-hidden relative flex flex-col">
       {/* 动态背景 */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-900/20 blur-[120px] mix-blend-screen animate-blob"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-cyan-900/10 blur-[120px] mix-blend-screen animate-blob" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-gold-900/10 blur-[120px] mix-blend-screen animate-blob" style={{ animationDelay: '2s' }}></div>
       </div>
       <div className="fixed inset-0 bg-blueprint bg-blueprint pointer-events-none opacity-10 z-0"></div>
 
       {/* 顶部导航 */}
       <header className="relative z-10 w-full py-6 px-6 flex justify-between items-center max-w-md mx-auto">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(34,211,238,0.4)]">
+          <div className="w-10 h-10 bg-gradient-to-br from-gold-400 to-blue-600 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(34,211,238,0.4)]">
             <Hexagon className="w-6 h-6 text-white" />
           </div>
           <div>
             <h1 className="text-lg font-black tracking-widest text-white drop-shadow-md">
               家长专属中心
             </h1>
-            <p className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">{user?.full_name}</p>
+            <p className="text-[10px] font-mono text-gold-400 uppercase tracking-widest">{user?.full_name}</p>
           </div>
         </div>
         <button 
@@ -169,7 +169,7 @@ const ParentCenter: React.FC = () => {
           <button 
             onClick={() => setActiveTab('report')}
             className={`flex-1 py-3 rounded-xl text-xs font-bold tracking-widest transition-all duration-300 flex items-center justify-center space-x-2 ${
-              activeTab === 'report' ? 'bg-cyan-500/20 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.2)]' : 'text-gray-500 hover:text-gray-300'
+              activeTab === 'report' ? 'bg-gold-500/20 text-gold-400 shadow-[0_0_15px_rgba(34,211,238,0.2)]' : 'text-gray-500 hover:text-gray-300'
             }`}
           >
             <Activity className="w-4 h-4" /> <span>学情报告</span>
@@ -177,7 +177,7 @@ const ParentCenter: React.FC = () => {
           <button 
             onClick={() => setActiveTab('materials')}
             className={`flex-1 py-3 rounded-xl text-xs font-bold tracking-widest transition-all duration-300 flex items-center justify-center space-x-2 ${
-              activeTab === 'materials' ? 'bg-cyan-500/20 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.2)]' : 'text-gray-500 hover:text-gray-300'
+              activeTab === 'materials' ? 'bg-gold-500/20 text-gold-400 shadow-[0_0_15px_rgba(34,211,238,0.2)]' : 'text-gray-500 hover:text-gray-300'
             }`}
           >
             <BookOpen className="w-4 h-4" /> <span>学习资料</span>
@@ -191,17 +191,17 @@ const ParentCenter: React.FC = () => {
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* 学生基础信息卡片 */}
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 mb-6 flex items-center justify-between shadow-[0_0_30px_rgba(0,0,0,0.5)] relative overflow-hidden group">
-              <div className="absolute -right-6 -top-6 w-24 h-24 bg-cyan-500/20 rounded-full blur-2xl transition-all"></div>
+              <div className="absolute -right-6 -top-6 w-24 h-24 bg-gold-500/20 rounded-full blur-2xl transition-all"></div>
               <div>
                 <h2 className="text-2xl font-bold tracking-widest text-white mb-1 flex items-center">
-                  <User className="w-5 h-5 mr-2 text-cyan-400" />
+                  <User className="w-5 h-5 mr-2 text-gold-400" />
                   {student.name}
                 </h2>
                 <span className="text-xs font-mono text-gray-400 px-2 py-0.5 bg-white/10 rounded border border-white/5">{student.grade || '未分配年级'}</span>
               </div>
               <div className="text-right">
                 <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mb-1">剩余课时</p>
-                <p className="text-3xl font-light text-cyan-400 tracking-tighter drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]">
+                <p className="text-3xl font-light text-gold-400 tracking-tighter drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]">
                   {student.remaining_lessons}
                 </p>
               </div>
@@ -210,7 +210,7 @@ const ParentCenter: React.FC = () => {
             {/* 雷达图卡片 */}
             <div className="bg-white/5 backdrop-blur-xl border border-stem-orange/30 rounded-3xl p-6 shadow-[0_0_40px_rgba(255,107,0,0.1)] relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-stem-orange/10 rounded-full blur-[60px] pointer-events-none"></div>
-              <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-[60px] pointer-events-none"></div>
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-gold-500/10 rounded-full blur-[60px] pointer-events-none"></div>
               
               <h3 className="text-sm font-bold tracking-widest text-white mb-6 flex items-center justify-center">
                 <Activity className="w-4 h-4 mr-2 text-stem-orange" />

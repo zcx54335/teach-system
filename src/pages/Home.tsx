@@ -144,7 +144,7 @@ const Home: React.FC<PageProps> = ({ localProgress }) => {
 
           <div className="w-12 h-0.5 bg-white/30"></div>
 
-          <p className="text-sm font-medium text-cyan-400 tracking-[0.2em] leading-relaxed">
+          <p className="text-sm font-medium text-gold-400 tracking-[0.2em] leading-relaxed">
             欢迎回来，杨老师。当前共有 <span className="text-white text-lg font-bold mx-1">{studentCount}</span> 名学生。
           </p>
           
@@ -184,7 +184,7 @@ const Home: React.FC<PageProps> = ({ localProgress }) => {
           
           <div className="w-full relative shadow-[0_0_50px_rgba(34,211,238,0.15)] rounded-xl overflow-hidden group">
             {/* 微光边缘 */}
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl opacity-0 group-hover:opacity-30 blur transition-opacity duration-500"></div>
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-gold-500 to-blue-500 rounded-xl opacity-0 group-hover:opacity-30 blur transition-opacity duration-500"></div>
             <div className="relative">
               <ImageSlider />
             </div>
@@ -217,7 +217,7 @@ const Home: React.FC<PageProps> = ({ localProgress }) => {
           
           <div className="w-full relative shadow-[0_0_50px_rgba(34,211,238,0.15)] rounded-xl overflow-hidden group">
             {/* 微光边缘 */}
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl opacity-0 group-hover:opacity-30 blur transition-opacity duration-500"></div>
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-gold-500 to-blue-500 rounded-xl opacity-0 group-hover:opacity-30 blur transition-opacity duration-500"></div>
             <div className="relative aspect-video rounded-xl bg-gray-900 overflow-hidden">
               <img 
                 src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80" 

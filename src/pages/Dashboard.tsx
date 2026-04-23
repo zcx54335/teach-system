@@ -83,7 +83,7 @@ export default function Dashboard() {
       seriesField: 'category',
       smooth: true,
       autoFit: true,
-      color: ['#1677ff', '#13c2c2'],
+      color: ['#1677ff', '#D4AF37'],
       areaStyle: (_: any, item: any) => {
         const c = item?.color || '#1677ff';
         return {

@@ -8,10 +8,22 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: "#1e3a8a", // 沉稳的深蓝色，用于高亮
+        primary: "#D4AF37", // 金色
         background: "#f3f4f6", // 浅灰背景色
+        gold: {
+          50: '#FDF8E7',
+          100: '#FAEDC0',
+          200: '#F7E299',
+          300: '#F5D76E',
+          400: '#E6C655',
+          500: '#D4AF37',
+          600: '#B5942D',
+          700: '#947823',
+          800: '#755E1A',
+          900: '#5C4A14',
+        },
         stem: {
-          green: "#00ff9d", // 荧光绿强调色
+          green: "#D4AF37", // 将原来的荧光绿替换为香槟金
           orange: "#ff6b00", // 亮橙色强调色 (Profile用)
           dark: "#0a0a0a", // 极深背景
           panel: "rgba(20, 20, 25, 0.7)", // 毛玻璃面板底色
@@ -59,12 +71,12 @@ export default {
         },
         'breathe': {
           "0%, 100%": {
-            boxShadow: "0 0 20px rgba(0, 210, 255, 0.2)",
+            boxShadow: "0 0 20px rgba(212, 175, 55, 0.2)",
             borderColor: "rgba(255, 255, 255, 0.1)"
           },
           "50%": {
-            boxShadow: "0 0 40px rgba(58, 123, 213, 0.5)",
-            borderColor: "rgba(0, 210, 255, 0.4)"
+            boxShadow: "0 0 40px rgba(245, 215, 110, 0.5)",
+            borderColor: "rgba(212, 175, 55, 0.4)"
           }
         }
       },

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { 
-  Users, CheckSquare, Square, Clock, ArrowLeft, Laptop, Image as ImageIcon, X, QrCode, Sparkles, BookOpen, MessageSquare, CheckCircle
+  Users, CheckSquare, Square, Clock, ArrowLeft, Laptop, Image as ImageIcon, X, QrCode, Sparkles, BookOpen, MessageSquare, CheckCircle, ChevronDown
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
@@ -24,6 +24,7 @@ type Schedule = {
   start_time: string;
   end_time: string;
   subject: string;
+  teacher_id?: string;
   student_ids?: string[];
   status?: 'pending' | 'completed' | string;
   report_data?: any;
@@ -397,26 +398,32 @@ const TeacherWorkbench: React.FC = () => {
   ];
 
   return (
-    <div className="w-full flex flex-col gap-6">
-      <header className="shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="w-full h-full flex flex-col gap-6">
+      <header className="mb-6 shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl md:text-3xl font-bold tracking-widest text-slate-800 dark:text-white flex items-center">
-            <Laptop className="w-6 h-6 md:w-8 md:h-8 mr-3 text-cyan-600 dark:text-cyan-400" />
+            <Laptop className="w-6 h-6 md:w-8 md:h-8 mr-3 text-gold-600 dark:text-gold-400" />
             日历驱动消课台
           </h2>
           <p className="text-xs md:text-sm text-slate-500 dark:text-gray-400 font-mono tracking-widest mt-2">CALENDAR-DRIVEN WORKBENCH</p>
         </div>
       </header>
 
-      <div className="flex flex-col xl:flex-row gap-6">
+      <div className="flex flex-col xl:flex-row gap-6 min-h-0 flex-1">
         
         {/* Leftmost: Student List Sidebar */}
-        <div className="w-full xl:w-64 flex flex-col bg-white dark:bg-white/[0.02] backdrop-blur-3xl border border-slate-100 dark:border-white/10 rounded-3xl p-5 shadow-sm dark:shadow-2xl shrink-0">
-          <h3 className="text-lg font-bold text-slate-800 dark:text-white tracking-widest mb-4 flex items-center">
-            <Users className="w-5 h-5 mr-2 text-cyan-600 dark:text-cyan-400" />
-            学员待消课概览
-          </h3>
-          <div className="flex flex-col gap-3 overflow-y-auto pr-2 max-h-[600px] xl:max-h-[calc(100vh-16rem)] custom-scrollbar">
+        <div className="w-full xl:w-64 flex flex-col bg-white dark:bg-white/[0.02] backdrop-blur-3xl border border-slate-100 dark:border-white/10 rounded-3xl p-5 shadow-sm dark:shadow-2xl shrink-0 h-full relative">
+          <div className="flex items-center justify-between mb-4 shrink-0">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-white tracking-widest flex items-center">
+              <Users className="w-5 h-5 mr-2 text-gold-600 dark:text-gold-400" />
+              学员待消课概览
+            </h3>
+            <span className="text-xs font-mono bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-gray-400 px-2 py-1 rounded-md">
+              共 {studentPendingStats.length} 人
+            </span>
+          </div>
+          
+          <div className="flex flex-col gap-3 overflow-y-auto pr-2 flex-1 custom-scrollbar relative pb-4">
             {studentPendingStats.map(student => (
               <div key={student.id} className="flex justify-between items-center p-3 rounded-xl bg-slate-50 dark:bg-black/20 border border-slate-100 dark:border-white/5 transition-colors hover:bg-slate-100 dark:hover:bg-white/5">
                 <span className="font-bold text-slate-700 dark:text-white truncate max-w-[120px]">{student.name}</span>
@@ -427,10 +434,17 @@ const TeacherWorkbench: React.FC = () => {
             ))}
             {studentPendingStats.length === 0 && <Empty description="暂无学员" image={Empty.PRESENTED_IMAGE_SIMPLE} />}
           </div>
+          
+          {/* Scroll indicator overlay */}
+          {studentPendingStats.length > 0 && (
+            <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white dark:from-[#141414] to-transparent pointer-events-none rounded-b-3xl flex items-end justify-center pb-2">
+              <ChevronDown className="w-4 h-4 text-slate-400 dark:text-gray-500 animate-bounce" />
+            </div>
+          )}
         </div>
 
         {/* Right: Main Content (Calendar and Schedule List) */}
-        <div className="flex-1 flex flex-col gap-6">
+        <div className="flex-1 flex flex-col gap-6 overflow-y-auto">
           <Card title="教学日历" className="shadow-sm">
             <div className="flex flex-col lg:flex-row gap-6">
           <div className="flex-1">
@@ -490,7 +504,7 @@ const TeacherWorkbench: React.FC = () => {
                   <ArrowLeft className="w-5 h-5" />
                 </button>
                 <div>
-                  <div className="text-cyan-400 font-bold text-lg tracking-widest">{activeSchedule.subject}</div>
+                  <div className="text-gold-400 font-bold text-lg tracking-widest">{activeSchedule.subject}</div>
                   <div className="text-slate-500 dark:text-gray-400 text-sm font-mono mt-1">{activeSchedule.date} | {activeSchedule.start_time} - {activeSchedule.end_time}</div>
                 </div>
               </div>
@@ -513,17 +527,17 @@ const TeacherWorkbench: React.FC = () => {
                       onClick={() => toggleDeductStudent(id)}
                       className={`flex flex-col p-3 rounded-xl cursor-pointer border transition-all duration-300 ${
                         isChecked 
-                          ? 'bg-cyan-50 dark:bg-cyan-900/20 border-cyan-500/50 shadow-[inset_0_0_20px_rgba(6,182,212,0.1)]' 
+                          ? 'bg-gold-50 dark:bg-gold-900/20 border-gold-500/50 shadow-[inset_0_0_20px_rgba(212,175,55,0.1)]' 
                           : 'bg-slate-50 dark:bg-black/20 border-red-500/20 opacity-60'
                       }`}
                     >
                       <div className="flex items-center gap-2 mb-1">
-                        {isChecked ? <CheckSquare className="w-4 h-4 text-cyan-400 shrink-0" /> : <Square className="w-4 h-4 text-red-500/50 shrink-0" />}
+                        {isChecked ? <CheckSquare className="w-4 h-4 text-gold-400 shrink-0" /> : <Square className="w-4 h-4 text-red-500/50 shrink-0" />}
                         <div className={`font-bold truncate text-sm ${isChecked ? 'text-slate-800 dark:text-white' : 'text-slate-400 dark:text-gray-400 line-through'}`}>{stu.name}</div>
                       </div>
                       <div className="text-xs text-gray-500 pl-6">
                         {isChecked ? (
-                          <>剩余 <span className={`font-mono ${balance <= 3 ? 'text-red-400' : 'text-cyan-400'}`}>{balance}</span> 课时</>
+                          <>剩余 <span className={`font-mono ${balance <= 3 ? 'text-red-400' : 'text-gold-400'}`}>{balance}</span> 课时</>
                         ) : (
                           <span className="text-red-400/80">缺勤</span>
                         )}
@@ -545,7 +559,7 @@ const TeacherWorkbench: React.FC = () => {
                   </label>
                   <button 
                     onClick={() => topicInputRef.current?.click()}
-                    className="flex items-center text-xs text-cyan-400 bg-cyan-500/10 px-3 py-1.5 rounded-lg border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors"
+                    className="flex items-center text-xs text-gold-400 bg-gold-500/10 px-3 py-1.5 rounded-lg border border-gold-500/20 hover:bg-gold-500/20 transition-colors"
                   >
                     <ImageIcon className="w-3 h-3 mr-1" /> 上传板书/照片
                   </button>
@@ -559,7 +573,7 @@ const TeacherWorkbench: React.FC = () => {
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
                   placeholder="请输入课程知识点、重点拆解..."
-                  className="w-full bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl p-4 text-slate-800 dark:text-white text-sm focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all resize-none h-24 mb-3"
+                  className="w-full bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl p-4 text-slate-800 dark:text-white text-sm focus:border-gold-500/50 focus:ring-1 focus:ring-gold-500/50 transition-all resize-none h-24 mb-3"
                 />
 
                 {topicFiles.length > 0 && (
@@ -619,7 +633,7 @@ const TeacherWorkbench: React.FC = () => {
               <div className="bg-slate-50 dark:bg-black/20 p-5 rounded-2xl border border-slate-100 dark:border-white/5">
                 <div className="flex items-center justify-between mb-3 border-b border-slate-200 dark:border-white/5 pb-3">
                   <label className="text-xs font-mono font-bold text-slate-500 dark:text-gray-400 uppercase tracking-[0.2em] flex items-center">
-                    <MessageSquare className="w-4 h-4 mr-2 text-green-400" /> 🧑‍🏫 老师专属评语 (选填)
+                    <MessageSquare className="w-4 h-4 mr-2 text-gold-400" /> 🧑‍🏫 老师专属评语 (选填)
                   </label>
                 </div>
                 
@@ -627,7 +641,7 @@ const TeacherWorkbench: React.FC = () => {
                   value={teacherComment}
                   onChange={(e) => setTeacherComment(e.target.value)}
                   placeholder="例如：子涵今天逻辑非常清晰，继续保持..."
-                  className="w-full bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl p-4 text-slate-800 dark:text-white text-sm focus:border-green-500/50 focus:ring-1 focus:ring-green-500/50 transition-all resize-none h-20"
+                  className="w-full bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl p-4 text-slate-800 dark:text-white text-sm focus:border-gold-500/50 focus:ring-1 focus:ring-gold-500/50 transition-all resize-none h-20"
                 />
               </div>
             </div>

@@ -120,7 +120,7 @@ export default function FinanceManagement() {
       dataIndex: 'subject',
       key: 'subject',
       width: 160,
-      render: (v: string) => <Tag color="cyan">{v}</Tag>,
+      render: (v: string) => <Tag color="gold">{v}</Tag>,
     },
     {
       title: '增加课时',

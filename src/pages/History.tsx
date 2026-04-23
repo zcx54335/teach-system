@@ -18,7 +18,7 @@ export default function History() {
     { title: '时间', dataIndex: 'time', key: 'time', width: 140 },
     { title: '学员', dataIndex: 'student', key: 'student', width: 140 },
     { title: '科目', dataIndex: 'subject', key: 'subject', width: 140 },
-    { title: '类型', dataIndex: 'type', key: 'type', width: 120, render: (v) => <Tag color={v === '消课' ? 'blue' : 'cyan'}>{v}</Tag> },
+    { title: '类型', dataIndex: 'type', key: 'type', width: 120, render: (v) => <Tag color={v === '消课' ? 'blue' : 'gold'}>{v}</Tag> },
     {
       title: '状态',
       dataIndex: 'status',

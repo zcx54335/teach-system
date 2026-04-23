@@ -550,7 +550,7 @@ const ParentDashboard: React.FC = () => {
     // 增加 scroll-pt-20 (80px) 确保顶部不被遮挡
     // 为滑动容器增加平滑滚动
     <div 
-      className="h-[100dvh] overflow-y-auto snap-y snap-mandatory overscroll-contain font-inter selection:bg-cyan-500/30 text-white scroll-smooth scroll-pt-20 relative transition-all duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
+      className="h-[100dvh] overflow-y-auto snap-y snap-mandatory overscroll-contain font-inter selection:bg-gold-500/30 text-white scroll-smooth scroll-pt-20 relative transition-all duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -558,7 +558,7 @@ const ParentDashboard: React.FC = () => {
       {/* 动态深邃银河背景 (Dynamic Galaxy Background) */}
       <div className="fixed inset-0 z-[-1] bg-[#020617] overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-900/20 blur-[120px] mix-blend-screen animate-blob"></div>
-        <div className="absolute top-[40%] right-[-10%] w-[60%] h-[60%] rounded-full bg-cyan-900/10 blur-[120px] mix-blend-screen animate-blob" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute top-[40%] right-[-10%] w-[60%] h-[60%] rounded-full bg-gold-900/10 blur-[120px] mix-blend-screen animate-blob" style={{ animationDelay: '2s' }}></div>
         <div className="absolute bottom-[-20%] left-[20%] w-[70%] h-[70%] rounded-full bg-indigo-900/20 blur-[120px] mix-blend-screen animate-blob" style={{ animationDelay: '4s' }}></div>
       </div>
 
@@ -618,7 +618,7 @@ const ParentDashboard: React.FC = () => {
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all font-mono"
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-gold-500/50 focus:ring-1 focus:ring-gold-500/50 transition-all font-mono"
                   placeholder="••••••••"
                   required
                   minLength={6}
@@ -629,7 +629,7 @@ const ParentDashboard: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isUpdatingPassword}
-                  className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 rounded-xl tracking-widest shadow-[0_0_15px_rgba(34,211,238,0.2)] transition-all active:scale-95 disabled:opacity-50"
+                  className="w-full bg-gold-600 hover:bg-gold-500 text-white font-bold py-3 rounded-xl tracking-widest shadow-[0_0_15px_rgba(34,211,238,0.2)] transition-all active:scale-95 disabled:opacity-50"
                 >
                   {isUpdatingPassword ? '更新中...' : '确认修改密码'}
                 </button>
@@ -664,14 +664,14 @@ const ParentDashboard: React.FC = () => {
           >
             {/* 文字提示 (激活时显示) */}
             <span className={`absolute right-6 text-[10px] font-mono whitespace-nowrap transition-all duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
-              activeSection === item.id ? 'opacity-100 text-cyan-400 translate-x-0' : 'opacity-0 text-gray-500 translate-x-4 pointer-events-none'
+              activeSection === item.id ? 'opacity-100 text-gold-400 translate-x-0' : 'opacity-0 text-gray-500 translate-x-4 pointer-events-none'
             }`}>
               {item.title}
             </span>
             {/* 圆点 / 长条 */}
             <div className={`h-2.5 rounded-full transition-all duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
               activeSection === item.id 
-                ? 'w-1.5 h-6 bg-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.8)]' 
+                ? 'w-1.5 h-6 bg-gold-400 shadow-[0_0_15px_rgba(34,211,238,0.8)]' 
                 : 'w-2.5 bg-white/20 hover:bg-white/40'
             }`} />
           </button>
@@ -680,14 +680,14 @@ const ParentDashboard: React.FC = () => {
 
       {/* 阻尼翻页提示微动效 */}
       <div 
-        className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] flex items-center justify-center space-x-2 bg-black/80 backdrop-blur-xl border border-cyan-500/30 px-5 py-2.5 rounded-full shadow-[0_10px_30px_rgba(34,211,238,0.2)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+        className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] flex items-center justify-center space-x-2 bg-black/80 backdrop-blur-xl border border-gold-500/30 px-5 py-2.5 rounded-full shadow-[0_10px_30px_rgba(34,211,238,0.2)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
           pullDistance > 50 
             ? 'opacity-100 translate-y-0 scale-100' 
             : 'opacity-0 translate-y-10 scale-90 pointer-events-none'
         }`}
       >
-        <ArrowDown className="w-4 h-4 text-cyan-400 animate-bounce" />
-        <span className="text-xs font-mono font-bold tracking-widest text-cyan-400">松开以跳转下一页</span>
+        <ArrowDown className="w-4 h-4 text-gold-400 animate-bounce" />
+        <span className="text-xs font-mono font-bold tracking-widest text-gold-400">松开以跳转下一页</span>
       </div>
 
       {/* 极弱的背景纹理，叠加在深色背景上 */}
@@ -715,21 +715,21 @@ const ParentDashboard: React.FC = () => {
 
       {/* 首屏：核心雷达图与学员信息 (Hero & Radar) */}
       <header id="section-hero" className="snap-start min-h-[100dvh] relative pt-12 pb-8 px-6 flex flex-col items-center justify-center border-b border-white/5 bg-gradient-to-b from-white/[0.02] to-transparent will-change-transform">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-cyan-500/10 rounded-full blur-[80px] pointer-events-none"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gold-500/10 rounded-full blur-[80px] pointer-events-none"></div>
         
         <div className="relative z-10 flex flex-col items-center w-full max-w-sm">
           <h1 id="student-name" className="text-4xl font-black tracking-widest text-white mb-3 font-inter text-center drop-shadow-md">
               {student?.name || '学员'}
             </h1>
-          <div className="px-4 py-1 mb-8 rounded-full bg-white/5 border border-cyan-500/30 backdrop-blur-md flex items-center justify-center shadow-[0_0_15px_rgba(34,211,238,0.2)]">
-            <span id="student-grade" className="text-xs font-medium tracking-widest text-cyan-100 text-center">
+          <div className="px-4 py-1 mb-8 rounded-full bg-white/5 border border-gold-500/30 backdrop-blur-md flex items-center justify-center shadow-[0_0_15px_rgba(34,211,238,0.2)]">
+            <span id="student-grade" className="text-xs font-medium tracking-widest text-gold-100 text-center">
               {student?.grade || '未分配年级'}
             </span>
           </div>
 
           <div id="radar-container" className="w-full bg-white/5 backdrop-blur-xl border border-stem-orange/50 rounded-3xl p-6 shadow-[0_0_40px_rgba(255,107,0,0.15)] relative overflow-hidden transition-opacity duration-300">
             <div className="absolute top-0 right-0 w-32 h-32 bg-stem-orange/10 rounded-full blur-[60px] pointer-events-none"></div>
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-[60px] pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-gold-500/10 rounded-full blur-[60px] pointer-events-none"></div>
             
             <div className="h-[280px] min-h-[280px] w-full flex flex-col justify-center items-center">
               <ResponsiveContainer width="100%" height="100%">
@@ -761,24 +761,24 @@ const ParentDashboard: React.FC = () => {
       <section id="section-calendar" className="snap-start min-h-[100dvh] relative pt-12 pb-8 px-6 flex flex-col items-center justify-center border-b border-white/5 will-change-transform">
         <div className="relative z-10 flex flex-col items-center w-full max-w-sm">
           <div className="mb-6 flex items-center space-x-3">
-            <div className="w-8 h-px bg-cyan-500/50"></div>
+            <div className="w-8 h-px bg-gold-500/50"></div>
             <h2 className="text-sm font-medium tracking-[0.2em] text-gray-300 uppercase font-inter">
               课程概览
             </h2>
-            <div className="w-8 h-px bg-cyan-500/50"></div>
+            <div className="w-8 h-px bg-gold-500/50"></div>
           </div>
 
           <div className="mb-6 text-center">
-            <p className="text-[10px] text-cyan-200/60 font-extralight tracking-[0.5em] uppercase mb-2 font-inter">
+            <p className="text-[10px] text-gold-200/60 font-extralight tracking-[0.5em] uppercase mb-2 font-inter">
               REMAINING CLASSES
             </p>
-            <div id="student-remaining" className="text-7xl font-light tracking-tighter text-cyan-400 drop-shadow-[0_0_20px_rgba(34,211,238,0.4)]">
+            <div id="student-remaining" className="text-7xl font-light tracking-tighter text-gold-400 drop-shadow-[0_0_20px_rgba(34,211,238,0.4)]">
               {student?.remaining_lessons ?? '--'}
             </div>
           </div>
 
           <div className="flex items-center space-x-2 text-sm text-gray-300 font-light tracking-wider bg-white/5 border border-white/10 px-6 py-2 rounded-2xl backdrop-blur-md shadow-lg mb-8">
-            <BookOpen className="w-4 h-4 text-cyan-400" />
+            <BookOpen className="w-4 h-4 text-gold-400" />
             <span>累计已上：<strong id="student-used" className="text-white font-medium">{(student?.total_classes ?? 0) - (student?.remaining_lessons ?? 0)}</strong> 课时</span>
           </div>
 
@@ -786,7 +786,7 @@ const ParentDashboard: React.FC = () => {
             <div className="flex items-center justify-between mb-6">
               <button 
                 onClick={handlePrevMonth}
-                className="p-1 text-gray-400 hover:text-cyan-400 transition-colors"
+                className="p-1 text-gray-400 hover:text-gold-400 transition-colors"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
@@ -795,7 +795,7 @@ const ParentDashboard: React.FC = () => {
               </h3>
               <button 
                 onClick={handleNextMonth}
-                className="p-1 text-gray-400 hover:text-cyan-400 transition-colors"
+                className="p-1 text-gray-400 hover:text-gold-400 transition-colors"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
@@ -839,7 +839,7 @@ const ParentDashboard: React.FC = () => {
                     
                     {/* 上课标记：科技蓝圆点 */}
                     {isClassDay && (
-                      <div className="absolute bottom-0.5 w-1 h-1 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]"></div>
+                      <div className="absolute bottom-0.5 w-1 h-1 rounded-full bg-gold-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]"></div>
                     )}
                   </div>
                 );
@@ -852,7 +852,7 @@ const ParentDashboard: React.FC = () => {
       {/* 中部成长时间轴 (Timeline) */}
       <section id="section-timeline" className="snap-start min-h-[100dvh] relative px-6 py-12 z-10 max-w-lg mx-auto will-change-transform">
         <div className="mb-10 flex items-center space-x-3">
-          <div className="w-8 h-px bg-cyan-500/50"></div>
+          <div className="w-8 h-px bg-gold-500/50"></div>
           <h2 className="text-sm font-medium tracking-[0.2em] text-gray-300 uppercase">
             成长记录轨迹
           </h2>
@@ -860,13 +860,13 @@ const ParentDashboard: React.FC = () => {
 
         <div className="relative pl-6 space-y-10">
           {/* 左侧垂直发光线 */}
-          <div className="absolute left-0 top-2 bottom-0 w-px bg-gradient-to-b from-cyan-500/50 via-white/10 to-transparent"></div>
+          <div className="absolute left-0 top-2 bottom-0 w-px bg-gradient-to-b from-gold-500/50 via-white/10 to-transparent"></div>
 
           {displayRecords.map((record) => (
             <div key={record.id} id={record.id} className="snap-center scroll-mt-24 relative group will-change-transform">
               {/* 时间轴节点 (Dot) - 发光效果 */}
               <div className={`absolute -left-[29px] top-1.5 w-3 h-3 rounded-full border-2 border-slate-950 
-                ${record.isLatest ? 'bg-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.8)]' : 'bg-gray-600'}
+                ${record.isLatest ? 'bg-gold-400 shadow-[0_0_15px_rgba(34,211,238,0.8)]' : 'bg-gray-600'}
                 transition-all duration-300 group-hover:scale-125
               `}></div>
 
@@ -908,7 +908,7 @@ const ParentDashboard: React.FC = () => {
                       </span>
                     )}
                     {record.status === 'reviewed' && (
-                      <span className="text-[9px] font-mono text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded flex items-center">
+                      <span className="text-[9px] font-mono text-gold-400 bg-gold-500/10 border border-gold-500/20 px-2 py-0.5 rounded flex items-center">
                         <CheckCircle2 className="w-3 h-3 mr-1" /> 老师已阅
                       </span>
                     )}
@@ -941,10 +941,10 @@ const ParentDashboard: React.FC = () => {
                       {!record.isLatest && (
                         <div 
                           onClick={() => triggerUpload(record.id)}
-                          className="group relative w-full h-16 rounded-xl border border-dashed border-gray-600 bg-white/5 flex items-center justify-center cursor-pointer transition-all duration-300 hover:border-cyan-500 hover:bg-white/10 active:scale-95"
+                          className="group relative w-full h-16 rounded-xl border border-dashed border-gray-600 bg-white/5 flex items-center justify-center cursor-pointer transition-all duration-300 hover:border-gold-500 hover:bg-white/10 active:scale-95"
                         >
-                          <Camera className="w-4 h-4 text-gray-400 group-hover:text-cyan-400 mr-2 transition-colors" />
-                          <span className="text-[10px] text-gray-500 group-hover:text-cyan-300 tracking-widest transition-colors">
+                          <Camera className="w-4 h-4 text-gray-400 group-hover:text-gold-400 mr-2 transition-colors" />
+                          <span className="text-[10px] text-gray-500 group-hover:text-gold-300 tracking-widest transition-colors">
                             补交作业照片
                           </span>
                         </div>
@@ -979,9 +979,9 @@ const ParentDashboard: React.FC = () => {
                     {record.status !== 'reviewed' && (
                       <div 
                         onClick={() => triggerUpload(record.id)}
-                        className="relative aspect-square rounded-xl border-2 border-dashed border-gray-700 bg-white/5 flex items-center justify-center cursor-pointer transition-all duration-300 hover:border-cyan-500 hover:bg-white/10 group"
+                        className="relative aspect-square rounded-xl border-2 border-dashed border-gray-700 bg-white/5 flex items-center justify-center cursor-pointer transition-all duration-300 hover:border-gold-500 hover:bg-white/10 group"
                       >
-                        <Plus className="w-6 h-6 text-gray-500 group-hover:text-cyan-400 transition-colors" />
+                        <Plus className="w-6 h-6 text-gray-500 group-hover:text-gold-400 transition-colors" />
                       </div>
                     )}
                   </div>
@@ -1026,13 +1026,13 @@ const ParentDashboard: React.FC = () => {
             <div className="flex-1 flex flex-col justify-center">
               <a 
                 href="tel:13281250502"
-                className="group relative overflow-hidden w-full bg-cyan-500/10 hover:bg-cyan-500/20 active:scale-95 border border-cyan-500/30 rounded-xl py-4 flex flex-col items-center justify-center transition-all duration-300 shadow-[0_0_15px_rgba(34,211,238,0.1)]"
+                className="group relative overflow-hidden w-full bg-gold-500/10 hover:bg-gold-500/20 active:scale-95 border border-gold-500/30 rounded-xl py-4 flex flex-col items-center justify-center transition-all duration-300 shadow-[0_0_15px_rgba(34,211,238,0.1)]"
               >
                 {/* 扫光动效 */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gold-400/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
                 
-                <Phone className="w-5 h-5 text-cyan-400 mb-2 relative z-10" />
-                <span className="text-xs font-mono font-bold tracking-widest text-cyan-400 relative z-10">
+                <Phone className="w-5 h-5 text-gold-400 mb-2 relative z-10" />
+                <span className="text-xs font-mono font-bold tracking-widest text-gold-400 relative z-10">
                   132 8125 0502
                 </span>
                 <span className="text-[10px] text-gray-300 mt-1 tracking-widest relative z-10">
@@ -1046,7 +1046,7 @@ const ParentDashboard: React.FC = () => {
           <button
             onClick={generatePoster}
             disabled={isGenerating}
-            className="mt-6 w-full relative overflow-hidden px-8 py-4 rounded-2xl font-mono text-sm tracking-widest transition-all duration-300 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold shadow-[0_0_30px_rgba(34,211,238,0.3)] hover:shadow-[0_0_40px_rgba(34,211,238,0.5)] active:scale-95 flex items-center justify-center"
+            className="mt-6 w-full relative overflow-hidden px-8 py-4 rounded-2xl font-mono text-sm tracking-widest transition-all duration-300 bg-gradient-to-r from-gold-600 to-blue-600 text-white font-bold shadow-[0_0_30px_rgba(34,211,238,0.3)] hover:shadow-[0_0_40px_rgba(34,211,238,0.5)] active:scale-95 flex items-center justify-center"
           >
             {isGenerating ? (
               <span className="flex items-center">
@@ -1074,7 +1074,7 @@ const ParentDashboard: React.FC = () => {
         >
           {/* 海报背景纹理 */}
           <div className="absolute inset-0 bg-blueprint bg-blueprint opacity-20 pointer-events-none"></div>
-          <div className="absolute -top-32 -left-32 w-96 h-96 bg-cyan-500/20 rounded-full blur-[100px]"></div>
+          <div className="absolute -top-32 -left-32 w-96 h-96 bg-gold-500/20 rounded-full blur-[100px]"></div>
           <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-stem-green/10 rounded-full blur-[100px]"></div>
           
           {/* 顶部标题区 */}
@@ -1082,8 +1082,8 @@ const ParentDashboard: React.FC = () => {
             <h1 className="text-3xl font-black tracking-widest text-white mb-2 drop-shadow-md">
               {student?.name || '学员'}
             </h1>
-            <div className="px-4 py-1 rounded-full bg-white/5 border border-cyan-500/30 backdrop-blur-md">
-              <span className="text-[10px] font-medium tracking-widest text-cyan-100">
+            <div className="px-4 py-1 rounded-full bg-white/5 border border-gold-500/30 backdrop-blur-md">
+              <span className="text-[10px] font-medium tracking-widest text-gold-100">
                 {student?.grade || '未分配年级'}
               </span>
             </div>
@@ -1107,7 +1107,7 @@ const ParentDashboard: React.FC = () => {
           {/* 底部导师名片区 */}
           <div className="relative z-10 pb-10 px-8 flex items-center justify-between mt-6">
             <div className="flex flex-col justify-center">
-              <p className="text-xs font-bold tracking-widest text-cyan-400 mb-1">杨老师专属导师</p>
+              <p className="text-xs font-bold tracking-widest text-gold-400 mb-1">杨老师专属导师</p>
               <p className="text-[10px] font-mono text-gray-400">理科逻辑与 STEM 实践</p>
               <p className="text-[9px] text-gray-500 mt-2">扫码查看详细学情报告</p>
             </div>
@@ -1141,8 +1141,8 @@ const ParentDashboard: React.FC = () => {
                 <img src={posterModal.imageUrl} alt="专属海报" className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center space-y-4">
-                  <div className="w-8 h-8 border-4 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin"></div>
-                  <span className="text-xs font-mono text-cyan-400 tracking-widest animate-pulse">GENERATING...</span>
+                  <div className="w-8 h-8 border-4 border-gold-500/30 border-t-gold-400 rounded-full animate-spin"></div>
+                  <span className="text-xs font-mono text-gold-400 tracking-widest animate-pulse">GENERATING...</span>
                 </div>
               )}
             </div>
@@ -1154,8 +1154,8 @@ const ParentDashboard: React.FC = () => {
 
       {/* 底部缓冲加载 (Pull to Next) */}
       <div id="section-buffer" className="snap-end h-40 w-full flex flex-col items-center justify-center bg-gradient-to-t from-black/50 to-transparent">
-        <ArrowDown className={`w-6 h-6 text-gray-500 mb-2 transition-all duration-300 ${isJumping ? 'animate-bounce text-cyan-400' : ''}`} />
-        <span className={`text-xs font-mono tracking-widest transition-colors duration-300 ${isJumping ? 'text-cyan-400' : 'text-gray-500'}`}>
+        <ArrowDown className={`w-6 h-6 text-gray-500 mb-2 transition-all duration-300 ${isJumping ? 'animate-bounce text-gold-400' : ''}`} />
+        <span className={`text-xs font-mono tracking-widest transition-colors duration-300 ${isJumping ? 'text-gold-400' : 'text-gray-500'}`}>
           {isJumping ? 'JUMPING TO SYSTEM...' : '↓ 继续下拉切换下一页'}
         </span>
       </div>

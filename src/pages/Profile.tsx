@@ -450,7 +450,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {myChildren.map(child => (
                 <div key={child.id} className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 rounded-3xl p-6 hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-all relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl group-hover:bg-cyan-500/20 transition-colors"></div>
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gold-500/10 rounded-full blur-3xl group-hover:bg-gold-500/20 transition-colors"></div>
                   
                   <div className="flex justify-between items-start mb-6">
                     <div>
@@ -459,7 +459,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
                     </div>
                     <button 
                       onClick={() => navigate(`/parent?id=${child.id}`)}
-                      className="bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-4 py-2 rounded-xl text-xs font-bold hover:bg-cyan-500/20 transition-colors flex items-center"
+                      className="bg-gold-500/10 text-gold-400 border border-gold-500/20 px-4 py-2 rounded-xl text-xs font-bold hover:bg-gold-500/20 transition-colors flex items-center"
                     >
                       <Activity className="w-3 h-3 mr-1" />
                       详细学情
@@ -473,7 +473,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
                         return (
                           <div key={sub} className="flex justify-between items-center bg-black/20 p-3 rounded-xl border border-slate-100 dark:border-white/5">
                             <span className="text-sm font-bold text-slate-600 dark:text-gray-300">{sub}</span>
-                            <span className="text-sm font-mono text-cyan-400">剩余: <strong className="text-lg">{balance}</strong></span>
+                            <span className="text-sm font-mono text-gold-400">剩余: <strong className="text-lg">{balance}</strong></span>
                           </div>
                         )
                       })
@@ -501,9 +501,9 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
             </div>
             
             <div className="bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-5 relative overflow-hidden group">
-              <div className="absolute -right-4 -top-4 w-16 h-16 bg-cyan-500/20 rounded-full blur-xl group-hover:bg-cyan-500/30 transition-colors"></div>
+              <div className="absolute -right-4 -top-4 w-16 h-16 bg-gold-500/20 rounded-full blur-xl group-hover:bg-gold-500/30 transition-colors"></div>
               <div className="flex items-center space-x-3 mb-2">
-                <Clock className="w-4 h-4 text-cyan-400" />
+                <Clock className="w-4 h-4 text-gold-400" />
                 <span className="text-[10px] font-mono text-slate-500 dark:text-gray-400 tracking-widest uppercase">总待消课时</span>
               </div>
               <div className="text-3xl font-light text-slate-800 dark:text-white tracking-tighter">{totalRemainingClasses}</div>
@@ -560,7 +560,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center space-x-2">
-                            <div className={`text-sm font-bold ${isWarning ? 'text-red-400' : 'text-cyan-400'}`}>
+                            <div className={`text-sm font-bold ${isWarning ? 'text-red-400' : 'text-gold-400'}`}>
                               {student.remaining_lessons}
                             </div>
                             <span className="text-xs text-slate-400 dark:text-gray-500">/ {student.total_classes}</span>
@@ -660,7 +660,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
 
               {/* 历史课程与评语轨迹 */}
               <div>
-                <h3 className="text-xs font-mono text-cyan-400 tracking-widest uppercase mb-4 flex items-center">
+                <h3 className="text-xs font-mono text-gold-400 tracking-widest uppercase mb-4 flex items-center">
                   <Activity className="w-4 h-4 mr-2" /> Class Records
                 </h3>
                 
@@ -672,7 +672,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
                     selectedStudent.class_records.map((record, idx) => (
                       <div key={record.id} className="relative pl-10">
                         {/* 节点 */}
-                        <div className="absolute left-[11px] top-1.5 w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]"></div>
+                        <div className="absolute left-[11px] top-1.5 w-2 h-2 rounded-full bg-gold-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]"></div>
                         
                         <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-4 hover:bg-white/10 transition-colors">
                           <div className="flex justify-between items-start mb-2">
@@ -683,7 +683,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
                           {/* 评语 */}
                           <div className="bg-slate-50 dark:bg-black/30 rounded p-3 mb-3 border border-slate-100 dark:border-white/5">
                             <p className="text-xs text-slate-600 dark:text-gray-300 font-light italic flex items-start">
-                              <Quote className="w-3 h-3 text-cyan-500/50 mr-2 shrink-0 mt-0.5" />
+                              <Quote className="w-3 h-3 text-gold-500/50 mr-2 shrink-0 mt-0.5" />
                               {record.comment || '无评语'}
                             </p>
                           </div>
@@ -813,7 +813,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
                 <p className="text-lg text-slate-800 dark:text-white font-bold tracking-widest mb-3">{createdStudent.name}</p>
                 
                 <p className="text-xs text-slate-500 dark:text-gray-400 font-mono mb-1">家长登录账号</p>
-                <p className="text-sm text-cyan-400 font-mono mb-3">{createdStudent.phone}</p>
+                <p className="text-sm text-gold-400 font-mono mb-3">{createdStudent.phone}</p>
                 
                 <p className="text-xs text-slate-500 dark:text-gray-400 font-mono mb-1">初始密码</p>
                 <p className="text-sm text-slate-800 dark:text-white font-mono">{createdStudent.phone.slice(-6)}</p>
@@ -830,7 +830,7 @@ const Profile: React.FC<PageProps> = ({ localProgress, students = [], fetchStude
                   />
                   <button 
                     onClick={() => handleCopyLink(createdStudent.id)}
-                    className="bg-cyan-600 hover:bg-cyan-500 text-slate-800 dark:text-white px-3 py-2 rounded-lg text-xs font-mono transition-colors tracking-widest"
+                    className="bg-gold-600 hover:bg-gold-500 text-slate-800 dark:text-white px-3 py-2 rounded-lg text-xs font-mono transition-colors tracking-widest"
                   >
                     复制链接
                   </button>

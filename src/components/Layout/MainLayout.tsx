@@ -441,7 +441,7 @@ const MainLayout: React.FC = () => {
         </Header>
 
         <Content
-          className="flex-1 overflow-y-auto p-6 min-h-0"
+          className="flex-1 overflow-y-auto p-6 min-h-0 flex flex-col"
           style={{ background: token.colorBgLayout }}
         >
           <AnimatePresence mode="wait" initial={false}>
@@ -451,6 +451,7 @@ const MainLayout: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
+              className="flex-1 flex flex-col min-h-0"
             >
               <Outlet />
             </motion.div>

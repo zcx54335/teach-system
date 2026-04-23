@@ -270,7 +270,7 @@ const SystemManagement: React.FC = () => {
   };
 
   if (isLoading) {
-    return <div className="p-8 text-cyan-400 font-mono animate-pulse">SYSTEM INITIALIZING...</div>;
+    return <div className="p-8 text-gold-400 font-mono animate-pulse">SYSTEM INITIALIZING...</div>;
   }
 
   return (
@@ -279,7 +279,7 @@ const SystemManagement: React.FC = () => {
       {/* Header */}
       <header className="mb-8 shrink-0">
         <h2 className="text-2xl md:text-3xl font-bold tracking-widest text-slate-800 dark:text-white flex items-center">
-          <Database className="w-6 h-6 md:w-8 md:h-8 mr-3 text-cyan-600 dark:text-cyan-400" />
+          <Database className="w-6 h-6 md:w-8 md:h-8 mr-3 text-gold-600 dark:text-gold-400" />
           系统管理
         </h2>
       </header>
@@ -289,7 +289,7 @@ const SystemManagement: React.FC = () => {
         <button 
           onClick={() => setTab('teachers')}
           className={`flex items-center px-6 py-3 font-bold tracking-widest transition-all border-b-2 whitespace-nowrap shrink-0 ${
-            activeTab === 'teachers' ? 'border-cyan-400 text-cyan-400' : 'border-transparent text-gray-500 hover:text-gray-300'
+            activeTab === 'teachers' ? 'border-gold-400 text-gold-400' : 'border-transparent text-gray-500 hover:text-gray-300'
           }`}
         >
           <Users className="w-4 h-4 mr-2" /> 师资管理
@@ -314,7 +314,7 @@ const SystemManagement: React.FC = () => {
       
               <button 
                 onClick={handleAddTeacherClick}
-                className="bg-cyan-100 dark:bg-cyan-500/10 hover:bg-cyan-200 dark:hover:bg-cyan-500/20 border border-cyan-300 dark:border-cyan-500/30 text-cyan-700 dark:text-cyan-400 font-bold py-2.5 px-5 rounded-xl transition-colors flex items-center whitespace-nowrap shrink-0"
+                className="bg-gold-100 dark:bg-gold-500/10 hover:bg-gold-200 dark:hover:bg-gold-500/20 border border-gold-300 dark:border-gold-500/30 text-gold-700 dark:text-gold-400 font-bold py-2.5 px-5 rounded-xl transition-colors flex items-center whitespace-nowrap shrink-0"
               >
                 <UserPlus className="w-5 h-5 mr-2" /> 新增教师
               </button>
@@ -340,14 +340,14 @@ const SystemManagement: React.FC = () => {
                   return (
                     <div key={teacher.id} className="bg-white dark:bg-white/[0.02] border border-slate-100 dark:border-white/10 rounded-3xl p-6 hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-all relative group shadow-sm dark:shadow-none">
                       <div className="flex items-center gap-4 mb-5">
-                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-100 dark:from-cyan-500/20 to-blue-200 dark:to-blue-600/20 border border-cyan-300 dark:border-cyan-500/30 flex items-center justify-center">
-                          <span className="text-xl font-bold text-cyan-700 dark:text-cyan-300">{teacher.full_name?.charAt(0) || 'T'}</span>
+                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-gold-100 dark:from-gold-500/20 to-blue-200 dark:to-blue-600/20 border border-gold-300 dark:border-gold-500/30 flex items-center justify-center">
+                          <span className="text-xl font-bold text-gold-700 dark:text-gold-300">{teacher.full_name?.charAt(0) || 'T'}</span>
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
                             <h4 className="text-xl font-bold text-slate-800 dark:text-white tracking-widest">{teacher.full_name}</h4>
                             {teacher.subject && (
-                              <span className="bg-cyan-100 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-300 dark:border-cyan-500/30 px-2 py-0.5 rounded text-[10px] font-bold">
+                              <span className="bg-gold-100 dark:bg-gold-500/20 text-gold-700 dark:text-gold-300 border border-gold-300 dark:border-gold-500/30 px-2 py-0.5 rounded text-[10px] font-bold">
                                 {teacher.subject}
                               </span>
                             )}
@@ -365,7 +365,7 @@ const SystemManagement: React.FC = () => {
                         ) : (
                           <div className="flex flex-wrap gap-2">
                             {assignedStudents.map(s => (
-                              <span key={s.id} className="bg-cyan-50 dark:bg-cyan-900/30 border border-cyan-200 dark:border-cyan-500/20 text-cyan-700 dark:text-cyan-300 text-xs px-2.5 py-1 rounded-lg">
+                              <span key={s.id} className="bg-gold-50 dark:bg-gold-900/30 border border-gold-200 dark:border-gold-500/20 text-gold-700 dark:text-gold-300 text-xs px-2.5 py-1 rounded-lg">
                                 {s.name}
                               </span>
                             ))}
@@ -379,7 +379,7 @@ const SystemManagement: React.FC = () => {
                             setSelectedTeacherId(teacher.id);
                             setIsAssignStudentOpen(true);
                           }}
-                          className="flex-1 bg-slate-50 dark:bg-white/5 hover:bg-cyan-50 dark:hover:bg-cyan-500/20 border border-slate-100 dark:border-white/5 hover:border-cyan-300 dark:hover:border-cyan-500/50 text-slate-600 dark:text-gray-300 hover:text-cyan-700 dark:hover:text-cyan-300 font-bold py-3 rounded-xl transition-colors flex items-center justify-center text-sm shadow-sm dark:shadow-none"
+                          className="flex-1 bg-slate-50 dark:bg-white/5 hover:bg-gold-50 dark:hover:bg-gold-500/20 border border-slate-100 dark:border-white/5 hover:border-gold-300 dark:hover:border-gold-500/50 text-slate-600 dark:text-gray-300 hover:text-gold-700 dark:hover:text-gold-300 font-bold py-3 rounded-xl transition-colors flex items-center justify-center text-sm shadow-sm dark:shadow-none"
                         >
                           <UserCheck className="w-4 h-4 mr-2" /> 分配
                         </button>
@@ -440,16 +440,16 @@ const SystemManagement: React.FC = () => {
             {/* Block 2: Course Dictionary */}
             <div className="bg-white dark:bg-white/[0.02] border border-slate-100 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-xl relative overflow-hidden">
               <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6 tracking-widest flex items-center">
-                <BookOpen className="w-5 h-5 mr-2 text-cyan-400" />
+                <BookOpen className="w-5 h-5 mr-2 text-gold-400" />
                 教务字典库 (Course Dictionary)
               </h3>
               <div>
                 <label className="block text-xs font-mono text-slate-500 dark:text-gray-400 mb-2">授课科目库 (Subjects List)</label>
-                <div className="bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl p-3 min-h-[60px] flex flex-wrap gap-2 items-center focus-within:border-cyan-500 transition-colors">
+                <div className="bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl p-3 min-h-[60px] flex flex-wrap gap-2 items-center focus-within:border-gold-500 transition-colors">
                   {settings.subjects_list.map((sub) => (
-                    <span key={sub} className="bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 px-3 py-1 rounded-lg text-sm flex items-center gap-2">
+                    <span key={sub} className="bg-gold-500/20 text-gold-300 border border-gold-500/30 px-3 py-1 rounded-lg text-sm flex items-center gap-2">
                       {sub}
-                      <button onClick={() => handleRemoveSubject(sub)} className="text-cyan-500 hover:text-cyan-300">
+                      <button onClick={() => handleRemoveSubject(sub)} className="text-gold-500 hover:text-gold-300">
                         <X className="w-3 h-3" />
                       </button>
                     </span>
@@ -490,7 +490,7 @@ const SystemManagement: React.FC = () => {
               <button 
                 onClick={handleSaveSettings}
                 disabled={isSavingSettings}
-                className="bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-bold py-4 px-8 rounded-xl tracking-widest shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:shadow-[0_0_30px_rgba(168,85,247,0.6)] transition-all disabled:opacity-50 flex items-center justify-center ml-auto"
+                className="bg-gradient-to-r from-purple-600 to-gold-600 hover:from-purple-500 hover:to-gold-500 text-white font-bold py-4 px-8 rounded-xl tracking-widest shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:shadow-[0_0_30px_rgba(168,85,247,0.6)] transition-all disabled:opacity-50 flex items-center justify-center ml-auto"
               >
                 {isSavingSettings ? (
                   <span className="flex items-center"><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div> 保存中...</span>
@@ -515,15 +515,15 @@ const SystemManagement: React.FC = () => {
             <form onSubmit={handleAddTeacher} className="space-y-4">
               <div>
                 <label className="block text-xs font-mono text-slate-500 dark:text-gray-400 mb-2">教师姓名</label>
-                <input required type="text" value={newTeacherName} onChange={e => setNewTeacherName(e.target.value)} className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:border-cyan-500" placeholder="例如：杨老师" />
+                <input required type="text" value={newTeacherName} onChange={e => setNewTeacherName(e.target.value)} className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:border-gold-500" placeholder="例如：杨老师" />
               </div>
               <div>
                 <label className="block text-xs font-mono text-slate-500 dark:text-gray-400 mb-2">手机号码 (作为登录账号)</label>
-                <input required type="text" value={newTeacherPhone} onChange={e => setNewTeacherPhone(e.target.value)} className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:border-cyan-500" placeholder="输入11位手机号" />
+                <input required type="text" value={newTeacherPhone} onChange={e => setNewTeacherPhone(e.target.value)} className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:border-gold-500" placeholder="输入11位手机号" />
               </div>
               <div>
                 <label className="block text-xs font-mono text-slate-500 dark:text-gray-400 mb-2">授课科目</label>
-                <select required value={newTeacherSubject} onChange={e => setNewTeacherSubject(e.target.value)} className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:border-cyan-500">
+                <select required value={newTeacherSubject} onChange={e => setNewTeacherSubject(e.target.value)} className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:border-gold-500">
                   <option value="" disabled>请选择授课科目</option>
                   {settings.subjects_list.map(sub => <option key={sub} value={sub}>{sub}</option>)}
                 </select>
@@ -533,7 +533,7 @@ const SystemManagement: React.FC = () => {
               </div>
               <div className="flex gap-3 pt-4">
                 <button type="button" onClick={() => setIsAddTeacherOpen(false)} className="flex-1 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-gray-400 py-3 rounded-xl font-bold hover:bg-white/10 transition-colors">取消</button>
-                <button type="submit" className="flex-1 bg-cyan-500 hover:bg-cyan-400 text-black py-3 rounded-xl font-bold tracking-widest transition-colors">{isEditTeacherMode ? '保存修改' : '确认创建'}</button>
+                <button type="submit" className="flex-1 bg-gold-500 hover:bg-gold-400 text-black py-3 rounded-xl font-bold tracking-widest transition-colors">{isEditTeacherMode ? '保存修改' : '确认创建'}</button>
               </div>
             </form>
           </div>
@@ -547,7 +547,7 @@ const SystemManagement: React.FC = () => {
             <div className="p-6 border-b border-white/5 flex justify-between items-center shrink-0">
               <div>
                 <h3 className="text-xl font-bold text-slate-800 dark:text-white tracking-widest">分配学员</h3>
-                <p className="text-sm text-cyan-400 mt-1">正在为 {teachers.find(t => t.id === selectedTeacherId)?.full_name} 分配学员</p>
+                <p className="text-sm text-gold-400 mt-1">正在为 {teachers.find(t => t.id === selectedTeacherId)?.full_name} 分配学员</p>
               </div>
               <button onClick={() => setIsAssignStudentOpen(false)} className="text-gray-400 hover:text-white">✕</button>
             </div>
@@ -560,7 +560,7 @@ const SystemManagement: React.FC = () => {
                     <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                     <input 
                       type="text" placeholder="搜索全校学员..." value={assignSearch} onChange={e => setAssignSearch(e.target.value)}
-                      className="w-full bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-800 dark:text-white focus:border-cyan-500"
+                      className="w-full bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-800 dark:text-white focus:border-gold-500"
                     />
                   </div>
                 </div>
@@ -578,12 +578,12 @@ const SystemManagement: React.FC = () => {
                       return isNotAssigned && matchesSearch && hasSubject;
                     })
                     .map(stu => (
-                      <div key={stu.id} className="flex items-center justify-between bg-white dark:bg-white/5 border border-slate-200 dark:border-white/5 p-3 rounded-xl hover:border-cyan-500/30 transition-colors">
+                      <div key={stu.id} className="flex items-center justify-between bg-white dark:bg-white/5 border border-slate-200 dark:border-white/5 p-3 rounded-xl hover:border-gold-500/30 transition-colors">
                         <div>
                           <span className="font-bold text-slate-800 dark:text-white text-sm">{stu.name}</span>
                           <span className="text-xs text-gray-500 ml-2">{stu.grade || '未知年级'}</span>
                         </div>
-                        <button onClick={() => handleAssignStudent(stu.id)} className="bg-cyan-500/10 text-cyan-400 px-3 py-1 rounded-lg text-xs font-bold hover:bg-cyan-500/20">
+                        <button onClick={() => handleAssignStudent(stu.id)} className="bg-gold-500/10 text-gold-400 px-3 py-1 rounded-lg text-xs font-bold hover:bg-gold-500/20">
                           分配 +
                         </button>
                       </div>
@@ -592,16 +592,16 @@ const SystemManagement: React.FC = () => {
               </div>
               
               {/* Right: Assigned Students */}
-              <div className="flex-1 flex flex-col bg-cyan-950/10">
-                <div className="p-4 border-b border-cyan-500/20 shrink-0">
-                  <h4 className="text-sm font-bold tracking-widest text-cyan-400">已分配到名下</h4>
+              <div className="flex-1 flex flex-col bg-gold-950/10">
+                <div className="p-4 border-b border-gold-500/20 shrink-0">
+                  <h4 className="text-sm font-bold tracking-widest text-gold-400">已分配到名下</h4>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 space-y-2">
                   {students.filter(s => s.teacher_id === selectedTeacherId).length === 0 ? (
                     <div className="text-sm text-gray-500 text-center py-8">暂未分配</div>
                   ) : (
                     students.filter(s => s.teacher_id === selectedTeacherId).map(stu => (
-                      <div key={stu.id} className="flex items-center justify-between bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-500/30 p-3 rounded-xl">
+                      <div key={stu.id} className="flex items-center justify-between bg-gold-50 dark:bg-gold-900/20 border border-gold-200 dark:border-gold-500/30 p-3 rounded-xl">
                         <span className="font-bold text-slate-800 dark:text-white text-sm">{stu.name}</span>
                         <button onClick={() => handleRemoveStudent(stu.id)} className="text-red-400 px-3 py-1 rounded-lg text-xs hover:bg-red-500/10 transition-colors">
                           移除 -
@@ -614,7 +614,7 @@ const SystemManagement: React.FC = () => {
             </div>
             
             <div className="p-4 border-t border-white/5 bg-black/40 shrink-0 text-right">
-              <button onClick={() => setIsAssignStudentOpen(false)} className="bg-cyan-500 text-black px-8 py-2.5 rounded-xl font-bold tracking-widest">完成</button>
+              <button onClick={() => setIsAssignStudentOpen(false)} className="bg-gold-500 text-black px-8 py-2.5 rounded-xl font-bold tracking-widest">完成</button>
             </div>
           </div>
         </div>
