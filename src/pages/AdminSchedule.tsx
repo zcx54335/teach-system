@@ -50,6 +50,7 @@ const AdminSchedule: React.FC = () => {
   // View State
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
 
   // Add Schedule Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -312,10 +313,21 @@ const AdminSchedule: React.FC = () => {
   
   // Real schedules for the selected date
   const selectedDateStr = toDateString(selectedDate);
-  const todaysSchedules = schedules.filter(s => s.date === selectedDateStr);
+  const isMatchSelectedStudents = (s: any) => selectedStudentIds.length === 0 || selectedStudentIds.some(id => {
+    // some s.student_ids might be a string containing a single UUID, or an array of UUIDs
+    const idsArray = Array.isArray(s.student_ids) ? s.student_ids : [s.student_ids];
+    return idsArray.includes(id);
+  });
+  const todaysSchedules = schedules.filter(s => s.date === selectedDateStr && isMatchSelectedStudents(s));
 
   const getStudentNames = (ids: string[]) => {
     return ids.map(id => students.find(s => s.id === id)?.name).filter(Boolean).join(', ');
+  };
+
+  const toggleStudent = (id: string) => {
+    setSelectedStudentIds(prev => 
+      prev.includes(id) ? prev.filter(sId => sId !== id) : [...prev, id]
+    );
   };
 
   return (
@@ -323,59 +335,79 @@ const AdminSchedule: React.FC = () => {
       <header className="mb-6 shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl md:text-3xl font-bold tracking-widest text-slate-800 dark:text-white flex items-center">
-              <CalendarIcon className="w-6 h-6 md:w-8 md:h-8 mr-3 text-gold-600 dark:text-gold-400" />
-              课程排期规划
-            </h2>
-            <p className="text-xs md:text-sm text-slate-500 dark:text-gray-400 font-mono tracking-widest mt-2">FUTURE SCHEDULE MANAGEMENT</p>
-          </div>
-          <Button 
-            type="primary"
-            size="large"
-            onClick={handleOpenAddModal}
-            className="flex items-center font-bold px-6 shadow-md dark:shadow-gold-500/20"
-          >
-            新增排课
-          </Button>
-        </header>
+            <CalendarIcon className="w-6 h-6 md:w-8 md:h-8 mr-3 text-gold-600 dark:text-gold-400" />
+            课程排期规划
+          </h2>
+          <p className="text-xs md:text-sm text-slate-500 dark:text-gray-400 font-mono tracking-widest mt-2">FUTURE SCHEDULE MANAGEMENT</p>
+        </div>
+      </header>
 
-      <div className="flex flex-col xl:flex-row gap-6 min-h-0 flex-1">
-        
-        {/* Leftmost: Student List Sidebar */}
-        <div className="w-full xl:w-64 flex flex-col bg-white dark:bg-white/[0.02] backdrop-blur-3xl border border-slate-100 dark:border-white/10 rounded-3xl p-5 shadow-sm dark:shadow-2xl shrink-0 h-full relative">
-          <div className="flex items-center justify-between mb-4 shrink-0">
-            <h3 className="text-lg font-bold text-slate-800 dark:text-white tracking-widest flex items-center">
+      {/* Top: Student List */}
+      <div className="w-full flex flex-col bg-white dark:bg-white/[0.02] backdrop-blur-3xl border border-slate-100 dark:border-white/10 rounded-3xl p-5 shadow-sm dark:shadow-2xl shrink-0">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-white tracking-widest flex items-center mr-4">
               <Users className="w-5 h-5 mr-2 text-gold-600 dark:text-gold-400" />
-              学员排课概览
+              选择学员排课 (可多选)
             </h3>
-            <span className="text-xs font-mono bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-gray-400 px-2 py-1 rounded-md">
-              共 {studentStats.length} 人
+          </div>
+          <div className="flex gap-2 items-center">
+            {selectedStudentIds.length > 0 && (
+              <Button size="small" onClick={() => setSelectedStudentIds([])} className="text-xs">
+                重置选择
+              </Button>
+            )}
+            <span className="text-xs font-mono bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-gray-400 px-3 py-1 rounded-full">
+              已选 {selectedStudentIds.length} / 共 {studentStats.length} 人
             </span>
           </div>
-          
-          <div className="flex flex-col gap-3 overflow-y-auto pr-2 flex-1 custom-scrollbar relative pb-4">
-            {studentStats.map(student => (
-              <div key={student.id} className="flex justify-between items-center p-3 rounded-xl bg-slate-50 dark:bg-black/20 border border-slate-100 dark:border-white/5 transition-colors hover:bg-slate-100 dark:hover:bg-white/5">
-                <span className="font-bold text-slate-700 dark:text-white truncate max-w-[120px]">{student.name}</span>
-                <span className="text-xs font-mono text-slate-500 dark:text-gray-400 whitespace-nowrap">
-                  待排: <strong className={`text-sm ml-1 ${student.toSchedule > 0 ? 'text-gold-600 dark:text-gold-400' : 'text-gray-400 dark:text-gray-600'}`}>{student.toSchedule}</strong>
+        </div>
+        
+        <div className="flex flex-wrap gap-3 pb-2">
+          {studentStats.map(student => {
+            const isSelected = selectedStudentIds.includes(student.id);
+            return (
+              <div 
+                key={student.id} 
+                onClick={() => toggleStudent(student.id)}
+                className={`flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer min-w-[140px] select-none
+                  ${isSelected 
+                    ? 'bg-gold-50 dark:bg-gold-900/20 border-gold-400 dark:border-gold-500 shadow-sm' 
+                    : 'bg-slate-50 dark:bg-black/20 border-slate-100 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-white/5'
+                  }
+                `}
+              >
+                <div className="flex items-center gap-2 overflow-hidden">
+                  <span className={`font-bold truncate text-sm ${isSelected ? 'text-gold-700 dark:text-gold-300' : 'text-slate-700 dark:text-white'}`}>
+                    {student.name}
+                  </span>
+                  {isSelected && <CheckCircle className="w-3.5 h-3.5 text-gold-500 shrink-0" />}
+                </div>
+                <span className="text-xs font-mono text-slate-500 dark:text-gray-400 whitespace-nowrap ml-3">
+                  待排: <strong className={`text-sm ml-1 ${student.toSchedule > 0 ? (isSelected ? 'text-gold-600 dark:text-gold-400' : 'text-slate-700 dark:text-gray-300') : 'text-gray-400 dark:text-gray-600'}`}>{student.toSchedule}</strong>
                 </span>
               </div>
-            ))}
-            {studentStats.length === 0 && <Empty description="暂无学员" image={Empty.PRESENTED_IMAGE_SIMPLE} />}
-          </div>
-          
-          {/* Scroll indicator overlay */}
-          {studentStats.length > 0 && (
-            <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white dark:from-[#141414] to-transparent pointer-events-none rounded-b-3xl flex items-end justify-center pb-2">
-              <ChevronDown className="w-4 h-4 text-slate-400 dark:text-gray-500 animate-bounce" />
-            </div>
-          )}
+            );
+          })}
+          {studentStats.length === 0 && <Empty description="暂无学员" image={Empty.PRESENTED_IMAGE_SIMPLE} className="mx-auto" />}
         </div>
+      </div>
 
-        {/* Middle: Calendar Board */}
-        <div className="w-full lg:w-1/2 xl:w-80 flex flex-col bg-white dark:bg-white/[0.02] backdrop-blur-3xl border border-slate-100 dark:border-white/10 rounded-3xl p-5 shadow-sm dark:shadow-2xl shrink-0 h-fit">
+      <div className="flex flex-col xl:flex-row gap-6 min-h-0 flex-1">
+        {/* Left: Calendar Board */}
+        <div className="w-full lg:w-1/2 xl:w-96 flex flex-col bg-white dark:bg-white/[0.02] backdrop-blur-3xl border border-slate-100 dark:border-white/10 rounded-3xl p-5 shadow-sm dark:shadow-2xl shrink-0 h-fit">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-bold text-slate-800 dark:text-white tracking-widest">教学日历</h3>
+            <Button 
+              type="primary"
+              onClick={handleOpenAddModal}
+              className="flex items-center font-bold px-5 shadow-md dark:shadow-gold-500/20"
+            >
+              新增排课
+            </Button>
+          </div>
+          
+          <div className="flex items-center justify-center mb-6">
             <div className="flex items-center gap-4 bg-slate-100 dark:bg-black/30 rounded-full px-3 py-1 border border-slate-100 dark:border-white/5">
               <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))} className="p-1 hover:text-gold-600 dark:hover:text-gold-400 text-slate-500 dark:text-gray-400 transition-colors"><ChevronLeft className="w-5 h-5" /></button>
               <span className="text-sm font-mono text-slate-800 dark:text-white font-bold w-20 text-center">
@@ -404,7 +436,7 @@ const AdminSchedule: React.FC = () => {
                 
                 const dStr = toDateString(d);
                 const isSelected = dStr === selectedDateStr;
-                const hasClass = schedules.some(s => s.date === dStr);
+                const hasClass = schedules.some(s => s.date === dStr && isMatchSelectedStudents(s));
 
                 return (
                   <div 
@@ -414,13 +446,16 @@ const AdminSchedule: React.FC = () => {
                     }}
                     className={`
                       aspect-square rounded-full flex flex-col items-center justify-center cursor-pointer relative transition-all duration-300
-                      ${isSelected ? 'bg-gold-100 dark:bg-transparent border border-gold-300 dark:border-gold-500/50 text-gold-700 dark:text-gold-300 shadow-[0_0_15px_rgba(212,175,55,0.1)] dark:shadow-[0_0_15px_rgba(212,175,55,0.3)]' : 'hover:bg-slate-50 dark:hover:bg-white/5 text-slate-600 dark:text-gray-300 border border-transparent'}
+                      ${isSelected ? 'bg-gold-100 dark:bg-transparent border border-gold-300 dark:border-gold-500/50 shadow-[0_0_15px_rgba(212,175,55,0.1)] dark:shadow-[0_0_15px_rgba(212,175,55,0.3)]' : 'hover:bg-slate-50 dark:hover:bg-white/5 border border-transparent'}
                     `}
                   >
-                    <span className={`text-sm md:text-base font-medium ${isSelected ? 'font-bold' : ''}`}>{d.getDate()}</span>
-                    {hasClass && (
-                      <div className={`w-1.5 h-1.5 rounded-full mt-1 ${isSelected ? 'bg-gold-600 dark:bg-gold-400 shadow-[0_0_5px_#D4AF37] dark:shadow-[0_0_5px_#F5D76E]' : 'bg-gold-400 dark:bg-gold-500/50'}`}></div>
-                    )}
+                    <span className={`text-sm md:text-base font-medium 
+                      ${isSelected || hasClass ? 'font-bold' : ''}
+                      ${hasClass && !isSelected ? 'text-[#52c41a] dark:text-green-400' : ''}
+                      ${!hasClass && !isSelected ? 'text-slate-600 dark:text-gray-300' : ''}
+                      ${isSelected && hasClass ? 'text-[#52c41a] dark:text-green-400' : ''}
+                      ${isSelected && !hasClass ? 'text-gold-700 dark:text-gold-300' : ''}
+                    `}>{d.getDate()}</span>
                   </div>
                 );
               })
@@ -429,25 +464,13 @@ const AdminSchedule: React.FC = () => {
         </div>
 
         {/* Right: Daily Schedule View */}
-        <div className="w-full lg:w-48 xl:w-64 flex flex-col bg-white dark:bg-white/[0.02] backdrop-blur-3xl border border-slate-100 dark:border-white/10 rounded-3xl p-5 shadow-sm dark:shadow-2xl flex-1 h-full min-w-0">
+        <div className="w-full flex flex-col bg-white dark:bg-white/[0.02] backdrop-blur-3xl border border-slate-100 dark:border-white/10 rounded-3xl p-5 shadow-sm dark:shadow-2xl flex-1 h-full min-w-0">
           
-          <div className="flex flex-col mb-6 pb-4 border-b border-slate-100 dark:border-white/5 shrink-0">
-            <div className="flex items-start mb-4">
-              <div className="flex flex-col mr-3 pr-3 border-r-2 border-slate-200 dark:border-white/10">
-                <span className="text-xl font-bold text-slate-800 dark:text-white leading-tight">{selectedDate.getMonth() + 1}月</span>
-                <span className="text-2xl font-black text-slate-800 dark:text-white leading-none my-1">{selectedDate.getDate()}</span>
-                <span className="text-xl font-bold text-slate-800 dark:text-white leading-tight">日</span>
-              </div>
-              <div className="flex flex-col">
-                <h3 className="text-xl font-bold text-slate-800 dark:text-white tracking-[0.2em] flex flex-col leading-tight">
-                  <span>计 划</span>
-                  <span>课 表</span>
-                </h3>
-              </div>
-            </div>
-            <div>
-              <p className="text-xs text-slate-500 dark:text-gray-400">查看该日期的排课</p>
-              <p className="text-xs text-slate-500 dark:text-gray-400">安排</p>
+          <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100 dark:border-white/5 shrink-0">
+            <div className="flex items-center flex-1 min-w-0">
+              <span className="text-3xl font-black text-slate-800 dark:text-white leading-none mr-2 whitespace-nowrap">{selectedDate.getMonth() + 1}月{selectedDate.getDate()}日</span>
+              <span className="text-lg font-bold text-slate-300 dark:text-gray-500 mx-2 hidden sm:inline shrink-0">|</span>
+              <span className="text-lg font-bold text-slate-800 dark:text-white tracking-widest hidden sm:inline whitespace-nowrap truncate">计划课表</span>
             </div>
           </div>
 
@@ -456,14 +479,7 @@ const AdminSchedule: React.FC = () => {
               <Skeleton active />
             ) : todaysSchedules.length === 0 ? (
               <div className="h-full flex items-center justify-center min-h-[300px]">
-                <Empty description="该日期暂无排课安排">
-                  <Button
-                    type="primary"
-                    onClick={handleOpenAddModal}
-                  >
-                    立即排课
-                  </Button>
-                </Empty>
+                <Empty description="该日期暂无排课安排" />
               </div>
             ) : (
               todaysSchedules.map(sched => (
